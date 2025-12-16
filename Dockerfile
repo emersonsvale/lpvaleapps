@@ -32,7 +32,6 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 # Copiar apenas arquivos necessários para produção
 COPY --from=builder --chown=nuxtjs:nodejs /app/.output ./.output
-COPY --from=builder --chown=nuxtjs:nodejs /app/public ./public
 
 # Configurações de ambiente otimizadas para Coolify
 ENV NODE_ENV=production
