@@ -22,7 +22,13 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
-    preset: 'node-server'
+    preset: 'node-server',
+    storage: {
+      assets: {
+        driver: 'fs',
+        base: './.output/public'
+      }
+    }
   },
 
   // Configurações de servidor para produção

@@ -7,6 +7,8 @@
 </template>
 
 <script setup lang="ts">
+
+
 interface Props {
   className?: string
 }
@@ -15,8 +17,8 @@ const props = withDefaults(defineProps<Props>(), {
   className: ''
 })
 
-// Referência da imagem na pasta public
-const logoUrl = '/logo-vale-apps.png'
+// Usar URL absoluta temporariamente para testar
+const logoUrl = 'https://framerusercontent.com/images/qNkZZGqsnFsa83IKgjnsMSUPI.png'
 
 // Utility function for class names
 const cn = (...classes: (string | undefined | null | false)[]) => {
