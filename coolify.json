@@ -1,0 +1,62 @@
+{
+    "name": "vale-apps",
+    "description": "Vale Apps - Landing Page Otimizada",
+    "repository": "https://github.com/emersonsvale/lpvaleapps",
+    "branch": "master",
+    "dockerfile": "Dockerfile",
+    "build": {
+        "context": ".",
+        "dockerfile": "Dockerfile",
+        "args": {}
+    },
+    "deploy": {
+        "port": 3000,
+        "healthcheck": {
+            "path": "/",
+            "port": 3000,
+            "interval": 30,
+            "timeout": 10,
+            "retries": 3,
+            "start_period": 30
+        },
+        "environment": {
+            "NODE_ENV": "production",
+            "NITRO_PORT": "3000",
+            "NITRO_HOST": "0.0.0.0",
+            "NITRO_PRESET": "node-server"
+        },
+        "resources": {
+            "limits": {
+                "memory": "512Mi",
+                "cpu": "500m"
+            },
+            "requests": {
+                "memory": "256Mi",
+                "cpu": "250m"
+            }
+        },
+        "replicas": 1,
+        "restart_policy": "unless-stopped"
+    },
+    "domains": [
+        {
+            "domain": "valeapps.com.br",
+            "redirect_www": true,
+            "ssl": {
+                "enabled": true,
+                "force_https": true,
+                "provider": "letsencrypt"
+            }
+        }
+    ],
+    "volumes": [],
+    "networks": [
+        "default"
+    ],
+    "labels": {
+        "app": "vale-apps",
+        "environment": "production",
+        "framework": "nuxt",
+        "version": "1.0.0"
+    }
+}

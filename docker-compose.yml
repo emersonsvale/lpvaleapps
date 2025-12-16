@@ -1,18 +1,66 @@
 version: '3.8'
 
 services:
+  # Serviço principal - Vale Apps
   vale-apps:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: vale-apps-prod
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - NITRO_PORT=3000
       - NITRO_HOST=0.0.0.0
+      - NITRO_PRESET=node-server
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000" ]
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 30s
+    networks:
+      - vale-apps-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vale-apps.rule=Host(`localhost`)"
+      - "traefik.http.services.vale-apps.loadbalancer.server.port=3000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Nginx para servir arquivos estáticos (opcional)
+  nginx:
+    image: nginx:alpine
+    container_name: vale-apps-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - vale-apps
+    networks:
+      - vale-apps-network
+    restart: unless-stopped
+    profiles:
+      - nginx
+
+networks:
+  vale-apps-network:
+    driver: bridge
+
+# Para desenvolvimento local
+# docker-compose up vale-apps
+#
+# Para produção com nginx
+# docker-compose --profile nginx up

@@ -71,24 +71,89 @@ Timeout: 30s
 
 ---
 
-## 🐳 **Alternativa: Docker (Opcional)**
+## 🐳 **Deploy com Docker (Recomendado)**
 
-Se preferir usar Docker no Coolify:
+### **Dockerfile Otimizado Criado:**
 
-### **Dockerfile já criado:**
-```dockerfile
-FROM node:18-alpine AS base
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-COPY . .
-RUN npm run build
-EXPOSE 3000
-ENV NODE_ENV=production
-ENV NITRO_PORT=3000
-ENV NITRO_HOST=0.0.0.0
-CMD ["node", ".output/server/index.mjs"]
+✅ **Multi-stage build** para máxima eficiência
+✅ **Health check** integrado
+✅ **Usuário não-root** para segurança
+✅ **Cache otimizado** para builds rápidos
+✅ **Configurações específicas** para Coolify
+
+### **Configuração no Coolify:**
+
+#### **1. Tipo de Deploy:**
+- Selecione **"Docker"** como tipo de build
+- Repository: `https://github.com/emersonsvale/lpvaleapps`
+- Dockerfile: `Dockerfile` (na raiz do projeto)
+
+#### **2. Configurações Docker:**
+```yaml
+Build Context: .
+Dockerfile: Dockerfile
+Target Stage: runner (automático)
+```
+
+#### **3. Arquivos de Configuração Criados:**
+- `Dockerfile` - Multi-stage otimizado
+- `.dockerignore` - Otimização de build
+- `coolify.json` - Configurações específicas
+- `docker-compose.yml` - Para testes locais
+- `nginx.conf` - Proxy reverso (opcional)
+- `deploy.sh` - Script automatizado
+
+---
+
+## 🧪 **Teste Local com Docker**
+
+### **Opção 1: Docker Compose (Recomendado)**
+```bash
+# Build e start
+docker-compose up --build
+
+# Apenas start (se já foi feito build)
+docker-compose up
+
+# Em background
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f vale-apps
+
+# Parar
+docker-compose down
+```
+
+### **Opção 2: Docker Manual**
+```bash
+# Build da imagem
+docker build -t vale-apps .
+
+# Executar container
+docker run -p 3000:3000 vale-apps
+
+# Com variáveis de ambiente
+docker run -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e NITRO_PORT=3000 \
+  -e NITRO_HOST=0.0.0.0 \
+  vale-apps
+```
+
+### **Opção 3: Script Automatizado**
+```bash
+# Build local
+./deploy.sh build
+
+# Build Docker
+./deploy.sh docker
+
+# Deploy completo
+./deploy.sh deploy
+
+# Deploy + testes
+./deploy.sh full
 ```
 
 ---
