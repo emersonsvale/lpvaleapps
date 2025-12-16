@@ -1,17 +1,23 @@
 # 🔧 Troubleshooting - Deploy Coolify
 
-## ❌ **Problema Identificado no Deploy**
+## ❌ **Problemas Identificados no Deploy**
 
-### **Erro Principal:**
+### **Erro 1: Native Bindings (RESOLVIDO)**
 ```
 ERROR Cannot find native binding. npm has a bug related to optional dependencies
 Cannot find module '@oxc-parser/binding-linux-x64-musl'
 ```
 
-### **Causa:**
+### **Erro 2: Vite Build - Image Import (RESOLVIDO)**
+```
+[plugin:vite:import-analysis] Failed to resolve import '/Solucoeesdigitais.png' from Logo.vue
+```
+
+### **Causas:**
 1. **Node.js 18**: Nuxt 4.2.2 requer Node.js 20+
 2. **Alpine Linux**: Problemas com bindings nativos do oxc-parser
 3. **Dependencies**: Conflito entre dependências de produção e desenvolvimento
+4. **Nomes de Arquivos**: Caracteres especiais e acentos em nomes de imagens causam problemas no Vite build
 
 ---
 
@@ -26,6 +32,14 @@ Cannot find module '@oxc-parser/binding-linux-x64-musl'
 - **`Dockerfile.debian`**: Versão usando Debian em vez de Alpine
 - **Melhor compatibilidade**: Para casos de problemas com bindings nativos
 - **Mesmo resultado**: Performance similar, maior compatibilidade
+
+### **3. Renomeação de Arquivos de Imagem**
+- **Problema**: Nomes com acentos e caracteres especiais (`Solucoeesdigitais.png`, `Retângulo 3 copiar.png`)
+- **Solução**: Renomeados para nomes seguros:
+  - `Solucoeesdigitais.png` → `logo-vale-apps.png`
+  - `Retângulo 3 copiar.png` → `favicon.png`
+  - `LogoValeAapps.png` → `logo-header.png`
+- **Resultado**: Build do Vite funciona sem erros de importação
 
 ---
 
