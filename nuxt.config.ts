@@ -23,11 +23,17 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     minify: true,
     preset: 'node-server',
-    storage: {
-      assets: {
-        driver: 'fs',
-        base: './.output/public'
+    publicAssets: [
+      {
+        baseURL: '/',
+        dir: 'public',
+        maxAge: 60 * 60 * 24 * 365 // 1 year
       }
+    ],
+    routeRules: {
+      '/favicon.png': { headers: { 'cache-control': 'max-age=31536000' } },
+      '/logo-*.png': { headers: { 'cache-control': 'max-age=31536000' } },
+      '/manifest.json': { headers: { 'cache-control': 'max-age=31536000' } }
     }
   },
 

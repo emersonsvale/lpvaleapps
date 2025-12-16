@@ -17,8 +17,8 @@ const props = withDefaults(defineProps<Props>(), {
   className: ''
 })
 
-// Usar URL absoluta temporariamente para testar
-const logoUrl = 'https://framerusercontent.com/images/qNkZZGqsnFsa83IKgjnsMSUPI.png'
+// Referência da imagem na pasta public
+const logoUrl = '/logo-vale-apps.png'
 
 // Utility function for class names
 const cn = (...classes: (string | undefined | null | false)[]) => {
