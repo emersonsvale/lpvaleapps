@@ -22,25 +22,7 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
-    preset: 'node-server',
-    publicAssets: [
-      {
-        baseURL: '/',
-        dir: 'public'
-      }
-    ],
-    routeRules: {
-      '/': {
-        headers: {
-          'Cache-Control': 's-maxage=31536000'
-        }
-      },
-      '/**': {
-        headers: {
-          'Cache-Control': 'max-age=31536000, immutable'
-        }
-      }
-    }
+    preset: 'node-server'
   },
 
   // Configurações de servidor para produção
