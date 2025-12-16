@@ -21,13 +21,8 @@ export default defineNuxtConfig({
   // Otimização de build
   nitro: {
     preset: 'node-server',
-    serveStatic: true,
-    publicAssets: [
-      {
-        baseURL: '/',
-        dir: 'public'
-      }
-    ]
+    serveStatic: true
+    // Removido publicAssets - deixando o Nuxt gerenciar automaticamente
   },
 
   // Configurações de servidor para produção
