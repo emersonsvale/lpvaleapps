@@ -46,7 +46,7 @@ export default defineNuxtConfig({
   // Configurações de servidor para produção
   runtimeConfig: {
     public: {
-      baseURL: process.env.NUXT_PUBLIC_BASE_URL || 'https://valeapps.com.br'
+      baseURL: 'https://valeapps.com.br'
     }
   },
 
