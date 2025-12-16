@@ -15,8 +15,8 @@ const props = withDefaults(defineProps<Props>(), {
   className: ''
 })
 
-// Import da imagem usando Vite
-const logoUrl = new URL('~/assets/logo-vale-apps.png', import.meta.url).href
+// Referência da imagem na pasta public
+const logoUrl = '/logo-vale-apps.png'
 
 // Utility function for class names
 const cn = (...classes: (string | undefined | null | false)[]) => {

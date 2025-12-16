@@ -38,6 +38,8 @@ ENV NODE_ENV=production
 ENV NITRO_PORT=3000
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PRESET=node-server
+ENV PORT=3000
+ENV HOST=0.0.0.0
 
 # Otimizações de performance
 ENV NODE_OPTIONS="--max-old-space-size=1024"
@@ -46,12 +48,8 @@ ENV UV_THREADPOOL_SIZE=4
 # Configurações de segurança
 USER nuxtjs
 
-# Health check para Coolify
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
-
 # Expor porta
 EXPOSE 3000
 
 # Comando otimizado para produção
-CMD ["node", ".output/server/index.mjs"]
+CMD ["sh", "-c", "node .output/server/index.mjs"]

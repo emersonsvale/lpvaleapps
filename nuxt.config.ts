@@ -22,6 +22,13 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
+    preset: 'node-server',
+    publicAssets: [
+      {
+        baseURL: '/',
+        dir: 'public'
+      }
+    ],
     routeRules: {
       '/': {
         headers: {
@@ -33,6 +40,13 @@ export default defineNuxtConfig({
           'Cache-Control': 'max-age=31536000, immutable'
         }
       }
+    }
+  },
+
+  // Configurações de servidor para produção
+  runtimeConfig: {
+    public: {
+      baseURL: process.env.NUXT_PUBLIC_BASE_URL || 'https://valeapps.com.br'
     }
   },
 
