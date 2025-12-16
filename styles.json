@@ -1,0 +1,130 @@
+{
+    "project": "Vale Apps",
+    "version": "1.0.0",
+    "description": "Padrões de estilo e componentes para o projeto Vale Apps",
+    "colors": {
+        "primary": {
+            "blue": "#3b82f6",
+            "gradient": "from-transparent via-blue-500 to-transparent"
+        },
+        "neutral": {
+            "light": {
+                "text": "#525252",
+                "textHover": "#737373",
+                "bg": "white/80",
+                "border": "#e5e5e5",
+                "bgHover": "#fafafa"
+            },
+            "dark": {
+                "text": "#fafafa",
+                "textHover": "#d4d4d4",
+                "bg": "black/80",
+                "border": "white/[0.2]",
+                "bgHover": "#171717"
+            }
+        }
+    },
+    "buttons": {
+        "primary": {
+            "description": "Botão principal de ação (baseado no 'Fale Conosco' do navMenu)",
+            "classes": "border text-sm font-medium relative border-neutral-200 dark:border-white/[0.2] text-black dark:text-white px-4 py-2 rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors",
+            "gradient": "absolute inset-x-0 w-1/2 mx-auto -bottom-px bg-gradient-to-r from-transparent via-blue-500 to-transparent h-px",
+            "usage": "Para CTAs principais como 'Fale Conosco', 'Começar Agora', etc."
+        },
+        "secondary": {
+            "description": "Botão secundário sem gradiente",
+            "classes": "border text-sm font-medium border-neutral-200 dark:border-white/[0.2] text-neutral-600 dark:text-neutral-300 px-4 py-2 rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors",
+            "usage": "Para ações secundárias como 'Saiba Mais', 'Ver Detalhes', etc."
+        },
+        "ghost": {
+            "description": "Botão transparente apenas com texto",
+            "classes": "text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-500 dark:hover:text-neutral-400 transition-colors",
+            "usage": "Para links e ações menos importantes"
+        }
+    },
+    "spacing": {
+        "sections": {
+            "paddingTop": "pt-24",
+            "paddingBottom": "pb-16 md:pb-32"
+        },
+        "elements": {
+            "title": "pt-8 lg:pt-12",
+            "subtitle": "mt-2",
+            "button": "mt-3",
+            "containerScroll": "relative (sem margin)"
+        }
+    },
+    "typography": {
+        "hero": {
+            "title": "text-balance text-5xl font-medium md:text-6xl",
+            "subtitle": "text-pretty text-lg text-muted-foreground",
+            "maxWidth": "max-w-2xl"
+        },
+        "section": {
+            "title": "text-3xl font-semibold md:text-4xl",
+            "subtitle": "text-base text-muted-foreground md:text-lg"
+        }
+    },
+    "effects": {
+        "backdrop": "backdrop-blur-md",
+        "shadows": {
+            "card": "shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)]",
+            "container": "shadow-lg shadow-zinc-950/15"
+        },
+        "borders": {
+            "default": "border border-transparent dark:border-white/[0.2]",
+            "rounded": "rounded-full",
+            "card": "rounded-2xl"
+        }
+    },
+    "animations": {
+        "transitions": "transition-colors",
+        "containerScroll": {
+            "rotate": "scrollProgress * 25",
+            "scale": "1 - scrollProgress * 0.1",
+            "rotateX": "scrollProgress * 45"
+        },
+        "particles": {
+            "amountX": 60,
+            "amountY": 80,
+            "separation": 120,
+            "waveAmplitudes": [
+                80,
+                60,
+                40
+            ]
+        }
+    },
+    "layout": {
+        "maxWidth": "max-w-5xl",
+        "padding": "px-6",
+        "zIndex": {
+            "background": "z-0",
+            "content": "z-10",
+            "navigation": "z-[5000]",
+            "overlay": "z-50"
+        }
+    },
+    "components": {
+        "navigation": {
+            "position": "fixed top-10 inset-x-0 mx-auto",
+            "style": "rounded-full dark:bg-black/80 bg-white/80 backdrop-blur-md",
+            "padding": "pr-2 pl-8 py-2"
+        },
+        "containerScroll": {
+            "perspective": "1000px",
+            "borderRadius": "20 * scale",
+            "border": "border-4 border-[#6C6C6C]",
+            "background": "bg-[#222222]"
+        }
+    },
+    "usage": {
+        "buttons": {
+            "primary": "Use para ações principais que queremos destacar",
+            "secondary": "Use para ações importantes mas não críticas",
+            "ghost": "Use para navegação e ações sutis"
+        },
+        "spacing": "Mantenha elementos próximos no hero, use espaçamentos maiores entre seções",
+        "colors": "Sempre use as variantes dark/light para suporte a temas"
+    }
+}

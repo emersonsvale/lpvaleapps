@@ -1,0 +1,36 @@
+# Robots.txt para Vale Apps - Soluções Digitais
+# https://valeapps.com.br
+
+User-agent: *
+Allow: /
+
+# Permitir acesso a todos os recursos importantes
+Allow: /assets/
+Allow: /_nuxt/
+Allow: /images/
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.webp
+Allow: /*.svg
+
+# Bloquear arquivos desnecessários para SEO
+Disallow: /.nuxt/
+Disallow: /.output/
+Disallow: /node_modules/
+Disallow: /*.json
+Disallow: /*.map
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://valeapps.com.br/sitemap.xml
+
+# Crawl-delay para ser gentil com os servidores
+Crawl-delay: 1
+
+# Informações adicionais
+# Site: Vale Apps - Desenvolvimento de Aplicativos Mobile e Web
+# Contato: contato@valeapps.com.br
+# Última atualização: 2025-12-16

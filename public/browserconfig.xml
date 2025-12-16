@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+    <msapplication>
+        <tile>
+            <square70x70logo src="/Retângulo 3 copiar.png"/>
+            <square150x150logo src="/Retângulo 3 copiar.png"/>
+            <square310x310logo src="/LogoValeAapps.png"/>
+            <wide310x150logo src="/LogoValeAapps.png"/>
+            <TileColor>#FFC000</TileColor>
+        </tile>
+    </msapplication>
+</browserconfig>

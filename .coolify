@@ -1,0 +1,25 @@
+# Configuração Coolify para Vale Apps
+
+# Build Command
+npm install && npm run build
+
+# Start Command  
+node .output/server/index.mjs
+
+# Port
+3000
+
+# Environment Variables (configurar no Coolify)
+# NODE_ENV=production
+# NITRO_PORT=3000
+# NITRO_HOST=0.0.0.0
+
+# Health Check
+# URL: /
+# Expected Status: 200
+
+# Domain
+# valeapps.com.br
+
+# SSL
+# Habilitar certificado automático
