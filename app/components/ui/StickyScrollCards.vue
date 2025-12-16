@@ -117,7 +117,6 @@ const features = [
     bgColor: "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700",
     textColor: "text-gray-700 dark:text-gray-200",
     link: "https://fenci.com.br",
-    technologies: ["Vue.js", "Node.js", "Stripe", "MongoDB"]
   },
   {
     title: "Zapifine - Automação WhatsApp",
@@ -127,7 +126,6 @@ const features = [
     bgColor: "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700",
     textColor: "text-gray-700 dark:text-gray-200",
     link: "https://app.zapifine.com",
-    technologies: ["React", "OpenAI", "WhatsApp API", "PostgreSQL"]
   },
   {
     title: "Oohh Food - Gestão Restaurantes",
@@ -137,7 +135,6 @@ const features = [
     bgColor: "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700",
     textColor: "text-gray-700 dark:text-gray-200",
     link: "https://app.oohhfood.com.br",
-    technologies: ["Flutter", "Firebase", "Node.js", "MySQL"]
   }
 ]
 
