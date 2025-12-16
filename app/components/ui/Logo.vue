@@ -1,6 +1,6 @@
 <template>
   <img
-    src="/logo-vale-apps.png"
+    :src="logoUrl"
     alt="Vale Apps - Soluções Digitais"
     :class="cn('h-5 w-auto', className)"
   />
@@ -14,6 +14,9 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   className: ''
 })
+
+// Import da imagem usando Vite
+const logoUrl = new URL('~/assets/logo-vale-apps.png', import.meta.url).href
 
 // Utility function for class names
 const cn = (...classes: (string | undefined | null | false)[]) => {
