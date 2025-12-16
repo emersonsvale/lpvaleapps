@@ -1,0 +1,78 @@
+{
+    "name": "Vale Apps - Soluções Digitais",
+    "short_name": "Vale Apps",
+    "description": "Soluções digitais sob medida com IA, automação e aplicativos web/mobile. Acelere seu negócio com sistemas modernos, ágeis e escaláveis.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0F0F11",
+    "theme_color": "#FFC000",
+    "orientation": "portrait-primary",
+    "categories": [
+        "business",
+        "productivity",
+        "developer"
+    ],
+    "lang": "pt-BR",
+    "dir": "ltr",
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/logo-header.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "https://framerusercontent.com/images/PYGY312hsQiQ9amSP5A6phSgc.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Vale Apps - Página Principal"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Contato",
+            "short_name": "Contato",
+            "description": "Entre em contato conosco",
+            "url": "/#contato",
+            "icons": [
+                {
+                    "src": "/favicon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Projetos",
+            "short_name": "Projetos",
+            "description": "Veja nossos projetos",
+            "url": "/#projetos",
+            "icons": [
+                {
+                    "src": "/favicon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Serviços",
+            "short_name": "Serviços",
+            "description": "Conheça nossos serviços",
+            "url": "/#servicos",
+            "icons": [
+                {
+                    "src": "/favicon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}

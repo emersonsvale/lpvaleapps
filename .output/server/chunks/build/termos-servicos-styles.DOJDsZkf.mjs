@@ -1,0 +1,2 @@
+const e=[".prose[data-v-6479e997]{color:inherit}.prose h2[data-v-6479e997],.prose p[data-v-6479e997],.prose ul li[data-v-6479e997]{color:hsl(var(--foreground))}"];export{e as default};
+//# sourceMappingURL=termos-servicos-styles.DOJDsZkf.mjs.map
