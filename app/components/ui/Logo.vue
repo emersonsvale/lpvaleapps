@@ -1,6 +1,6 @@
 <template>
   <img
-    src="/Solucoeesdigitais.png"
+    src="/logo-vale-apps.png"
     alt="Vale Apps - Soluções Digitais"
     :class="cn('h-5 w-auto', className)"
   />

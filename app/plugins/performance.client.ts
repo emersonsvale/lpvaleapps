@@ -47,7 +47,7 @@ export default defineNuxtPlugin(() => {
         // Preload de recursos críticos baseado na interação do usuário
         const preloadCriticalResources = () => {
             const criticalImages = [
-                '/LogoValeAapps.png',
+                '/logo-header.png',
                 'https://framerusercontent.com/images/PYGY312hsQiQ9amSP5A6phSgc.png'
             ]
 

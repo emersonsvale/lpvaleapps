@@ -13,6 +13,11 @@ export default defineNuxtConfig({
     renderJsonPayloads: true
   },
 
+  // Configuração de assets
+  vite: {
+    assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.webp']
+  },
+
   // Otimização de build
   nitro: {
     compressPublicAssets: true,
@@ -66,10 +71,10 @@ export default defineNuxtConfig({
         { name: 'twitter:image:alt', content: 'Logo da Vale Apps' }
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/Retângulo 3 copiar.png' },
-        { rel: 'apple-touch-icon', href: '/Retângulo 3 copiar.png', sizes: '180x180' },
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+        { rel: 'apple-touch-icon', href: '/favicon.png', sizes: '180x180' },
         // Preload de recursos críticos
-        { rel: 'preload', href: '/LogoValeAapps.png', as: 'image' },
+        { rel: 'preload', href: '/logo-header.png', as: 'image' },
         { rel: 'preconnect', href: 'https://framerusercontent.com' },
         { rel: 'dns-prefetch', href: 'https://www.googletagmanager.com' },
         { rel: 'dns-prefetch', href: 'https://connect.facebook.net' },

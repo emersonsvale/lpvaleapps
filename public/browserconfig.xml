@@ -2,10 +2,10 @@
 <browserconfig>
     <msapplication>
         <tile>
-            <square70x70logo src="/Retângulo 3 copiar.png"/>
-            <square150x150logo src="/Retângulo 3 copiar.png"/>
-            <square310x310logo src="/LogoValeAapps.png"/>
-            <wide310x150logo src="/LogoValeAapps.png"/>
+            <square70x70logo src="/favicon.png"/>
+            <square150x150logo src="/favicon.png"/>
+            <square310x310logo src="/logo-header.png"/>
+            <wide310x150logo src="/logo-header.png"/>
             <TileColor>#FFC000</TileColor>
         </tile>
     </msapplication>
