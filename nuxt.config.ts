@@ -20,9 +20,15 @@ export default defineNuxtConfig({
 
   // Otimização de build
   nitro: {
+    compressPublicAssets: true,
+    minify: true,
     preset: 'node-server',
-    serveStatic: true
-    // Removido publicAssets - deixando o Nuxt gerenciar automaticamente
+    serveStatic: true,
+    // Regras de cache para arquivos estáticos
+    routeRules: {
+      '/': { headers: { 'Cache-Control': 's-maxage=31536000' } },
+      '/**': { headers: { 'Cache-Control': 'max-age=31536000, immutable' } }
+    }
   },
 
   // Configurações de servidor para produção
