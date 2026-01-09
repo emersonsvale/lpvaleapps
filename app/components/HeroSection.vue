@@ -53,7 +53,8 @@
                   </div>
                 </div>
                 <template #fallback>
-                  <div>
+                  <!-- Fallback com estilo inicial invisível para evitar FOUC -->
+                  <div class="opacity-0">
                     <h1 class="pt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:pt-12">
                       Construa produtos digitais modernos com eficiência.
                     </h1>
@@ -103,7 +104,8 @@
               </div>
             </div>
             <template #fallback>
-              <div class="relative">
+              <!-- Fallback invisível para evitar FOUC -->
+              <div class="relative opacity-0">
                 <div
                   aria-hidden="true"
                   class="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"

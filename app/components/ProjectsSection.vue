@@ -13,11 +13,15 @@
       <!-- Bento Grid Layout - Exatamente como Inspira UI -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
         <!-- Card 1 - Fenci (Grande - 2 colunas) -->
-        <div class="md:col-span-2 group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg hover:-translate-y-1 hover:border-muted-foreground/20 transition-all duration-300 cursor-pointer">
+        <div 
+          ref="card1"
+          :style="{ opacity: cardOpacities[0] }"
+          class="md:col-span-2 group relative overflow-hidden rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer project-card"
+        >
           <!-- Imagem real do projeto -->
           <div class="relative h-56 overflow-hidden">
             <img 
-              src="https://framerusercontent.com/images/PYGY312hsQiQ9amSP5A6phSgc.png?width=5120&height=3332" 
+              src="https://framerusercontent.com/images/PYGY312hsQiQ9amSP5A6phSgc.png" 
               alt="Fenci App Interface"
               class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
             />
@@ -51,7 +55,11 @@
         </div>
 
         <!-- Card 2 - Estatísticas (1 coluna) -->
-        <div class="group relative overflow-hidden rounded-lg border bg-card p-6 hover:shadow-lg hover:-translate-y-1 hover:border-muted-foreground/20 transition-all duration-300 cursor-pointer">
+        <div 
+          ref="card2"
+          :style="{ opacity: cardOpacities[1] }"
+          class="group relative overflow-hidden rounded-lg p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer project-card"
+        >
           <div class="text-center">
             <PhTrendUp :size="32" class="text-muted-foreground mx-auto mb-4 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
             <div class="text-3xl font-bold mb-2 group-hover:scale-105 transition-transform duration-300">50+</div>
@@ -61,11 +69,15 @@
         </div>
 
         <!-- Card 3 - Oohh Food (1 coluna) -->
-        <div class="group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg hover:-translate-y-1 hover:border-muted-foreground/20 transition-all duration-300 cursor-pointer">
+        <div 
+          ref="card3"
+          :style="{ opacity: cardOpacities[2] }"
+          class="group relative overflow-hidden rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer project-card"
+        >
           <!-- Imagem real do projeto -->
           <div class="relative h-40 overflow-hidden">
             <img 
-              src="https://framerusercontent.com/images/YJXDxS5wiD3ORjqqItb6Mh2ZJzo.png?scale-down-to=1024&width=1907&height=909" 
+              src="https://framerusercontent.com/images/YJXDxS5wiD3ORjqqItb6Mh2ZJzo.png" 
               alt="Oohh Food Interface"
               class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
             />
@@ -99,11 +111,15 @@
         </div>
 
         <!-- Card 4 - Zapifine (1 coluna) -->
-        <div class="group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg hover:-translate-y-1 hover:border-muted-foreground/20 transition-all duration-300 cursor-pointer">
+        <div 
+          ref="card4"
+          :style="{ opacity: cardOpacities[3] }"
+          class="group relative overflow-hidden rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer project-card"
+        >
           <!-- Imagem real do projeto -->
           <div class="relative h-40 overflow-hidden">
             <img 
-              src="https://framerusercontent.com/images/YfIR4f46Xn2tXf0JrrN6tbHVvAA.png?scale-down-to=1024&width=1881&height=896" 
+              src="https://framerusercontent.com/images/YfIR4f46Xn2tXf0JrrN6tbHVvAA.png" 
               alt="Zapifine Interface"
               class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
             />
@@ -137,7 +153,11 @@
         </div>
 
         <!-- Card 5 - Tecnologias (1 coluna) -->
-        <div class="group relative overflow-hidden rounded-lg border bg-card p-6 hover:shadow-lg hover:-translate-y-1 hover:border-muted-foreground/20 transition-all duration-300 cursor-pointer">
+        <div 
+          ref="card5"
+          :style="{ opacity: cardOpacities[4] }"
+          class="group relative overflow-hidden rounded-lg p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer project-card"
+        >
           <div class="flex items-center gap-2 mb-4">
             <PhCode :size="20" class="text-muted-foreground group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
             <span class="font-semibold text-sm transition-colors duration-300">Stack</span>
@@ -147,7 +167,11 @@
         </div>
 
         <!-- Card 6 - CTA (3 colunas - largura total) -->
-        <div class="md:col-span-3 group relative overflow-hidden rounded-lg border bg-muted/30 p-8 hover:shadow-lg hover:-translate-y-1 hover:border-muted-foreground/20 hover:bg-muted/50 transition-all duration-300 cursor-pointer">
+        <div 
+          ref="card6"
+          :style="{ opacity: cardOpacities[5] }"
+          class="md:col-span-3 group relative overflow-hidden rounded-lg p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer project-card"
+        >
           <div class="text-center">
             <PhRocket :size="32" class="text-muted-foreground mx-auto mb-4 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300" />
             <h3 class="text-xl font-bold mb-2 group-hover:scale-105 transition-transform duration-300">Pronto para o próximo projeto?</h3>
@@ -175,6 +199,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { 
   PhTrendUp,
   PhCode,
@@ -183,4 +208,71 @@ import {
   PhGlobe
 } from '@phosphor-icons/vue'
 import Button from '~/components/ui/Button.vue'
+
+// Refs para os cards
+const card1 = ref<HTMLElement>()
+const card2 = ref<HTMLElement>()
+const card3 = ref<HTMLElement>()
+const card4 = ref<HTMLElement>()
+const card5 = ref<HTMLElement>()
+const card6 = ref<HTMLElement>()
+
+// Opacidades dos cards (inicialmente todos visíveis)
+const cardOpacities = ref([1, 1, 1, 1, 1, 1])
+
+// Função para calcular opacidade baseada na posição do scroll
+const updateCardOpacities = () => {
+  const cards = [card1, card2, card3, card4, card5, card6]
+  const viewportHeight = window.innerHeight
+  const scrollY = window.scrollY
+
+  cards.forEach((cardRef, index) => {
+    if (!cardRef.value) return
+
+    const rect = cardRef.value.getBoundingClientRect()
+    const cardTop = rect.top + scrollY
+    const cardBottom = cardTop + rect.height
+    
+    // Se o card já passou completamente (está acima do viewport)
+    if (cardBottom < scrollY) {
+      // Calcula a distância que o card já passou
+      const distancePassed = scrollY - cardBottom
+      // Fade out progressivo: quanto mais longe, mais transparente
+      // Máximo de 500px para fade completo
+      const fadeDistance = 500
+      const opacity = Math.max(0, 1 - (distancePassed / fadeDistance))
+      cardOpacities.value[index] = opacity
+    } else {
+      // Card ainda está visível ou não passou ainda
+      cardOpacities.value[index] = 1
+    }
+  })
+}
+
+// Listener de scroll
+let scrollListener: (() => void) | null = null
+
+onMounted(() => {
+  // Atualizar opacidades inicialmente
+  updateCardOpacities()
+  
+  // Adicionar listener de scroll otimizado
+  scrollListener = () => {
+    requestAnimationFrame(updateCardOpacities)
+  }
+  
+  window.addEventListener('scroll', scrollListener, { passive: true })
+})
+
+onUnmounted(() => {
+  if (scrollListener) {
+    window.removeEventListener('scroll', scrollListener)
+  }
+})
 </script>
+
+<style scoped>
+.project-card {
+  transition: opacity 0.3s ease-out;
+}
+</style>
