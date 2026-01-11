@@ -2,7 +2,7 @@
   <section class="py-20 relative overflow-hidden bg-background">
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto text-center mb-12">
-        <h2 class="text-4xl md:text-6xl font-bold mb-6">
+        <h2 class="text-4xl md:text-6xl font-medium mb-6">
           Acelere seu desenvolvimento
         </h2>
         <p class="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
@@ -14,7 +14,7 @@
       <div class="max-w-6xl mx-auto space-y-16">
         <!-- Vale Apps Timeline -->
         <div class="space-y-6">
-          <h3 class="text-2xl font-bold">Desenvolvimento Vale Apps</h3>
+          <h3 class="text-2xl font-medium">Desenvolvimento Vale Apps</h3>
           <div class="relative pt-8 pb-16">
             <!-- Timeline Base Line -->
             <div class="absolute top-8 left-0 right-0 h-0.5 bg-muted"></div>
@@ -60,7 +60,7 @@
 
         <!-- Regular Development Timeline -->
         <div class="space-y-6">
-          <h3 class="text-2xl font-bold text-muted-foreground">Desenvolvimento Regular</h3>
+          <h3 class="text-2xl font-medium text-muted-foreground">Desenvolvimento Regular</h3>
           <div class="relative pt-8 pb-16">
             <!-- Timeline Base Line -->
             <div class="absolute top-8 left-0 right-0 h-0.5 bg-muted"></div>

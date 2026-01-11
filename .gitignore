@@ -98,3 +98,10 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
+
+# Font files (not versioned due to size and license)
+public/fonts/*.woff
+public/fonts/*.woff2
+public/fonts/*.ttf
+public/fonts/*.otf
+!public/fonts/.gitkeep

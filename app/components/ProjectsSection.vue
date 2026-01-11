@@ -2,7 +2,7 @@
   <section class="py-20">
     <div class="container mx-auto px-6">
       <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-bold mb-6">
+        <h2 class="text-4xl md:text-5xl font-medium mb-6">
           Projetos que <span class="block">desenvolvemos</span>
         </h2>
         <p class="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -36,7 +36,7 @@
                   <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
                     <div class="space-y-3">
                       <div class="flex items-center gap-3">
-                        <h3 class="text-2xl md:text-3xl font-bold text-white">Fenci</h3>
+                        <h3 class="text-2xl md:text-3xl font-medium text-white">Fenci</h3>
                         <a href="https://fenci.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar site do Fenci" class="text-white/80 hover:text-white transition-colors">
                           <PhArrowSquareOut :size="20" />
                         </a>
@@ -76,7 +76,7 @@
                   <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
                     <div class="space-y-3">
                       <div class="flex items-center gap-3">
-                        <h3 class="text-2xl md:text-3xl font-bold text-white">Oohh Food</h3>
+                        <h3 class="text-2xl md:text-3xl font-medium text-white">Oohh Food</h3>
                         <a href="https://app.oohhfood.com.br/" target="_blank" rel="noopener noreferrer" aria-label="Visitar site do Oohh Food" class="text-white/80 hover:text-white transition-colors">
                           <PhArrowSquareOut :size="20" />
                         </a>
@@ -116,7 +116,7 @@
                   <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
                     <div class="space-y-3">
                       <div class="flex items-center gap-3">
-                        <h3 class="text-2xl md:text-3xl font-bold text-white">Zapifine</h3>
+                        <h3 class="text-2xl md:text-3xl font-medium text-white">Zapifine</h3>
                         <a href="https://app.zapifine.com/" target="_blank" rel="noopener noreferrer" aria-label="Visitar site do Zapifine" class="text-white/80 hover:text-white transition-colors">
                           <PhArrowSquareOut :size="20" />
                         </a>

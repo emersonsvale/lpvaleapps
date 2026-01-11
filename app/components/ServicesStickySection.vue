@@ -6,7 +6,7 @@
         <p class="text-sm uppercase tracking-wider text-brand mb-4">
           TUDO QUE FAZEMOS FAZEMOS INTENSAMENTE
         </p>
-        <h2 class="text-5xl md:text-7xl font-bold mb-6">
+        <h2 class="text-5xl md:text-7xl font-medium mb-6">
           Você pensa, <span class="block">nós construímos</span>
         </h2>
         <p class="text-xl text-muted-foreground">
@@ -27,7 +27,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             <!-- Left Column -->
             <div class="space-y-6">
-              <h3 class="text-5xl md:text-6xl font-bold">Desenvolvimento com FlutterFlow</h3>
+              <h3 class="text-5xl md:text-6xl font-medium">Desenvolvimento com FlutterFlow</h3>
               <p class="text-lg text-muted-foreground leading-relaxed">
                 Utilizamos FlutterFlow para ajudar mais de 30 empresas de todos os tamanhos a entrar no mercado em tempo recorde. Desenvolvemos aplicativos mobile e web totalmente escaláveis, com performance nativa e experiência de usuário excepcional.
               </p>
@@ -93,7 +93,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             <!-- Left Column -->
             <div class="space-y-6">
-              <h3 class="text-5xl md:text-6xl font-bold">Desenvolvimento Web</h3>
+              <h3 class="text-5xl md:text-6xl font-medium">Desenvolvimento Web</h3>
               <p class="text-lg text-muted-foreground leading-relaxed">
                 O desenvolvimento do seu produto não precisa mais levar meses. Com nossa abordagem moderna e utilização inteligente de tecnologias como Vue.js, React e Next.js, você pode lançar aplicativos web completos e escaláveis em semanas.
               </p>
@@ -159,7 +159,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             <!-- Left Column -->
             <div class="space-y-6">
-              <h3 class="text-5xl md:text-6xl font-bold">Desenvolvimento Mobile</h3>
+              <h3 class="text-5xl md:text-6xl font-medium">Desenvolvimento Mobile</h3>
               <p class="text-lg text-muted-foreground leading-relaxed">
                 Utilizando as tecnologias mais modernas como Flutter, React Native e desenvolvimento nativo, entregamos aplicativos mobile para iOS e Android com máxima eficiência, performance e experiência do usuário.
               </p>
