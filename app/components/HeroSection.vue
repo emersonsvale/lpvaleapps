@@ -32,14 +32,14 @@
                 >
                   <h1 class="pt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:pt-12">
                     <BlurText 
-                      text="Construa produtos digitais modernos com eficiência."
+                      text="Desenvolvimento de Aplicativos Mobile e Web com Tecnologia de Ponta"
                       :delay="500"
                       :duration="1200"
                     />
                   </h1>
                   <p class="mt-4 max-w-2xl text-pretty text-lg text-muted-foreground">
                     <BlurText 
-                      text="Na Vale Apps, unimos tecnologia, design e automação para acelerar o crescimento da sua empresa com soluções sob medida."
+                      text="Na Vale Apps, unimos desenvolvimento mobile, web, design e automação para acelerar o crescimento da sua empresa. Criamos aplicativos iOS, Android e web com soluções sob medida que geram resultados."
                       :delay="1500"
                       :duration="1000"
                     />
@@ -56,10 +56,10 @@
                   <!-- Fallback com estilo inicial invisível para evitar FOUC -->
                   <div class="opacity-0">
                     <h1 class="pt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:pt-12">
-                      Construa produtos digitais modernos com eficiência.
+                      Desenvolvimento de Aplicativos Mobile e Web com Tecnologia de Ponta
                     </h1>
                     <p class="mt-4 max-w-2xl text-pretty text-lg text-muted-foreground">
-                      Na Vale Apps, unimos tecnologia, design e automação para acelerar o crescimento da sua empresa com soluções sob medida.
+                      Na Vale Apps, unimos desenvolvimento mobile, web, design e automação para acelerar o crescimento da sua empresa. Criamos aplicativos iOS, Android e web com soluções sob medida que geram resultados.
                     </p>
                     <div class="mt-6 flex items-center gap-2">
                     </div>
@@ -89,14 +89,14 @@
                   <img
                     class="bg-background aspect-[15/8] relative hidden rounded-lg dark:block w-full h-full object-cover"
                     src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard dark theme"
+                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
                     width="2700"
                     height="1440"
                   />
                   <img
                     class="aspect-[15/8] relative rounded-lg w-full h-full object-cover dark:hidden"
                     src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard light theme"
+                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
                     width="2700"
                     height="1440"
                   />
@@ -114,14 +114,14 @@
                   <img
                     class="bg-background aspect-[15/8] relative hidden rounded-lg dark:block w-full h-full object-cover"
                     src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard dark theme"
+                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
                     width="2700"
                     height="1440"
                   />
                   <img
                     class="aspect-[15/8] relative rounded-lg w-full h-full object-cover dark:hidden"
                     src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard light theme"
+                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
                     width="2700"
                     height="1440"
                   />

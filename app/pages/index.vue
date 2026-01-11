@@ -37,8 +37,14 @@
 
           <!-- Projetos Section -->
           <section id="projetos">
-            <StickyScrollCards />
+            <ProjectsSection />
           </section>
+
+          <!-- Serviços Sticky Section -->
+          <ServicesStickySection />
+
+          <!-- Development Comparison Section -->
+          <DevelopmentComparisonSection />
 
           <!-- Serviços Section -->
           <section id="servicos">
@@ -83,7 +89,9 @@ const isReady = ref(false)
 // Lazy loading dos componentes para melhor performance
 const FloatingNav = defineAsyncComponent(() => import('~/components/ui/FloatingNav.vue'))
 const HeroSection = defineAsyncComponent(() => import('~/components/HeroSection.vue'))
-const StickyScrollCards = defineAsyncComponent(() => import('~/components/ui/StickyScrollCards.vue'))
+const ProjectsSection = defineAsyncComponent(() => import('~/components/ProjectsSection.vue'))
+const ServicesStickySection = defineAsyncComponent(() => import('~/components/ServicesStickySection.vue'))
+const DevelopmentComparisonSection = defineAsyncComponent(() => import('~/components/DevelopmentComparisonSection.vue'))
 const ServicesSection = defineAsyncComponent(() => import('~/components/ServicesSection.vue'))
 const ContactSection = defineAsyncComponent(() => import('~/components/ContactSection.vue'))
 const EnhancedFooter = defineAsyncComponent(() => import('~/components/EnhancedFooter.vue'))

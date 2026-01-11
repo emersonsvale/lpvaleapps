@@ -3,8 +3,8 @@
     <div class="mx-auto max-w-7xl px-2 md:px-8">
       <div class="rounded-lg bg-zinc-900/95 border border-zinc-800 shadow-xl flex flex-col md:flex-row items-stretch overflow-hidden" style="min-height:420px;">
         <div class="flex-1 flex flex-col justify-center items-center md:items-start px-8 py-12 md:py-0 md:pl-12 md:pr-0 text-center md:text-left">
-          <h2 class="text-3xl md:text-4xl font-semibold mb-4 text-white">Nossos Serviços</h2>
-          <p class="text-lg text-zinc-300 max-w-md">Oferecemos soluções completas para transformar suas ideias em aplicativos de sucesso.</p>
+          <h2 class="text-3xl md:text-4xl font-semibold mb-4 text-white">Seu projeto do começo ao fim</h2>
+          <p class="text-lg text-zinc-300 max-w-md">Oferecemos soluções completas de desenvolvimento mobile, web e automação para transformar suas ideias em aplicativos de sucesso com tecnologia de ponta.</p>
         </div>
         <div class="flex-1 flex items-center justify-center p-4 md:p-8">
           <CardSwap :width="500" :height="320" class="relative z-0">

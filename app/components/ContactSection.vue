@@ -6,7 +6,7 @@
           Vamos Criar Algo Incrível Juntos?
         </h2>
         <p class="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Transforme sua ideia em um aplicativo de sucesso. Entre em contato conosco e descubra como podemos impulsionar seu negócio.
+          Transforme sua ideia em um aplicativo mobile ou web de sucesso. Entre em contato conosco e descubra como podemos impulsionar seu negócio com desenvolvimento de alta qualidade e tecnologia moderna.
         </p>
       </div>
       
