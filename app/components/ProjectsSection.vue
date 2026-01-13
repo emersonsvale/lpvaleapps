@@ -131,6 +131,46 @@
             </div>
           </div>
         </div>
+
+        <!-- Card 4 - BroGym -->
+        <div 
+          ref="card4"
+          :style="{ opacity: cardOpacities[3] }"
+          class="group project-card"
+        >
+          <div class="relative">
+            <!-- Mockup Laptop -->
+            <div class="relative mx-auto max-w-full">
+              <div class="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg shadow-2xl group-hover:shadow-3xl transition-all duration-500 group-hover:scale-[1.02] overflow-hidden">
+                <!-- Screen -->
+                <div class="relative bg-black h-[400px]">
+                  <img 
+                    src="/Gemini_Generated_Image_8hkox38hkox38hko.png" 
+                    alt="Interface do aplicativo BroGym - Treino com IA"
+                    class="w-full h-full object-cover"
+                  />
+                  <!-- Overlay com gradiente para legibilidade do texto -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent"></div>
+                  
+                  <!-- Texto sobreposto -->
+                  <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
+                    <div class="space-y-3">
+                      <div class="flex items-center gap-3">
+                        <h3 class="text-2xl md:text-3xl font-medium text-white">BroGym: Treino com IA</h3>
+                        <a href="https://brogym.valeapps.com.br/" target="_blank" rel="noopener noreferrer" aria-label="Visitar site do BroGym" class="text-white/80 hover:text-white transition-colors">
+                          <PhArrowSquareOut :size="20" />
+                        </a>
+                      </div>
+                      <p class="text-white/90 text-base md:text-lg leading-relaxed max-w-2xl">
+                        O BroGym é uma aplicação mobile desenvolvida para preencher a lacuna entre o treino amador e a orientação profissional. O objetivo foi criar uma solução escalável onde a Inteligência Artificial atua como um personal trainer, adaptando rotinas de exercícios baseadas no feedback diário do usuário.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -146,13 +186,14 @@ import {
 const card1 = ref<HTMLElement>()
 const card2 = ref<HTMLElement>()
 const card3 = ref<HTMLElement>()
+const card4 = ref<HTMLElement>()
 
 // Opacidades dos cards (inicialmente todos visíveis)
-const cardOpacities = ref([1, 1, 1])
+const cardOpacities = ref([1, 1, 1, 1])
 
 // Função para calcular opacidade baseada na posição do scroll
 const updateCardOpacities = () => {
-  const cards = [card1, card2, card3]
+  const cards = [card1, card2, card3, card4]
   const viewportHeight = window.innerHeight
   const scrollY = window.scrollY
 
