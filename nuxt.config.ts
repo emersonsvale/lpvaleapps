@@ -34,7 +34,9 @@ export default defineNuxtConfig({
   // Configurações de servidor para produção
   runtimeConfig: {
     public: {
-      baseURL: 'https://valeapps.com.br'
+      baseURL: 'https://valeapps.com.br',
+      supabaseUrl: '',
+      supabaseAnonKey: ''
     }
   },
 

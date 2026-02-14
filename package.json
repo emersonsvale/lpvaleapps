@@ -13,6 +13,7 @@
   "dependencies": {
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@phosphor-icons/vue": "^2.2.1",
+    "@supabase/supabase-js": "^2.95.3",
     "@types/three": "^0.182.0",
     "@vueuse/core": "^14.1.0",
     "@vueuse/motion": "^3.0.3",
