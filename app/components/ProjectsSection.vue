@@ -50,20 +50,45 @@
                   <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
                   <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
                     <div class="space-y-3">
-                      <div class="flex items-center gap-3">
+                      <div class="flex items-center gap-3 flex-wrap">
                         <h3 class="text-2xl md:text-3xl font-medium text-white">
                           {{ projeto.titulo ?? 'Projeto' }}
                         </h3>
-                        <a
-                          v-if="projeto.link_web"
-                          :href="projeto.link_web"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          :aria-label="`Visitar site do ${projeto.titulo ?? 'projeto'}`"
-                          class="text-white/80 hover:text-white transition-colors"
-                        >
-                          <PhArrowSquareOut :size="20" />
-                        </a>
+                        <div v-if="hasAnyLink(projeto)" class="flex items-center gap-2">
+                          <a
+                            v-if="projeto.link_web"
+                            :href="projeto.link_web"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :aria-label="`Visitar site do ${projeto.titulo ?? 'projeto'}`"
+                            class="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                            title="Visitar site"
+                          >
+                            <PhGlobe :size="20" />
+                          </a>
+                          <a
+                            v-if="projeto.link_google"
+                            :href="projeto.link_google"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :aria-label="`Abrir na Google Play: ${projeto.titulo ?? 'projeto'}`"
+                            class="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                            title="Google Play"
+                          >
+                            <PhGooglePlayLogo :size="20" />
+                          </a>
+                          <a
+                            v-if="projeto.link_apple"
+                            :href="projeto.link_apple"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :aria-label="`Abrir na App Store: ${projeto.titulo ?? 'projeto'}`"
+                            class="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                            title="App Store"
+                          >
+                            <PhAppleLogo :size="20" />
+                          </a>
+                        </div>
                       </div>
                       <p class="text-white/90 text-base md:text-lg leading-relaxed max-w-2xl line-clamp-4">
                         {{ projeto.descricao ?? '' }}
@@ -82,7 +107,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { PhArrowSquareOut } from '@phosphor-icons/vue'
+import { PhGlobe, PhGooglePlayLogo, PhAppleLogo } from '@phosphor-icons/vue'
 import type { Projeto } from '~/composables/useProjetos'
 
 const { data: projetosData, pending } = await useAsyncData('projetos-section', () => useProjetos())
@@ -96,6 +121,10 @@ function imageUrl(projeto: Projeto): string | null {
   const imgs = projeto.imgens
   if (Array.isArray(imgs) && imgs.length > 0) return imgs[0]
   return null
+}
+
+function hasAnyLink(projeto: Projeto): boolean {
+  return !!(projeto.link_web?.trim() || projeto.link_google?.trim() || projeto.link_apple?.trim())
 }
 
 function updateCardOpacities() {
