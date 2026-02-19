@@ -2,7 +2,12 @@
   <section class="relative bg-background">
     <!-- Header Section -->
     <div class="container mx-auto px-6 pb-2 pt-6">
-      <div class="text-center max-w-4xl mx-auto">
+      <div
+        v-motion
+        :initial="headerReveal.initial"
+        :visible-once="headerReveal.visibleOnce"
+        class="text-center max-w-4xl mx-auto"
+      >
         <p class="text-sm uppercase tracking-wider text-brand mb-4">
           TUDO QUE FAZEMOS FAZEMOS INTENSAMENTE
         </p>
@@ -280,6 +285,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { sectionTitleReveal } from '~/composables/useScrollRevealVariants'
 import {
   PhSquaresFour,
   PhGear,
@@ -293,6 +299,8 @@ import {
   PhChartLineUp,
   PhCpu
 } from '@phosphor-icons/vue'
+
+const headerReveal = sectionTitleReveal
 
 const section1 = ref<HTMLElement>()
 const section2 = ref<HTMLElement>()

@@ -3,7 +3,12 @@
     <div class="max-w-7xl mx-auto p-8 md:p-14 z-40 relative">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 lg:gap-16 pb-12">
         <!-- Brand section -->
-        <div class="flex flex-col space-y-4">
+        <div
+          v-motion
+          :initial="footerCol.initial"
+          :visible-once="footerCol.visibleOnce"
+          class="flex flex-col space-y-4"
+        >
           <div class="flex items-center space-x-2">
             <Logo class="h-8" />
           </div>
@@ -13,7 +18,11 @@
         </div>
 
         <!-- Services section -->
-        <div>
+        <div
+          v-motion
+          :initial="footerCol.initial"
+          :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 60 } }"
+        >
           <h4 class="text-white text-lg font-semibold mb-6">Serviços</h4>
           <ul class="space-y-3">
             <li v-for="service in services" :key="service.label" class="relative">
@@ -28,7 +37,11 @@
         </div>
 
         <!-- Company section -->
-        <div>
+        <div
+          v-motion
+          :initial="footerCol.initial"
+          :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 120 } }"
+        >
           <h4 class="text-white text-lg font-semibold mb-6">Empresa</h4>
           <ul class="space-y-3">
             <li v-for="link in companyLinks" :key="link.label">
@@ -43,7 +56,11 @@
         </div>
 
         <!-- Contact section -->
-        <div>
+        <div
+          v-motion
+          :initial="footerCol.initial"
+          :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 180 } }"
+        >
           <h4 class="text-white text-lg font-semibold mb-6">Contato</h4>
           <ul class="space-y-4">
             <li v-for="(item, i) in contactInfo" :key="i" class="flex items-center space-x-3">
@@ -115,16 +132,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { 
-  Mail, 
-  Globe 
-} from 'lucide-vue-next'
+import { useRevealFade } from '~/composables/useScrollRevealVariants'
+import { Mail, Globe } from 'lucide-vue-next'
 import { PhInstagramLogo, PhLinkedinLogo, PhWhatsappLogo } from '@phosphor-icons/vue'
 import { PhHeart, PhCoffee } from '@phosphor-icons/vue'
 import Logo from '~/components/ui/Logo.vue'
 import TextHoverEffect from '~/components/ui/TextHoverEffect.vue'
 import FooterBackgroundGradient from '~/components/ui/FooterBackgroundGradient.vue'
+
+const footerCol = useRevealFade()
 
 // Services data
 const services = [

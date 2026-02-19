@@ -1,7 +1,12 @@
 <template>
   <section class="py-20 relative overflow-hidden">
     <div class="container mx-auto px-6">
-      <div class="text-center mb-16">
+      <div
+        v-motion
+        :initial="sectionTitleReveal.initial"
+        :visible-once="sectionTitleReveal.visibleOnce"
+        class="text-center mb-16"
+      >
         <h2 class="text-4xl md:text-5xl font-medium mb-6">
           Vamos Criar Algo Incrível Juntos?
         </h2>
@@ -9,9 +14,13 @@
           Transforme sua ideia em um aplicativo mobile ou web de sucesso. Entre em contato conosco e descubra como podemos impulsionar seu negócio com desenvolvimento de alta qualidade e tecnologia moderna.
         </p>
       </div>
-      
-      
-      <div class="text-center">
+
+      <div
+        v-motion
+        :initial="ctaReveal.initial"
+        :visible-once="ctaReveal.visibleOnce"
+        class="text-center"
+      >
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <a 
             href="https://wa.me/5511969210065?text=Olá! Gostaria de começar meu projeto com a Vale Apps."
@@ -31,5 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhRocket } from '@phosphor-icons/vue'
+import { sectionTitleReveal, useRevealFadeUp } from '~/composables/useScrollRevealVariants'
+
+const ctaReveal = useRevealFadeUp({ y: 20 })
 </script>

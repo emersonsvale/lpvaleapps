@@ -1,7 +1,12 @@
 <template>
   <section class="py-20">
     <div class="container mx-auto px-6">
-      <div class="text-center mb-16">
+      <div
+        v-motion
+        :initial="sectionTitleReveal.initial"
+        :visible-once="sectionTitleReveal.visibleOnce"
+        class="text-center mb-16"
+      >
         <h2 class="text-4xl md:text-5xl font-medium mb-6">
           Cases incríveis <span class="block">que construímos</span>
         </h2>
@@ -29,6 +34,9 @@
         <div
           v-for="(projeto, index) in projetos"
           :key="projeto.id"
+          v-motion
+          :initial="cardReveal.initial"
+          :visible-once="{ ...cardReveal.visibleOnce, transition: { ...cardReveal.visibleOnce.transition, delay: index * 80 } }"
           :data-index="index"
           :style="{ opacity: cardOpacities[index] ?? 1 }"
           class="group project-card"
@@ -108,7 +116,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { PhGlobe, PhGooglePlayLogo, PhAppleLogo } from '@phosphor-icons/vue'
+import { sectionTitleReveal, useRevealFadeUpStagger } from '~/composables/useScrollRevealVariants'
 import type { Projeto } from '~/composables/useProjetos'
+
+const cardReveal = useRevealFadeUpStagger(0)
 
 const { data: projetosData, pending } = await useAsyncData('projetos-section', () => useProjetos())
 const projetos = computed(() => projetosData.value ?? [])

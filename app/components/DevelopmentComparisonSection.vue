@@ -1,7 +1,12 @@
 <template>
   <section class="py-20 relative overflow-hidden bg-background">
     <div class="container mx-auto px-6">
-      <div class="max-w-4xl mx-auto text-center mb-12">
+      <div
+        v-motion
+        :initial="sectionTitleReveal.initial"
+        :visible-once="sectionTitleReveal.visibleOnce"
+        class="max-w-4xl mx-auto text-center mb-12"
+      >
         <h2 class="text-4xl md:text-6xl font-medium mb-6">
           Acelere seu desenvolvimento
         </h2>
@@ -13,7 +18,12 @@
       <!-- Comparison Timelines -->
       <div class="max-w-6xl mx-auto space-y-16">
         <!-- Vale Apps Timeline -->
-        <div class="space-y-6">
+        <div
+          v-motion
+          :initial="timelineReveal.initial"
+          :visible-once="timelineReveal.visibleOnce"
+          class="space-y-6"
+        >
           <h3 class="text-2xl font-medium">Desenvolvimento Vale Apps</h3>
           <div class="relative pt-8 pb-16">
             <!-- Timeline Base Line -->
@@ -59,7 +69,12 @@
         </div>
 
         <!-- Regular Development Timeline -->
-        <div class="space-y-6">
+        <div
+          v-motion
+          :initial="timelineReveal.initial"
+          :visible-once="timelineReveal.visibleOnce"
+          class="space-y-6"
+        >
           <h3 class="text-2xl font-medium text-muted-foreground">Desenvolvimento Regular</h3>
           <div class="relative pt-8 pb-16">
             <!-- Timeline Base Line -->
@@ -95,7 +110,9 @@
 </template>
 
 <script setup lang="ts">
-// Componente de comparação de desenvolvimento
+import { sectionTitleReveal, useRevealFadeUpStagger } from '~/composables/useScrollRevealVariants'
+
+const timelineReveal = useRevealFadeUpStagger(100)
 </script>
 
 <style scoped>

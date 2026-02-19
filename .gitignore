@@ -1,5 +1,5 @@
 # Nuxt dev/build outputs
-# .output  # Temporariamente comentado para deploy pré-buildado
+.output
 .data
 .nuxt
 .nitro
