@@ -1,38 +1,39 @@
-# Dockerfile otimizado para build pré-pronto - Vale Apps
-# Simplesmente copia o build já feito localmente
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
-FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Criar usuário não-root para segurança
+# Passo crítico: copiar os arquivos de dependência explicitamente
+COPY package.json package-lock.json ./
+
+# Instalação rigorosa
+RUN npm ci
+
+# Copia o restante do código
+COPY . .
+
+# Build do Nuxt
+RUN npm run build
+
+# Stage 2: Production
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Usuário não-root para segurança
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nuxtjs
 
-# Copiar apenas o package.json para instalar dependências de produção
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# Copia apenas o necessário para execução
+COPY --from=builder /app/.output ./.output
+COPY --from=builder /app/package.json ./package.json
 
-# Copiar o build já pronto (.output contém tudo)
-COPY --chown=nuxtjs:nodejs .output ./.output
-
-# Configurações de ambiente otimizadas
 ENV NODE_ENV=production
-ENV NITRO_PORT=3000
-ENV NITRO_HOST=0.0.0.0
-ENV NITRO_PRESET=node-server
-ENV NITRO_SERVE_STATIC=true
 ENV PORT=3000
 ENV HOST=0.0.0.0
 
-# Otimizações de performance
-ENV NODE_OPTIONS="--max-old-space-size=1024"
-ENV UV_THREADPOOL_SIZE=4
-
-# Usar usuário não-root
 USER nuxtjs
 
-# Expor porta
 EXPOSE 3000
 
-# Comando para rodar o servidor
 CMD ["node", ".output/server/index.mjs"]

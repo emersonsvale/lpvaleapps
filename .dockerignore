@@ -1,66 +1,11 @@
-# .dockerignore para build pré-pronto
-# Ignora tudo exceto o que precisamos
-
-# Código fonte (não precisamos, já está buildado)
-app/
-assets/
-components/
-layouts/
-middleware/
-pages/
-plugins/
-server/
-utils/
-
-# Arquivos de configuração de desenvolvimento
-nuxt.config.ts
-tailwind.config.ts
-tsconfig.json
-*.config.js
-*.config.ts
-
-# Dependências (serão instaladas no container)
-node_modules/
-
-# Arquivos de build temporários
-.nuxt/
-.nitro/
-.cache/
-dist/
-
-# Logs
-*.log
-logs/
-
-# Arquivos de ambiente (usar .env.example se necessário)
-.env*
-!.env.example
-
-# Arquivos de desenvolvimento
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Git
-.git/
+.git
 .gitignore
-
-# Documentação (não necessária no container)
-*.md
-!README.md
-
-# Scripts de desenvolvimento
-scripts/
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Manter apenas:
-# - package.json e package-lock.json (para instalar deps)
-# - .output/ (build pronto)
-# - Dockerfile.prebuilt
+.nuxt
+.output
+dist
+node_modules
+*.log
+npm-debug.log
+.env
+README.md
+.cursor
