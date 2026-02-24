@@ -1,107 +1,123 @@
 <template>
-  <section class="py-20">
+  <section class="py-20 md:py-32">
     <div class="container mx-auto px-6">
       <div
         v-motion
         :initial="sectionTitleReveal.initial"
         :visible-once="sectionTitleReveal.visibleOnce"
-        class="text-center mb-16"
+        class="text-center mb-16 md:mb-20"
       >
-        <h2 class="text-4xl md:text-5xl font-medium mb-6">
-          Cases incríveis <span class="block">que construímos</span>
+        <p class="text-sm uppercase tracking-widest text-brand mb-4 font-medium">Portfólio</p>
+        <h2 class="text-4xl md:text-6xl font-medium mb-6 leading-tight">
+          Cases que <span class="text-brand">transformam</span> <span class="block">negócios</span>
         </h2>
-        <p class="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Conheça alguns dos aplicativos mobile e web que desenvolvemos e como ajudamos nossos clientes a alcançar seus objetivos digitais com tecnologia de ponta.
+        <p class="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          Conheça os aplicativos e plataformas que desenvolvemos para nossos clientes com tecnologia de ponta.
         </p>
       </div>
 
       <!-- Loading -->
-      <div v-if="pending" class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-7xl mx-auto">
-        <div v-for="i in 4" :key="i" class="rounded-lg bg-muted/30 h-[480px] animate-pulse" />
+      <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div v-for="i in 3" :key="i" class="rounded-2xl bg-muted/20 h-[520px] animate-pulse border border-white/[0.03]" />
       </div>
 
       <!-- Empty state -->
-      <p v-else-if="!projetos?.length" class="text-center text-muted-foreground py-12">
-        Nenhum projeto disponível no momento.
-      </p>
+      <div v-else-if="!projetos?.length" class="text-center py-20">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/20 flex items-center justify-center">
+          <PhBriefcase :size="28" class="text-muted-foreground" />
+        </div>
+        <p class="text-muted-foreground">Nenhum projeto disponível no momento.</p>
+      </div>
 
       <!-- Grid de projetos -->
       <div
         v-else
         ref="gridRef"
-        class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 max-w-7xl mx-auto"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto"
       >
         <div
           v-for="(projeto, index) in projetos"
           :key="projeto.id"
           v-motion
           :initial="cardReveal.initial"
-          :visible-once="{ ...cardReveal.visibleOnce, transition: { ...cardReveal.visibleOnce.transition, delay: index * 80 } }"
+          :visible-once="{ ...cardReveal.visibleOnce, transition: { ...cardReveal.visibleOnce.transition, delay: index * 100 } }"
           :data-index="index"
           :style="{ opacity: cardOpacities[index] ?? 1 }"
           class="group project-card"
         >
-          <div class="relative">
-            <div class="relative mx-auto max-w-full">
-              <div class="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg shadow-2xl group-hover:shadow-3xl transition-all duration-500 group-hover:scale-[1.02] overflow-hidden">
-                <div class="relative bg-black h-[480px]">
-                  <img
-                    v-if="imageUrl(projeto)"
-                    :src="imageUrl(projeto)!"
-                    :alt="`Interface do projeto ${projeto.titulo ?? 'Vale Apps'}`"
-                    class="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <div v-else class="w-full h-full bg-muted/50 flex items-center justify-center">
-                    <span class="text-muted-foreground text-sm">Sem imagem</span>
+          <div class="relative h-full">
+            <div class="relative bg-zinc-900/80 rounded-2xl border border-white/[0.06] shadow-xl overflow-hidden h-full transition-all duration-500 hover:border-brand/20 hover:shadow-[0_8px_40px_rgba(255,192,0,0.08)]">
+              <!-- Image container -->
+              <div class="relative h-[320px] md:h-[360px] overflow-hidden">
+                <img
+                  v-if="imageUrl(projeto)"
+                  :src="imageUrl(projeto)!"
+                  :alt="`Interface do projeto ${projeto.titulo ?? 'Vale Apps'}`"
+                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div v-else class="w-full h-full bg-muted/20 flex items-center justify-center">
+                  <PhImage :size="40" class="text-muted-foreground/40" />
+                </div>
+                <!-- Gradient overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-500" />
+                
+                <!-- Links floating top-right -->
+                <div v-if="hasAnyLink(projeto)" class="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                  <a
+                    v-if="projeto.link_web"
+                    :href="projeto.link_web"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    :aria-label="`Visitar site do ${projeto.titulo ?? 'projeto'}`"
+                    class="p-2 rounded-xl bg-black/40 backdrop-blur-sm text-white/80 hover:text-brand hover:bg-black/60 transition-all duration-200 border border-white/10"
+                    title="Visitar site"
+                  >
+                    <PhGlobe :size="18" />
+                  </a>
+                  <a
+                    v-if="projeto.link_google"
+                    :href="projeto.link_google"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    :aria-label="`Abrir na Google Play: ${projeto.titulo ?? 'projeto'}`"
+                    class="p-2 rounded-xl bg-black/40 backdrop-blur-sm text-white/80 hover:text-brand hover:bg-black/60 transition-all duration-200 border border-white/10"
+                    title="Google Play"
+                  >
+                    <PhGooglePlayLogo :size="18" />
+                  </a>
+                  <a
+                    v-if="projeto.link_apple"
+                    :href="projeto.link_apple"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    :aria-label="`Abrir na App Store: ${projeto.titulo ?? 'projeto'}`"
+                    class="p-2 rounded-xl bg-black/40 backdrop-blur-sm text-white/80 hover:text-brand hover:bg-black/60 transition-all duration-200 border border-white/10"
+                    title="App Store"
+                  >
+                    <PhAppleLogo :size="18" />
+                  </a>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="p-6 md:p-7">
+                <h3 class="text-xl md:text-2xl font-semibold text-white mb-2 group-hover:text-brand transition-colors duration-300">
+                  {{ projeto.titulo ?? 'Projeto' }}
+                </h3>
+                <p class="text-zinc-400 text-sm md:text-base leading-relaxed line-clamp-3">
+                  {{ projeto.descricao ?? '' }}
+                </p>
+                
+                <!-- Bottom bar -->
+                <div class="mt-5 pt-4 border-t border-white/[0.05] flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-xs text-zinc-500 font-medium uppercase tracking-wider">No ar</span>
                   </div>
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
-                  <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
-                    <div class="space-y-3">
-                      <div class="flex items-center gap-3 flex-wrap">
-                        <h3 class="text-2xl md:text-3xl font-medium text-white">
-                          {{ projeto.titulo ?? 'Projeto' }}
-                        </h3>
-                        <div v-if="hasAnyLink(projeto)" class="flex items-center gap-2">
-                          <a
-                            v-if="projeto.link_web"
-                            :href="projeto.link_web"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            :aria-label="`Visitar site do ${projeto.titulo ?? 'projeto'}`"
-                            class="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                            title="Visitar site"
-                          >
-                            <PhGlobe :size="20" />
-                          </a>
-                          <a
-                            v-if="projeto.link_google"
-                            :href="projeto.link_google"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            :aria-label="`Abrir na Google Play: ${projeto.titulo ?? 'projeto'}`"
-                            class="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                            title="Google Play"
-                          >
-                            <PhGooglePlayLogo :size="20" />
-                          </a>
-                          <a
-                            v-if="projeto.link_apple"
-                            :href="projeto.link_apple"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            :aria-label="`Abrir na App Store: ${projeto.titulo ?? 'projeto'}`"
-                            class="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                            title="App Store"
-                          >
-                            <PhAppleLogo :size="20" />
-                          </a>
-                        </div>
-                      </div>
-                      <p class="text-white/90 text-base md:text-lg leading-relaxed max-w-2xl line-clamp-4">
-                        {{ projeto.descricao ?? '' }}
-                      </p>
-                    </div>
+                  <div v-if="projeto.link_web" class="flex items-center gap-1 text-xs text-zinc-500 group-hover:text-brand transition-colors duration-300">
+                    <span>Ver projeto</span>
+                    <PhArrowUpRight :size="14" />
                   </div>
                 </div>
               </div>
@@ -115,7 +131,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { PhGlobe, PhGooglePlayLogo, PhAppleLogo } from '@phosphor-icons/vue'
+import { PhGlobe, PhGooglePlayLogo, PhAppleLogo, PhArrowUpRight, PhImage, PhBriefcase } from '@phosphor-icons/vue'
 import { sectionTitleReveal, useRevealFadeUpStagger } from '~/composables/useScrollRevealVariants'
 import type { Projeto } from '~/composables/useProjetos'
 

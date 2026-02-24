@@ -7,7 +7,7 @@
           v-motion
           :initial="footerCol.initial"
           :visible-once="footerCol.visibleOnce"
-          class="flex flex-col space-y-4"
+          class="flex flex-col space-y-5"
         >
           <div class="flex items-center space-x-2">
             <Logo class="h-8" />
@@ -15,6 +15,20 @@
           <p class="text-sm leading-relaxed text-muted-foreground">
             Transformamos suas ideias em aplicativos incríveis com tecnologia de ponta e design excepcional.
           </p>
+          <!-- Social icons inline with brand -->
+          <div class="flex space-x-3 pt-1">
+            <a
+              v-for="social in socialLinks"
+              :key="social.label"
+              :href="social.href"
+              :aria-label="social.label"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-brand hover:border-brand/20 hover:bg-brand/5 transition-all duration-300 relative z-50"
+            >
+              <component :is="social.icon" :size="16" />
+            </a>
+          </div>
         </div>
 
         <!-- Services section -->
@@ -23,12 +37,12 @@
           :initial="footerCol.initial"
           :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 60 } }"
         >
-          <h4 class="text-white text-lg font-semibold mb-6">Serviços</h4>
+          <h4 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Serviços</h4>
           <ul class="space-y-3">
             <li v-for="service in services" :key="service.label" class="relative">
               <a
                 :href="service.href"
-                class="hover:text-brand transition-colors text-muted-foreground"
+                class="text-sm hover:text-brand transition-colors text-muted-foreground hover:translate-x-0.5 inline-block transition-transform duration-200"
               >
                 {{ service.label }}
               </a>
@@ -42,12 +56,12 @@
           :initial="footerCol.initial"
           :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 120 } }"
         >
-          <h4 class="text-white text-lg font-semibold mb-6">Empresa</h4>
+          <h4 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Empresa</h4>
           <ul class="space-y-3">
             <li v-for="link in companyLinks" :key="link.label">
               <a
                 :href="link.href"
-                class="hover:text-brand transition-colors text-muted-foreground"
+                class="text-sm hover:text-brand transition-colors text-muted-foreground hover:translate-x-0.5 inline-block transition-transform duration-200"
               >
                 {{ link.label }}
               </a>
@@ -61,20 +75,22 @@
           :initial="footerCol.initial"
           :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 180 } }"
         >
-          <h4 class="text-white text-lg font-semibold mb-6">Contato</h4>
+          <h4 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Contato</h4>
           <ul class="space-y-4">
             <li v-for="(item, i) in contactInfo" :key="i" class="flex items-center space-x-3">
-              <component :is="item.icon" :size="18" class="text-brand" />
+              <div class="w-8 h-8 rounded-lg bg-brand/5 flex items-center justify-center flex-shrink-0">
+                <component :is="item.icon" :size="16" class="text-brand" />
+              </div>
               <a
                 v-if="item.href"
                 :href="item.href"
-                class="hover:text-brand transition-colors text-muted-foreground"
+                class="text-sm hover:text-brand transition-colors text-muted-foreground"
               >
                 {{ item.text }}
               </a>
               <span
                 v-else
-                class="hover:text-brand transition-colors text-muted-foreground"
+                class="text-sm text-muted-foreground"
               >
                 {{ item.text }}
               </span>
@@ -83,41 +99,36 @@
         </div>
       </div>
 
-<hr class="border-t border-transparent my-8" />
+      <hr class="border-t border-white/[0.04] my-8" />
 
       <!-- Footer bottom -->
       <div class="flex flex-col md:flex-row justify-between items-center text-sm space-y-4 md:space-y-0 relative z-50">
-        <!-- Social icons -->
-        <div class="flex space-x-6 text-gray-400">
-          <a
-            v-for="social in socialLinks"
-            :key="social.label"
-            :href="social.href"
-            :aria-label="social.label"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:text-brand transition-colors cursor-pointer relative z-50"
-          >
-            <component :is="social.icon" :size="20" />
-          </a>
+        <!-- Copyright -->
+        <div class="text-center md:text-left text-muted-foreground/70">
+          <p class="flex items-center gap-2 text-xs">
+            &copy; 2026 Vale Soluções Digitais LTDA
+            <span class="hidden sm:inline mx-1 text-white/10">|</span>
+            <span class="hidden sm:inline">61.712.285/0001-88</span>
+          </p>
         </div>
 
-        <!-- Copyright -->
-        <div class="text-center md:text-left text-muted-foreground">
-          <p class="flex items-center gap-2 mb-2">
-            &copy; 2025 Vale Soluções Digitais LTDA - 61.712.285/0001-88
-            <span class="mx-2">•</span>
-            Feito com <PhHeart :size="16" class="text-red-500" /> e muito <PhCoffee :size="16" class="text-amber-600" />
-          </p>
-          <p class="text-sm flex gap-4">
-            <NuxtLink to="/politica-privacidade" class="hover:text-brand transition-colors">
-              Política de Privacidade
-            </NuxtLink>
-            <span>•</span>
-            <NuxtLink to="/termos-servicos" class="hover:text-brand transition-colors">
-              Termos de Serviços
-            </NuxtLink>
-          </p>
+        <!-- Legal links -->
+        <div class="flex items-center gap-4 text-xs text-muted-foreground/60">
+          <NuxtLink to="/politica-privacidade" class="hover:text-brand transition-colors">
+            Política de Privacidade
+          </NuxtLink>
+          <span class="text-white/10">|</span>
+          <NuxtLink to="/termos-servicos" class="hover:text-brand transition-colors">
+            Termos de Serviços
+          </NuxtLink>
+        </div>
+
+        <!-- Made with -->
+        <div class="flex items-center gap-1.5 text-xs text-muted-foreground/50">
+          <span>Feito com</span>
+          <PhHeart :size="12" weight="fill" class="text-red-500" />
+          <span>e muito</span>
+          <PhCoffee :size="12" class="text-amber-600" />
         </div>
       </div>
     </div>
@@ -142,21 +153,19 @@ import FooterBackgroundGradient from '~/components/ui/FooterBackgroundGradient.v
 
 const footerCol = useRevealFade()
 
-// Services data
 const services = [
-  { label: 'Desenvolvimento Mobile', href: '#' },
-  { label: 'Aplicações Web', href: '#' },
-  { label: 'UI/UX Design', href: '#' },
+  { label: 'Desenvolvimento Mobile', href: '#servicos' },
+  { label: 'Aplicações Web', href: '#servicos' },
+  { label: 'UI/UX Design', href: '#servicos' },
+  { label: 'Automação & IA', href: '#servicos' },
 ]
 
-// Company links data
 const companyLinks = [
-
+  { label: 'Projetos', href: '#projetos' },
   { label: 'Política de Privacidade', href: '/politica-privacidade' },
   { label: 'Termos de Serviços', href: '/termos-servicos' },
 ]
 
-// Contact info data
 const contactInfo = [
   {
     icon: Mail,
@@ -170,7 +179,6 @@ const contactInfo = [
   },
 ]
 
-// Social media icons
 const socialLinks = [
   { icon: PhInstagramLogo, label: 'Instagram', href: 'https://www.instagram.com/valeappss/' },
   { icon: PhLinkedinLogo, label: 'LinkedIn', href: 'https://www.linkedin.com/company/valeapps/' },

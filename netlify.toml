@@ -1,0 +1,6 @@
+# Fallback para rotas dinâmicas da proposta (SPA)
+[[redirects]]
+  from = "/proposta/*"
+  to = "/index.html"
+  status = 200
+  force = true

@@ -1,43 +1,52 @@
 <template>
   <div
     :class="cn(
-      'flex max-w-fit fixed top-10 inset-x-0 mx-auto border border-transparent dark:border-white/[0.2] rounded-full dark:bg-black/40 bg-white/80 backdrop-blur-md shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] z-[5000] pr-2 pl-4 py-2 items-center justify-center space-x-4',
+      'flex max-w-fit fixed inset-x-0 mx-auto border border-transparent dark:border-white/[0.08] rounded-full dark:bg-black/60 bg-white/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.15)] z-[5000] pr-2 pl-4 py-2 items-center justify-center space-x-1 sm:space-x-3 transition-all duration-500',
+      isScrolled ? 'top-4' : 'top-8',
       className
     )"
   >
     <!-- Logo -->
-    <NuxtLink to="/" class="flex items-center">
-      <Logo className="h-3" />
+    <NuxtLink to="/" class="flex items-center mr-1 sm:mr-2" @click.prevent="scrollToTop">
+      <Logo className="h-3.5" />
     </NuxtLink>
+
+    <!-- Separator -->
+    <div class="w-px h-4 bg-white/10 hidden sm:block"></div>
     
     <NuxtLink
       v-for="(navItem, idx) in navItems"
       :key="`link-${idx}`"
       :to="navItem.link"
       :class="cn(
-        'relative dark:text-neutral-50 items-center flex space-x-1 text-neutral-600 dark:hover:text-neutral-300 hover:text-neutral-500 transition-colors'
+        'relative items-center flex space-x-1 px-3 py-1.5 rounded-full transition-all duration-300',
+        activeSection === navItem.link 
+          ? 'text-brand bg-brand/10' 
+          : 'dark:text-neutral-400 text-neutral-500 dark:hover:text-neutral-200 hover:text-neutral-700 hover:bg-white/5'
       )"
+      @click.prevent="scrollToSection(navItem.link)"
     >
       <span class="block sm:hidden">
         <component :is="navItem.icon" v-if="navItem.icon" class="h-4 w-4" />
       </span>
-      <span class="hidden sm:block text-sm">{{ navItem.name }}</span>
+      <span class="hidden sm:block text-sm font-medium">{{ navItem.name }}</span>
     </NuxtLink>
     
     <a 
       href="https://wa.me/5511969210065?text=Olá! Gostaria de saber mais sobre os serviços da Vale Apps."
       target="_blank"
       rel="noopener noreferrer"
-      class="border text-sm font-medium relative border-neutral-200 dark:border-white/[0.2] text-black dark:text-white px-4 py-2 rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
+      class="relative text-sm font-semibold bg-brand text-black px-4 py-2 rounded-full hover:bg-brand/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,192,0,0.25)] flex items-center gap-1.5"
     >
-      <span>Fale Conosco</span>
-      <span class="absolute inset-x-0 w-1/2 mx-auto -bottom-px bg-gradient-to-r from-transparent via-brand to-transparent h-px" />
+      <PhWhatsappLogo :size="16" weight="bold" />
+      <span class="hidden sm:inline">Fale Conosco</span>
     </a>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Component } from 'vue'
+import { ref, onMounted, onUnmounted, type Component } from 'vue'
+import { PhWhatsappLogo } from '@phosphor-icons/vue'
 import Logo from '~/components/ui/Logo.vue'
 
 interface NavItem {
@@ -55,8 +64,55 @@ const props = withDefaults(defineProps<Props>(), {
   className: ''
 })
 
-// Utility function for class names (similar to clsx/cn)
+const activeSection = ref('#inicio')
+const isScrolled = ref(false)
+
 const cn = (...classes: (string | undefined | null | false)[]) => {
   return classes.filter(Boolean).join(' ')
 }
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const scrollToSection = (link: string) => {
+  const id = link.replace('#', '')
+  const el = document.getElementById(id)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+const updateActiveSection = () => {
+  isScrolled.value = window.scrollY > 50
+
+  const sections = props.navItems.map(item => ({
+    id: item.link,
+    el: document.getElementById(item.link.replace('#', ''))
+  })).filter(s => s.el)
+
+  const scrollPos = window.scrollY + window.innerHeight / 3
+
+  for (let i = sections.length - 1; i >= 0; i--) {
+    const section = sections[i]
+    if (section.el && section.el.offsetTop <= scrollPos) {
+      activeSection.value = section.id
+      break
+    }
+  }
+}
+
+let scrollListener: (() => void) | null = null
+
+onMounted(() => {
+  updateActiveSection()
+  scrollListener = () => requestAnimationFrame(updateActiveSection)
+  window.addEventListener('scroll', scrollListener, { passive: true })
+})
+
+onUnmounted(() => {
+  if (scrollListener) {
+    window.removeEventListener('scroll', scrollListener)
+  }
+})
 </script>

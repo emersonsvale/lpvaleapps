@@ -25,9 +25,10 @@ export default defineNuxtConfig({
     minify: true,
     preset: 'node-server',
     serveStatic: true,
-    // Regras de cache para arquivos estáticos
+    // Regras de cache: estáticos longos; propostas dinâmicas sem cache longo
     routeRules: {
       '/': { headers: { 'Cache-Control': 's-maxage=31536000' } },
+      '/proposta/**': { prerender: false, headers: { 'Cache-Control': 'no-cache' } },
       '/**': { headers: { 'Cache-Control': 'max-age=31536000, immutable' } }
     }
   },

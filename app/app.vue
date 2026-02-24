@@ -11,7 +11,9 @@
     </noscript>
     <!-- End Google Tag Manager (noscript) -->
     
-    <NuxtPage />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </div>
 </template>
 

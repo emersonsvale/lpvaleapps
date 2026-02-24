@@ -76,24 +76,24 @@
     }
 
     .dark {
-        --background: 222.2 84% 4.9%;
+        --background: 220 20% 4%;
         --foreground: 210 40% 98%;
-        --card: 222.2 84% 4.9%;
+        --card: 220 20% 4%;
         --card-foreground: 210 40% 98%;
-        --popover: 222.2 84% 4.9%;
+        --popover: 220 20% 4%;
         --popover-foreground: 210 40% 98%;
         --primary: 210 40% 98%;
         --primary-foreground: 222.2 47.4% 11.2%;
-        --secondary: 217.2 32.6% 17.5%;
+        --secondary: 220 14% 10%;
         --secondary-foreground: 210 40% 98%;
-        --muted: 217.2 32.6% 17.5%;
-        --muted-foreground: 215 20.2% 65.1%;
-        --accent: 217.2 32.6% 17.5%;
+        --muted: 220 14% 10%;
+        --muted-foreground: 215 20.2% 55%;
+        --accent: 220 14% 10%;
         --accent-foreground: 210 40% 98%;
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 210 40% 98%;
-        --border: 217.2 32.6% 17.5%;
-        --input: 217.2 32.6% 17.5%;
+        --border: 220 14% 12%;
+        --input: 220 14% 12%;
         --ring: 212.7 26.8% 83.9%;
     }
 
@@ -104,6 +104,9 @@
     body {
         @apply bg-background text-foreground;
         font-family: 'PP Neue Montreal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
     }
 
     html.dark {
@@ -113,6 +116,12 @@
     html.dark body {
         background-color: hsl(var(--background));
         color: hsl(var(--foreground));
+    }
+
+    /* Better selection color */
+    ::selection {
+        background: rgba(255, 192, 0, 0.2);
+        color: inherit;
     }
 }
 
@@ -132,19 +141,85 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Enhanced focus styles */
+*:focus-visible {
+    outline: 2px solid rgba(255, 192, 0, 0.5);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Proposta card */
+.proposta-card {
+    @apply rounded-xl border border-border bg-card/50 p-5 sm:p-6 backdrop-blur-sm transition-colors duration-200;
+}
+
+/* Proposta markdown prose */
+.proposta-prose {
+    @apply text-foreground/90 text-sm sm:text-base leading-relaxed;
+}
+
+.proposta-prose h2 {
+    @apply text-lg sm:text-xl font-semibold text-foreground mt-8 mb-3 first:mt-0;
+}
+
+.proposta-prose h3 {
+    @apply text-base sm:text-lg font-medium text-foreground mt-6 mb-2;
+}
+
+.proposta-prose p {
+    @apply mb-4 last:mb-0;
+}
+
+.proposta-prose ul,
+.proposta-prose ol {
+    @apply mb-4 pl-5 space-y-1.5;
+}
+
+.proposta-prose ul {
+    @apply list-disc;
+}
+
+.proposta-prose ol {
+    @apply list-decimal;
+}
+
+.proposta-prose li {
+    @apply text-foreground/85;
+}
+
+.proposta-prose strong {
+    @apply font-semibold text-brand;
+}
+
+.proposta-prose hr {
+    @apply my-6 border-border;
+}
+
+.proposta-prose a {
+    @apply text-brand underline underline-offset-2 hover:text-brand-300 transition-colors;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 
 ::-webkit-scrollbar-track {
-    @apply bg-neutral-100 dark:bg-neutral-800;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    @apply bg-neutral-300 dark:bg-neutral-600 rounded-full;
+    @apply bg-white/10 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    @apply bg-neutral-400 dark:bg-neutral-500;
+    @apply bg-white/20;
+}
+
+/* Smooth transitions for all interactive elements */
+@layer utilities {
+    .transition-gpu {
+        will-change: transform;
+        transform: translateZ(0);
+    }
 }
