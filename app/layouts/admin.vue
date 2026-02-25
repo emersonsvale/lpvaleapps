@@ -32,6 +32,9 @@ const pageTitle = computed(() => {
   if (path === '/admin/propostas') return 'Propostas'
   if (path === '/admin/propostas/nova') return 'Nova Proposta'
   if (path.match(/^\/admin\/propostas\/editar\/\d+$/)) return 'Editar Proposta'
+  if (path === '/admin/clientes') return 'CRM Clientes'
+  if (path === '/admin/clientes/novo') return 'Novo Cliente'
+  if (path.match(/^\/admin\/clientes\/editar\/\d+$/)) return 'Editar Cliente'
   return 'Admin'
 })
 
@@ -48,6 +51,12 @@ const breadcrumbs = computed(() => {
   if (path.startsWith('/admin/propostas')) {
     list.push({ label: 'Propostas', path: '/admin/propostas' })
     if (path === '/admin/propostas/nova') list.push({ label: 'Nova' })
+    else if (path.match(/\/editar\/\d+$/)) list.push({ label: 'Editar' })
+    return list
+  }
+  if (path.startsWith('/admin/clientes')) {
+    list.push({ label: 'CRM Clientes', path: '/admin/clientes' })
+    if (path === '/admin/clientes/novo') list.push({ label: 'Novo' })
     else if (path.match(/\/editar\/\d+$/)) list.push({ label: 'Editar' })
   }
   return list

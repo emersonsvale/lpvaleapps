@@ -3,7 +3,7 @@
     <!-- Cards de métricas -->
     <section>
       <h2 class="sr-only">Métricas</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div
           class="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-zinc-700/80 transition-colors"
         >
@@ -41,6 +41,26 @@
             class="mt-3 inline-block text-sm text-brand hover:underline"
           >
             Ver propostas →
+          </NuxtLink>
+        </div>
+
+        <div
+          class="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-zinc-700/80 transition-colors"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-zinc-500">Clientes no CRM</p>
+              <p class="text-2xl font-semibold text-zinc-100 mt-1">{{ stats?.clientes ?? 0 }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-brand/15 flex items-center justify-center">
+              <PhUsersThree class="w-5 h-5 text-brand" />
+            </div>
+          </div>
+          <NuxtLink
+            to="/admin/clientes"
+            class="mt-3 inline-block text-sm text-brand hover:underline"
+          >
+            Ver CRM →
           </NuxtLink>
         </div>
 
@@ -135,12 +155,56 @@
         </ul>
       </div>
     </section>
+
+    <section>
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <h2 class="text-lg font-semibold text-zinc-100">Clientes recentes</h2>
+        <NuxtLink
+          to="/admin/clientes"
+          class="text-sm text-brand hover:underline"
+        >
+          Ver CRM
+        </NuxtLink>
+      </div>
+      <div
+        v-if="ultimosClientes.length === 0"
+        class="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-8 text-center text-zinc-500"
+      >
+        Nenhum cliente no CRM ainda.
+      </div>
+      <div v-else class="rounded-xl border border-zinc-800/80 bg-zinc-900/50 overflow-hidden">
+        <ul class="divide-y divide-zinc-800/80">
+          <li
+            v-for="cliente in ultimosClientes"
+            :key="cliente.id"
+            class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-zinc-800/30 transition-colors"
+          >
+            <div>
+              <p class="font-medium text-zinc-200">{{ cliente.nome }}</p>
+              <p v-if="cliente.empresa" class="text-sm text-zinc-500">{{ cliente.empresa }}</p>
+              <p class="text-xs text-zinc-500 mt-1">{{ tituloStatusCliente(cliente.status) }}</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="font-medium text-brand">{{ formatarMoeda(cliente.valor_potencial ?? 0) }}</span>
+              <NuxtLink
+                :to="`/admin/clientes/editar/${cliente.id}`"
+                class="text-sm text-zinc-400 hover:text-zinc-200"
+              >
+                Editar
+              </NuxtLink>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { CRMCliente } from '~/composables/useClientesCRM'
 import type { PropostaRow } from '~/composables/usePropostas'
-import { PhFolderOpen, PhFileText, PhPlus, PhTrendUp } from '@phosphor-icons/vue'
+import { PhFolderOpen, PhFileText, PhPlus, PhTrendUp, PhUsersThree } from '@phosphor-icons/vue'
+import { fetchCRMClientes } from '~/composables/useClientesCRM'
 import { fetchPropostas } from '~/composables/usePropostas'
 
 definePageMeta({ layout: 'admin' })
@@ -156,9 +220,11 @@ const { data: dashboardData, pending } = await useAsyncData(
       projetos = count ?? 0
     }
     const propostasList = await fetchPropostas()
+    const clientesList = await fetchCRMClientes()
     const propostas = propostasList.length
     const valorTotal = propostasList.reduce((s, p) => s + (p.valor_final ?? 0), 0)
-    return { projetos, propostas, valorTotal, propostasList }
+    const clientes = clientesList.length
+    return { projetos, propostas, valorTotal, propostasList, clientes, clientesList }
   }
 )
 
@@ -167,12 +233,14 @@ const stats = computed(() =>
     ? {
         projetos: dashboardData.value.projetos,
         propostas: dashboardData.value.propostas,
+        clientes: dashboardData.value.clientes,
         valorTotal: dashboardData.value.valorTotal
       }
     : null
 )
 
 const ultimasPropostas = computed(() => (dashboardData.value?.propostasList ?? []).slice(0, 5) as PropostaRow[])
+const ultimosClientes = computed(() => (dashboardData.value?.clientesList ?? []).slice(0, 5) as CRMCliente[])
 
 const valorTotalFormatado = computed(() => {
   const v = dashboardData.value?.valorTotal ?? 0
@@ -181,6 +249,23 @@ const valorTotalFormatado = computed(() => {
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
+}
+
+function tituloStatusCliente(status: CRMCliente['status']) {
+  switch (status) {
+    case 'contato_inicial':
+      return 'Contato inicial'
+    case 'proposta_enviada':
+      return 'Proposta enviada'
+    case 'negociacao':
+      return 'Negociação'
+    case 'fechado_ganho':
+      return 'Fechado ganho'
+    case 'fechado_perdido':
+      return 'Fechado perdido'
+    default:
+      return 'Lead'
+  }
 }
 
 function resumoFinanceiro(proposta: PropostaRow): string {

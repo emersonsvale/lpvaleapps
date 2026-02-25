@@ -67,6 +67,17 @@
             <span>Propostas</span>
           </NuxtLink>
         </li>
+        <li>
+          <NuxtLink
+            to="/admin/clientes"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+            :class="isActive('/admin/clientes') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
+            @click="open = false"
+          >
+            <PhUsersThree class="w-5 h-5 shrink-0 opacity-80" />
+            <span>CRM Clientes</span>
+          </NuxtLink>
+        </li>
       </ul>
     </nav>
 
@@ -93,7 +104,7 @@ import {
   PhChartLine,
   PhFolderOpen,
   PhFileText,
-  PhPlus,
+  PhUsersThree,
   PhSignOut
 } from '@phosphor-icons/vue'
 
