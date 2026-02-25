@@ -17,7 +17,7 @@
             </div>
           </div>
           <NuxtLink
-            to="/admin/projetos"
+            to="/admin/portifolio"
             class="mt-3 inline-block text-sm text-brand hover:underline"
           >
             Ver projetos →
@@ -107,11 +107,12 @@
             <div>
               <p class="font-medium text-zinc-200">{{ p.nome_proejeto || p.nome_cliente || 'Proposta #' + p.id }}</p>
               <p v-if="p.nome_cliente" class="text-sm text-zinc-500">{{ p.nome_cliente }}</p>
+              <p class="text-xs text-zinc-500 mt-1">
+                {{ p.tipo_proposta === 'hora' ? 'Por hora' : 'Empreitada' }}
+              </p>
             </div>
             <div class="flex items-center gap-4">
-              <span v-if="p.valor_final != null" class="font-medium text-brand">
-                {{ formatarMoeda(p.valor_final) }}
-              </span>
+              <span class="font-medium text-brand">{{ resumoFinanceiro(p) }}</span>
               <div class="flex items-center gap-2">
                 <a
                   v-if="p.slug"
@@ -180,6 +181,20 @@ const valorTotalFormatado = computed(() => {
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
+}
+
+function resumoFinanceiro(proposta: PropostaRow): string {
+  if (proposta.tipo_proposta === 'hora') {
+    const horas = proposta.total_horas ?? 0
+    const valor = proposta.valor_final ?? 0
+    return `${horas}h · ${formatarMoeda(valor)}`
+  }
+
+  if (proposta.valor_final != null) {
+    return formatarMoeda(proposta.valor_final)
+  }
+
+  return 'Sob consulta'
 }
 
 function linkProposta(slug: string) {

@@ -47,13 +47,13 @@
       <ul class="space-y-0.5 px-3">
         <li>
           <NuxtLink
-            to="/admin/projetos"
+            to="/admin/portifolio"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
-            :class="isActive('/admin/projetos') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
+            :class="isActive('/admin/portifolio') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
             @click="open = false"
           >
             <PhFolderOpen class="w-5 h-5 shrink-0 opacity-80" />
-            <span>Projetos</span>
+            <span>Portifolio</span>
           </NuxtLink>
         </li>
         <li>
@@ -68,17 +68,6 @@
           </NuxtLink>
         </li>
       </ul>
-
-      <div class="px-3 mt-4">
-        <NuxtLink
-          to="/admin/propostas/nova"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-brand/20 text-brand hover:bg-brand/30"
-          @click="open = false"
-        >
-          <PhPlus class="w-5 h-5 shrink-0" />
-          <span>Nova Proposta</span>
-        </NuxtLink>
-      </div>
     </nav>
 
     <!-- Usuário e Sair -->

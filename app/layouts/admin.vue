@@ -26,9 +26,9 @@ onMounted(() => {
 const pageTitle = computed(() => {
   const path = route.path
   if (path === '/admin') return 'Dashboard'
-  if (path === '/admin/projetos') return 'Projetos'
-  if (path === '/admin/projetos/nova') return 'Novo projeto'
-  if (path.match(/^\/admin\/projetos\/editar\/\d+$/)) return 'Editar projeto'
+  if (path === '/admin/portifolio') return 'Portifolio'
+  if (path === '/admin/portifolio/nova') return 'Novo projeto'
+  if (path.match(/^\/admin\/portifolio\/editar\/\d+$/)) return 'Editar projeto'
   if (path === '/admin/propostas') return 'Propostas'
   if (path === '/admin/propostas/nova') return 'Nova Proposta'
   if (path.match(/^\/admin\/propostas\/editar\/\d+$/)) return 'Editar Proposta'
@@ -39,9 +39,9 @@ const breadcrumbs = computed(() => {
   const path = route.path
   const list: { label: string; path?: string }[] = [{ label: 'Dashboard', path: '/admin' }]
   if (path === '/admin') return list
-  if (path.startsWith('/admin/projetos')) {
-    list.push({ label: 'Projetos', path: '/admin/projetos' })
-    if (path === '/admin/projetos/nova') list.push({ label: 'Novo' })
+  if (path.startsWith('/admin/portifolio')) {
+    list.push({ label: 'Portifolio', path: '/admin/portifolio' })
+    if (path === '/admin/portifolio/nova') list.push({ label: 'Novo' })
     else if (path.match(/\/editar\/\d+$/)) list.push({ label: 'Editar' })
     return list
   }

@@ -140,7 +140,7 @@
         {{ saving ? 'Salvando...' : (projetoId ? 'Atualizar' : 'Criar projeto') }}
       </button>
       <NuxtLink
-        to="/admin/projetos"
+        to="/admin/portifolio"
         class="px-4 py-2 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-800"
       >
         Cancelar
@@ -244,7 +244,7 @@ async function onSubmit() {
       if (!data) return
     }
     emit('success')
-    await navigateTo('/admin/projetos')
+    await navigateTo('/admin/portifolio')
   } finally {
     saving.value = false
   }

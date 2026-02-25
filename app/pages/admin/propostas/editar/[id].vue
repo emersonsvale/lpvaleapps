@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="text-2xl font-semibold text-zinc-100 mb-2">Editar Proposta</h1>
-    <p class="text-zinc-400 mb-6">Altere os dados e salve. O link para o cliente permanece o mesmo se o slug não for alterado.</p>
+    <p class="text-zinc-400 mb-6">Altere os dados da empreitada ou proposta por hora e salve. O link permanece o mesmo se o slug não mudar.</p>
     <div v-if="pending" class="text-zinc-500">Carregando...</div>
     <div v-else-if="!proposta" class="text-zinc-500">Proposta não encontrada.</div>
     <AdminPropostaForm

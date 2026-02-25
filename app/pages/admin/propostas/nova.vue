@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="text-2xl font-semibold text-zinc-100 mb-2">Nova Proposta</h1>
-    <p class="text-zinc-400 mb-6">Preencha os dados e gere o link para enviar ao cliente.</p>
+    <p class="text-zinc-400 mb-6">Escolha entre empreitada ou por hora, preencha os dados e gere o link para o cliente.</p>
     <AdminPropostaForm @success="onSuccess" />
   </div>
 </template>
