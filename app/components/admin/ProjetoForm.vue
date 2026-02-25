@@ -244,7 +244,6 @@ async function onSubmit() {
       if (!data) return
     }
     emit('success')
-    await navigateTo('/admin/portifolio')
   } finally {
     saving.value = false
   }

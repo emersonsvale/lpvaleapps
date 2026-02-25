@@ -78,6 +78,17 @@
             <span>CRM Clientes</span>
           </NuxtLink>
         </li>
+        <li>
+          <NuxtLink
+            to="/admin/emails"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+            :class="isActive('/admin/emails') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
+            @click="open = false"
+          >
+            <PhEnvelopeSimple class="w-5 h-5 shrink-0 opacity-80" />
+            <span>Emails</span>
+          </NuxtLink>
+        </li>
       </ul>
     </nav>
 
@@ -105,7 +116,8 @@ import {
   PhFolderOpen,
   PhFileText,
   PhUsersThree,
-  PhSignOut
+  PhSignOut,
+  PhEnvelopeSimple
 } from '@phosphor-icons/vue'
 
 const route = useRoute()

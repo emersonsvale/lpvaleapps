@@ -35,10 +35,19 @@ export default defineNuxtConfig({
 
   // Configurações de servidor para produção
   runtimeConfig: {
+    // Privadas (apenas server)
+    resendApiKey: '',
+    supabaseAdminKey: '',
+
     public: {
       baseURL: 'https://valeapps.com.br',
       supabaseUrl: '',
-      supabaseAnonKey: ''
+      supabaseAnonKey: '',
+
+      // Email configuration
+      senderEmail: 'noreply@valeapps.com.br',
+      supportEmail: 'contato@valeapps.com.br',
+      adminEmail: 'admin@valeapps.com.br'
     }
   },
 

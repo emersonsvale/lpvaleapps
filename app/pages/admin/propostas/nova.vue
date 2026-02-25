@@ -1,8 +1,26 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-semibold text-zinc-100 mb-2">Nova Proposta</h1>
-    <p class="text-zinc-400 mb-6">Escolha entre empreitada ou por hora, preencha os dados e gere o link para o cliente.</p>
-    <AdminPropostaForm @success="onSuccess" />
+  <div class="space-y-6">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-zinc-500">Propostas</p>
+        <h1 class="text-2xl font-semibold text-zinc-100 mt-1">Nova proposta</h1>
+        <p class="text-zinc-400 mt-2">Escolha a modalidade, preencha o escopo comercial e gere o link para o cliente.</p>
+      </div>
+      <NuxtLink
+        to="/admin/propostas"
+        class="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+      >
+        Voltar para listagem
+      </NuxtLink>
+    </div>
+
+    <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-6">
+      <AdminPropostaForm @success="onSuccess" />
+    </div>
+
+    <div class="rounded-xl border border-brand/30 bg-brand/10 p-4 text-sm text-zinc-300">
+      Dica: mantenha o nome do projeto e os valores comerciais consistentes para facilitar negociações e revisões futuras.
+    </div>
   </div>
 </template>
 

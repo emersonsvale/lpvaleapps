@@ -35,6 +35,11 @@ const pageTitle = computed(() => {
   if (path === '/admin/clientes') return 'CRM Clientes'
   if (path === '/admin/clientes/novo') return 'Novo Cliente'
   if (path.match(/^\/admin\/clientes\/editar\/\d+$/)) return 'Editar Cliente'
+  if (path === '/admin/emails') return 'Templates de Email'
+  if (path === '/admin/emails/new') return 'Novo Template'
+  if (path.match(/^\/admin\/emails\/[^/]+$/)) return 'Editar Template'
+  if (path.match(/^\/admin\/emails\/[^/]+\/preview$/)) return 'Preview do Template'
+  if (path.match(/^\/admin\/emails\/[^/]+\/test$/)) return 'Teste de Template'
   return 'Admin'
 })
 
@@ -58,6 +63,15 @@ const breadcrumbs = computed(() => {
     list.push({ label: 'CRM Clientes', path: '/admin/clientes' })
     if (path === '/admin/clientes/novo') list.push({ label: 'Novo' })
     else if (path.match(/\/editar\/\d+$/)) list.push({ label: 'Editar' })
+    return list
+  }
+  if (path.startsWith('/admin/emails')) {
+    list.push({ label: 'Templates de Email', path: '/admin/emails' })
+    if (path === '/admin/emails/new') list.push({ label: 'Novo' })
+    else if (path.match(/\/preview$/)) list.push({ label: 'Preview' })
+    else if (path.match(/\/test$/)) list.push({ label: 'Teste' })
+    else if (path.match(/^\/admin\/emails\/[^/]+$/)) list.push({ label: 'Editar' })
+    return list
   }
   return list
 })

@@ -1,15 +1,28 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-semibold text-zinc-100 mb-2">Editar projeto</h1>
-    <p class="text-zinc-400 mb-6">Altere os dados do projeto.</p>
-    <div v-if="pending" class="text-zinc-500">Carregando...</div>
-    <div v-else-if="!projeto" class="text-zinc-500">Projeto não encontrado.</div>
-    <AdminProjetoForm
-      v-else
-      :projeto-id="id"
-      :initial="projeto"
-      @success="onSuccess"
-    />
+  <div class="space-y-6">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-zinc-500">Portfólio</p>
+        <h1 class="text-2xl font-semibold text-zinc-100 mt-1">Editar projeto</h1>
+        <p class="text-zinc-400 mt-2">Atualize informações de exibição, links e posicionamento do projeto.</p>
+      </div>
+      <NuxtLink
+        to="/admin/portifolio"
+        class="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+      >
+        Voltar para listagem
+      </NuxtLink>
+    </div>
+
+    <div v-if="pending" class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 text-zinc-500">Carregando projeto...</div>
+    <div v-else-if="!projeto" class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 text-zinc-500">Projeto não encontrado.</div>
+    <div v-else class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-6">
+      <AdminProjetoForm
+        :projeto-id="id"
+        :initial="projeto"
+        @success="onSuccess"
+      />
+    </div>
   </div>
 </template>
 
