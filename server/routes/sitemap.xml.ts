@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
     const baseUrl = 'https://valeapps.com.br'
     const currentDate = new Date().toISOString().split('T')[0]
 
-    // URLs do site
+    // URLs do site (sem fragmentos # — Google os ignora)
     const urls = [
         {
             loc: baseUrl,
@@ -24,31 +24,6 @@ export default defineEventHandler(async (event) => {
             lastmod: currentDate,
             changefreq: 'monthly',
             priority: '0.3'
-        },
-        // Seções importantes da página principal
-        {
-            loc: `${baseUrl}/#inicio`,
-            lastmod: currentDate,
-            changefreq: 'weekly',
-            priority: '0.9'
-        },
-        {
-            loc: `${baseUrl}/#projetos`,
-            lastmod: currentDate,
-            changefreq: 'weekly',
-            priority: '0.8'
-        },
-        {
-            loc: `${baseUrl}/#servicos`,
-            lastmod: currentDate,
-            changefreq: 'weekly',
-            priority: '0.8'
-        },
-        {
-            loc: `${baseUrl}/#contato`,
-            lastmod: currentDate,
-            changefreq: 'weekly',
-            priority: '0.7'
         }
     ]
 

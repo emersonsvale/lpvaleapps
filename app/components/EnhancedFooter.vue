@@ -37,7 +37,8 @@
           :initial="footerCol.initial"
           :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 60 } }"
         >
-          <h4 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Serviços</h4>
+          <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Serviços</h3>
+          <nav aria-label="Serviços">
           <ul class="space-y-3">
             <li v-for="service in services" :key="service.label" class="relative">
               <a
@@ -48,6 +49,7 @@
               </a>
             </li>
           </ul>
+          </nav>
         </div>
 
         <!-- Company section -->
@@ -56,7 +58,8 @@
           :initial="footerCol.initial"
           :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 120 } }"
         >
-          <h4 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Empresa</h4>
+          <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Empresa</h3>
+          <nav aria-label="Empresa">
           <ul class="space-y-3">
             <li v-for="link in companyLinks" :key="link.label">
               <a
@@ -67,6 +70,7 @@
               </a>
             </li>
           </ul>
+          </nav>
         </div>
 
         <!-- Contact section -->
@@ -75,7 +79,7 @@
           :initial="footerCol.initial"
           :visible-once="{ ...footerCol.visibleOnce, transition: { ...footerCol.visibleOnce.transition, delay: 180 } }"
         >
-          <h4 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Contato</h4>
+          <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-6">Contato</h3>
           <ul class="space-y-4">
             <li v-for="(item, i) in contactInfo" :key="i" class="flex items-center space-x-3">
               <div class="w-8 h-8 rounded-lg bg-brand/5 flex items-center justify-center flex-shrink-0">

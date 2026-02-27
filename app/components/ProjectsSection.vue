@@ -35,7 +35,7 @@
         ref="gridRef"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto"
       >
-        <div
+        <article
           v-for="(projeto, index) in projetos"
           :key="projeto.id"
           v-motion
@@ -55,6 +55,8 @@
                   :alt="`Interface do projeto ${projeto.titulo ?? 'Vale Apps'}`"
                   class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
+                  width="600"
+                  height="360"
                 />
                 <div v-else class="w-full h-full bg-muted/20 flex items-center justify-center">
                   <PhImage :size="40" class="text-muted-foreground/40" />
@@ -123,7 +125,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </article>
       </div>
     </div>
   </section>

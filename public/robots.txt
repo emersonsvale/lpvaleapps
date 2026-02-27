@@ -20,9 +20,14 @@ Allow: /*.svg
 Disallow: /.nuxt/
 Disallow: /.output/
 Disallow: /node_modules/
-Disallow: /*.json
 Disallow: /*.map
 Disallow: /api/
+Disallow: /admin/
+
+# Permitir arquivos importantes
+Allow: /manifest.json
+Allow: /llms.txt
+Allow: /llms-full.txt
 
 # Sitemap
 Sitemap: https://valeapps.com.br/sitemap.xml
@@ -33,4 +38,4 @@ Crawl-delay: 1
 # Informações adicionais
 # Site: Vale Apps - Desenvolvimento de Aplicativos Mobile e Web
 # Contato: contato@valeapps.com.br
-# Última atualização: 2025-12-16
+# Última atualização: 2026-02-26

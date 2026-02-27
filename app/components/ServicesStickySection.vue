@@ -62,6 +62,9 @@
                   src="/6822eda0e7eeae0b4a26549b_Web App Development.avif" 
                   alt="Desenvolvimento de aplicações web modernas - SaaS, dashboards B2B e sistemas web responsivos"
                   class="w-full h-full object-cover"
+                  width="800"
+                  height="256"
+                  loading="lazy"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
               </div>
@@ -105,6 +108,9 @@
                   src="/6822eda0b0430eb3b83683ed_Mobile App Development.avif" 
                   alt="Desenvolvimento de aplicativos mobile - iOS, Android e cross-platform com Flutter e React Native"
                   class="w-full h-full object-cover"
+                  width="800"
+                  height="256"
+                  loading="lazy"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
               </div>
@@ -147,6 +153,9 @@
                   src="/68220c098ed4ed1d7d323d4c_FlutterFlow.avif"
                   alt="Automação de processos e integração entre sistemas"
                   class="w-full h-full object-cover"
+                  width="800"
+                  height="256"
+                  loading="lazy"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
               </div>
@@ -187,8 +196,11 @@
               <div class="relative h-64 w-full mt-8 overflow-hidden rounded-xl">
                 <img
                   src="/6822eda0b0430eb3b83683ed_Mobile App Development.avif"
-                  alt="Soluções com Inteligência Artificial"
+                  alt="Soluções com Inteligência Artificial - IA aplicada a negócios"
                   class="w-full h-full object-cover"
+                  width="800"
+                  height="256"
+                  loading="lazy"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
               </div>

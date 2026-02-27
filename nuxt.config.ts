@@ -27,9 +27,11 @@ export default defineNuxtConfig({
     serveStatic: true,
     // Regras de cache: estáticos longos; propostas dinâmicas sem cache longo
     routeRules: {
-      '/': { headers: { 'Cache-Control': 's-maxage=31536000' } },
+      '/': { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } },
       '/proposta/**': { prerender: false, headers: { 'Cache-Control': 'no-cache' } },
-      '/**': { headers: { 'Cache-Control': 'max-age=31536000, immutable' } }
+      '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
+      '/fonts/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
+      '/images/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } }
     }
   },
 
@@ -55,7 +57,8 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: {
-        class: 'dark'
+        class: 'dark',
+        lang: 'pt-BR'
       },
       title: 'Vale Apps - Soluções digitais sob medida',
       meta: [
@@ -163,26 +166,136 @@ export default defineNuxtConfig({
           `,
           type: 'text/javascript'
         },
-        // JSON-LD
+        // JSON-LD: Organization
         {
-          innerHTML: `{
+          innerHTML: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "Vale Apps",
+            "legalName": "Vale Soluções Digitais LTDA",
             "url": "https://valeapps.com.br",
-            "logo": "https://framerusercontent.com/images/qNkZZGqsnFsa83IKgjnsMSUPI.png",
-            "description": "Desenvolvemos soluções digitais sob medida com IA, automação, aplicativos web e mobile.",
+            "logo": "https://valeapps.com.br/logo-header.png",
+            "image": "https://valeapps.com.br/og-image.png",
+            "description": "Desenvolvemos soluções digitais sob medida com IA, automação, aplicativos web e mobile para empresas que querem acelerar seu crescimento.",
+            "foundingDate": "2024",
+            "taxID": "61.712.285/0001-88",
             "sameAs": [
               "https://www.linkedin.com/company/valeapps",
-              "https://www.instagram.com/valeapps"
+              "https://www.instagram.com/valeappss/"
             ],
             "contactPoint": {
               "@type": "ContactPoint",
               "telephone": "+55-11-96921-0065",
               "contactType": "customer support",
+              "availableLanguage": ["Portuguese", "English"],
               "areaServed": "BR"
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "São Paulo",
+              "addressRegion": "SP",
+              "addressCountry": "BR"
             }
-          }`,
+          }),
+          type: 'application/ld+json'
+        },
+        // JSON-LD: WebSite with SearchAction
+        {
+          innerHTML: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Vale Apps",
+            "url": "https://valeapps.com.br",
+            "description": "Soluções digitais sob medida com IA, automação e aplicativos web/mobile.",
+            "inLanguage": "pt-BR",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Vale Apps"
+            }
+          }),
+          type: 'application/ld+json'
+        },
+        // JSON-LD: LocalBusiness
+        {
+          innerHTML: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ProfessionalService",
+            "name": "Vale Apps",
+            "url": "https://valeapps.com.br",
+            "logo": "https://valeapps.com.br/logo-header.png",
+            "image": "https://valeapps.com.br/og-image.png",
+            "description": "Empresa de desenvolvimento de aplicativos mobile e web, automação e inteligência artificial em São Paulo.",
+            "telephone": "+55-11-96921-0065",
+            "email": "contato@valeapps.com.br",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "São Paulo",
+              "addressRegion": "SP",
+              "addressCountry": "BR"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": "-23.5505",
+              "longitude": "-46.6333"
+            },
+            "priceRange": "$$",
+            "openingHoursSpecification": {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+              "opens": "09:00",
+              "closes": "18:00"
+            },
+            "areaServed": {
+              "@type": "Country",
+              "name": "Brasil"
+            },
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "Serviços de Desenvolvimento",
+              "itemListElement": [
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "Desenvolvimento de Aplicativos Mobile",
+                    "description": "Apps nativos e híbridos para iOS e Android com React Native e Flutter"
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "Desenvolvimento Web",
+                    "description": "Aplicações web modernas com Vue.js, React, Next.js e Nuxt - SaaS, dashboards e sistemas"
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "UI/UX Design",
+                    "description": "Design de interfaces intuitivas e experiências digitais centradas no usuário"
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "Automação e Inteligência Artificial",
+                    "description": "Automação de processos, integração de sistemas e soluções com IA generativa"
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Service",
+                    "name": "Cloud & DevOps",
+                    "description": "Infraestrutura escalável na nuvem com CI/CD, Docker e deploy automatizado"
+                  }
+                }
+              ]
+            }
+          }),
           type: 'application/ld+json'
         }
       ],

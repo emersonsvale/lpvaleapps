@@ -56,6 +56,11 @@
             <ContactSection />
           </section>
 
+          <!-- FAQ Section -->
+          <section id="faq">
+            <FAQSection />
+          </section>
+
           <!-- Footer -->
           <EnhancedFooter />
         </div>
@@ -94,6 +99,7 @@ const ServicesStickySection = defineAsyncComponent(() => import('~/components/Se
 const DevelopmentComparisonSection = defineAsyncComponent(() => import('~/components/DevelopmentComparisonSection.vue'))
 const ServicesSection = defineAsyncComponent(() => import('~/components/ServicesSection.vue'))
 const ContactSection = defineAsyncComponent(() => import('~/components/ContactSection.vue'))
+const FAQSection = defineAsyncComponent(() => import('~/components/FAQSection.vue'))
 const EnhancedFooter = defineAsyncComponent(() => import('~/components/EnhancedFooter.vue'))
 
 // SEO otimizado

@@ -114,7 +114,7 @@
                   </div>
                 </div>
                 <template #fallback>
-                  <div class="opacity-0">
+                  <div>
                     <div class="mb-6 lg:mt-4">
                       <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand/20 bg-brand/5 text-sm text-brand">
                         Desenvolvimento Ágil &middot; Resultados Reais
@@ -167,7 +167,7 @@
               </div>
             </div>
             <template #fallback>
-              <div class="relative opacity-0">
+              <div class="relative">
                 <div
                   aria-hidden="true"
                   class="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"
