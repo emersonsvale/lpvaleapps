@@ -20,11 +20,11 @@
       :to="navItem.link"
       :class="cn(
         'relative items-center flex space-x-1 px-3 py-1.5 rounded-full transition-all duration-300',
-        activeSection === navItem.link 
+        isActiveItem(navItem.link)
           ? 'text-brand bg-brand/10' 
           : 'dark:text-neutral-400 text-neutral-500 dark:hover:text-neutral-200 hover:text-neutral-700 hover:bg-white/5'
       )"
-      @click.prevent="scrollToSection(navItem.link)"
+      @click.prevent="handleNavClick(navItem.link)"
     >
       <span class="block sm:hidden">
         <component :is="navItem.icon" v-if="navItem.icon" class="h-4 w-4" />
@@ -64,7 +64,7 @@ const props = withDefaults(defineProps<Props>(), {
   className: ''
 })
 
-const activeSection = ref('#inicio')
+const activeSection = ref('')
 const isScrolled = ref(false)
 
 const cn = (...classes: (string | undefined | null | false)[]) => {
@@ -75,31 +75,78 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const scrollToSection = (link: string) => {
-  const id = link.replace('#', '')
-  const el = document.getElementById(id)
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const router = useRouter()
+const route = useRoute()
+
+const isHashLink = (link: string) => link.startsWith('#')
+const getHashFromLink = (link: string) => {
+  if (link.startsWith('#')) return link
+  const hashIndex = link.indexOf('#')
+  return hashIndex >= 0 ? link.slice(hashIndex) : ''
+}
+const getPathFromLink = (link: string) => {
+  if (link.startsWith('#')) return '/'
+  const hashIndex = link.indexOf('#')
+  return hashIndex >= 0 ? link.slice(0, hashIndex) || '/' : link
+}
+
+const isActiveItem = (link: string) => {
+  const hash = getHashFromLink(link)
+  if (hash) {
+    return route.path === '/' && activeSection.value === hash
   }
+
+  const path = getPathFromLink(link)
+  return route.path === path || route.path.startsWith(path + '/')
+}
+
+const handleNavClick = (link: string) => {
+  const hash = getHashFromLink(link)
+  const path = getPathFromLink(link)
+
+  if (hash) {
+    const id = hash.replace('#', '')
+    const samePage = route.path === path
+    const el = samePage ? document.getElementById(id) : null
+
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+
+    router.push(`${path}${hash}`)
+    return
+  }
+
+  router.push(path)
 }
 
 const updateActiveSection = () => {
   isScrolled.value = window.scrollY > 50
 
-  const sections = props.navItems.map(item => ({
-    id: item.link,
-    el: document.getElementById(item.link.replace('#', ''))
-  })).filter(s => s.el)
+  const sections = props.navItems
+    .map(item => {
+      const hash = getHashFromLink(item.link)
+      if (!hash || route.path !== '/') return null
+      return {
+        id: hash,
+        el: document.getElementById(hash.replace('#', ''))
+      }
+    })
+    .filter((section): section is { id: string; el: HTMLElement } => !!section?.el)
 
   const scrollPos = window.scrollY + window.innerHeight / 3
+  let currentSection = ''
 
   for (let i = sections.length - 1; i >= 0; i--) {
     const section = sections[i]
     if (section.el && section.el.offsetTop <= scrollPos) {
-      activeSection.value = section.id
+      currentSection = section.id
       break
     }
   }
+
+  activeSection.value = currentSection
 }
 
 let scrollListener: (() => void) | null = null

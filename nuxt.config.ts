@@ -28,6 +28,8 @@ export default defineNuxtConfig({
     // Regras de cache: estáticos longos; propostas dinâmicas sem cache longo
     routeRules: {
       '/': { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } },
+      '/blog': { headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=43200' } },
+      '/blog/**': { headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=43200' } },
       '/proposta/**': { prerender: false, headers: { 'Cache-Control': 'no-cache' } },
       '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
       '/fonts/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },

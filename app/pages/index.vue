@@ -86,7 +86,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
-import { PhHouse, PhChatCircle, PhBriefcase, PhCode } from '@phosphor-icons/vue'
+import { PhHouse, PhChatCircle, PhBriefcase, PhCode, PhArticle } from '@phosphor-icons/vue'
 
 // Estado de carregamento
 const isReady = ref(false)
@@ -134,6 +134,11 @@ const navItems = [
     name: "Serviços",
     link: "#servicos", 
     icon: PhCode,
+  },
+  {
+    name: "Blog",
+    link: "/blog",
+    icon: PhArticle,
   },
   {
     name: "Contato",

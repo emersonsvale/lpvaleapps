@@ -138,10 +138,57 @@ export const useSEO = () => {
         })
     }
 
+    const generateBlogPostingSchema = (options: {
+        title: string
+        description: string
+        slug: string
+        image?: string
+        authorName?: string
+        datePublished: string
+        dateModified?: string
+    }) => {
+        const blogPosting = {
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: options.title,
+            description: options.description,
+            image: options.image ? [options.image] : undefined,
+            datePublished: options.datePublished,
+            dateModified: options.dateModified || options.datePublished,
+            author: {
+                '@type': 'Person',
+                name: options.authorName || 'Vale Apps'
+            },
+            publisher: {
+                '@type': 'Organization',
+                name: 'Vale Apps',
+                logo: {
+                    '@type': 'ImageObject',
+                    url: `${baseUrl}/logo-header.png`
+                }
+            },
+            mainEntityOfPage: {
+                '@type': 'WebPage',
+                '@id': `${baseUrl}/blog/${options.slug}`
+            },
+            url: `${baseUrl}/blog/${options.slug}`
+        }
+
+        useHead({
+            script: [
+                {
+                    type: 'application/ld+json',
+                    innerHTML: JSON.stringify(blogPosting)
+                }
+            ]
+        })
+    }
+
     return {
         setPageSEO,
         generateBreadcrumb,
         generateFAQSchema,
+        generateBlogPostingSchema,
         baseUrl
     }
 }
