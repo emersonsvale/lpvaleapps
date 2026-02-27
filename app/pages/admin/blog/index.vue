@@ -63,9 +63,23 @@
         class="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 transition-colors"
       >
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="min-w-0">
-            <p class="font-medium text-zinc-100 truncate">{{ post.title }}</p>
-            <p class="text-zinc-500 text-sm truncate">/blog/{{ post.slug }}</p>
+          <div class="min-w-0 flex items-center gap-3">
+            <img
+              v-if="post.cover_image"
+              :src="post.cover_image"
+              :alt="post.title"
+              class="w-16 h-10 rounded-md object-cover border border-zinc-800 shrink-0"
+              loading="lazy"
+            />
+            <div
+              v-else
+              class="w-16 h-10 rounded-md bg-zinc-800/70 border border-zinc-700 shrink-0"
+              aria-hidden="true"
+            />
+            <div class="min-w-0">
+              <p class="font-medium text-zinc-100 truncate">{{ post.title }}</p>
+              <p class="text-zinc-500 text-sm truncate">/blog/{{ post.slug }}</p>
+            </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">

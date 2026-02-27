@@ -47,6 +47,8 @@ export default defineNuxtConfig({
       baseURL: 'https://valeapps.com.br',
       supabaseUrl: '',
       supabaseAnonKey: '',
+      blogImagesBucket: 'images',
+      blogImagesFolder: 'blog',
 
       // Email configuration
       senderEmail: 'noreply@valeapps.com.br',

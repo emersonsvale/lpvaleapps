@@ -51,6 +51,7 @@ export interface BlogPostAdminListItem {
     id: number
     title: string
     slug: string
+    cover_image: string | null
     status: BlogStatus
     updated_at: string
     published_at: string | null
@@ -73,7 +74,42 @@ export interface BlogImageUploadResult {
     path: string
 }
 
-const BLOG_IMAGES_BUCKET = 'blog-images'
+const DEFAULT_BLOG_IMAGES_BUCKET = 'images'
+const DEFAULT_BLOG_IMAGES_FOLDER = 'blog'
+
+function resolveBlogImagesBucket(): string {
+    const configuredBucket = useRuntimeConfig().public.blogImagesBucket
+
+    if (typeof configuredBucket === 'string' && configuredBucket.trim()) {
+        return configuredBucket.trim()
+    }
+
+    return DEFAULT_BLOG_IMAGES_BUCKET
+}
+
+function resolveBlogImagesFolder(): string {
+    const configuredFolder = useRuntimeConfig().public.blogImagesFolder
+
+    if (typeof configuredFolder === 'string' && configuredFolder.trim()) {
+        return configuredFolder.trim().replace(/^\/+|\/+$/g, '')
+    }
+
+    return DEFAULT_BLOG_IMAGES_FOLDER
+}
+
+function resolveUploadErrorMessage(errorMessage: string | undefined, bucket: string): string {
+    const normalized = (errorMessage || '').toLowerCase()
+
+    if (normalized.includes('bucket not found')) {
+        return `Bucket de storage \"${bucket}\" não encontrado. Crie o bucket no Supabase Storage ou rode o script scripts/migrations/2026-02-27_blog_storage_images.sql.`
+    }
+
+    if (normalized.includes('row-level security') || normalized.includes('not allowed')) {
+        return `Sem permissão para upload no bucket \"${bucket}\". Aplique as policies do arquivo scripts/migrations/2026-02-27_storage_images_blog_policies.sql.`
+    }
+
+    return errorMessage || 'Falha ao enviar imagem para o storage.'
+}
 
 function resolveImageExtension(file: File): string {
     const fromName = file.name.split('.').pop()?.toLowerCase()
@@ -105,11 +141,13 @@ export async function uploadBlogCoverImage(
 
     const safeSlug = normalizeBlogSlug(options?.slug || 'blog-post') || 'blog-post'
     const ext = resolveImageExtension(file)
-    const filePath = `covers/${safeSlug}-${Date.now()}.${ext}`
+    const folder = resolveBlogImagesFolder()
+    const filePath = `${folder}/covers/${safeSlug}-${Date.now()}.${ext}`
+    const bucket = resolveBlogImagesBucket()
 
     const { error: uploadError } = await supabase
         .storage
-        .from(BLOG_IMAGES_BUCKET)
+        .from(bucket)
         .upload(filePath, file, {
             cacheControl: '3600',
             upsert: false,
@@ -119,11 +157,11 @@ export async function uploadBlogCoverImage(
     if (uploadError) {
         return {
             data: null,
-            error: uploadError.message || 'Falha ao enviar imagem para o storage.',
+            error: resolveUploadErrorMessage(uploadError.message, bucket),
         }
     }
 
-    const { data: publicData } = supabase.storage.from(BLOG_IMAGES_BUCKET).getPublicUrl(filePath)
+    const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(filePath)
     const publicUrl = publicData?.publicUrl
 
     if (!publicUrl) {
@@ -302,7 +340,7 @@ export async function fetchBlogPostsAdmin(options?: {
 
     let query = supabase
         .from('blog_posts')
-        .select('id, title, slug, status, updated_at, published_at, scheduled_at, noindex')
+        .select('id, title, slug, cover_image, status, updated_at, published_at, scheduled_at, noindex')
         .order('updated_at', { ascending: false })
 
     if (options?.status && options.status !== 'all') {
