@@ -2,53 +2,53 @@ import { marked } from 'marked'
 
 // ─── Dados da empresa (Vale Apps) ──────────────────────────────────────────────
 export const EMPRESA_DEFAULTS = {
-    razaoSocial: 'Vale Solucoes Digitais LTDA',
-    cnpj: '61.712.285/0001-88',
-    emailSuporte: 'suporte@valeapps.com.br',
-    canalAtendimento: 'WhatsApp / E-mail',
-    bancoNome: '',
-    bancoAgencia: '',
-    bancoConta: '',
-    chavePix: '',
-    cidadeForo: 'Imperatriz',
-    estadoForo: 'Maranhão',
+  razaoSocial: 'Vale Solucoes Digitais LTDA',
+  cnpj: '61.712.285/0001-88',
+  emailSuporte: 'suporte@valeapps.com.br',
+  canalAtendimento: 'WhatsApp / E-mail',
+  bancoNome: 'Asaas I.P S.A',
+  bancoAgencia: '0001',
+  bancoConta: '6194047-4',
+  chavePix: 'financeiro+nubank@valeapps.com.br',
+  cidadeForo: 'Imperatriz',
+  estadoForo: 'Maranhão',
 }
 
 // ─── Interface de dados do documento ───────────────────────────────────────────
 export interface ContratoDocumentData {
-    // Dados do contratante
-    clienteRazaoSocial: string
-    clienteEndereco: string
-    clienteCep: string
-    clienteCnpj: string
+  // Dados do contratante
+  clienteRazaoSocial: string
+  clienteEndereco: string
+  clienteCep: string
+  clienteCnpj: string
 
-    // Termos do contrato
-    prazoDias: number
-    prazoGarantiaDias: number
+  // Termos do contrato
+  prazoDias: number
+  prazoGarantiaDias: number
 
-    // Financeiro
-    valorTotal: number
-    condicoesPagamento: string
-    valorHoraSuporte: number
+  // Financeiro
+  valorTotal: number
+  condicoesPagamento: string
+  valorHoraSuporte: number
 
-    // Multas e penalidades
-    multaAbsorcao: string
-    percentualResilicao: string
+  // Multas e penalidades
+  multaAbsorcao: string
+  percentualResilicao: string
 
-    // Suporte
-    emailSuporte: string
-    canalAtendimento: string
+  // Suporte
+  emailSuporte: string
+  canalAtendimento: string
 
-    // Dados bancários (Vale Apps)
-    bancoNome: string
-    bancoAgencia: string
-    bancoConta: string
-    chavePix: string
+  // Dados bancários (Vale Apps)
+  bancoNome: string
+  bancoAgencia: string
+  bancoConta: string
+  chavePix: string
 
-    // Foro e assinatura
-    cidadeForo: string
-    estadoForo: string
-    dataAssinatura: string
+  // Foro e assinatura
+  cidadeForo: string
+  estadoForo: string
+  dataAssinatura: string
 }
 
 // ─── Valor por extenso (pt-BR) ────────────────────────────────────────────────
@@ -58,139 +58,139 @@ const DEZENAS = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta',
 const CENTENAS = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos']
 
 function numeroPorExtenso(n: number): string {
-    if (n === 0) return 'zero'
-    if (n < 0) return 'menos ' + numeroPorExtenso(-n)
+  if (n === 0) return 'zero'
+  if (n < 0) return 'menos ' + numeroPorExtenso(-n)
 
-    if (n >= 1_000_000_000) {
-        const bilhoes = Math.floor(n / 1_000_000_000)
-        const resto = n % 1_000_000_000
-        let s = numeroPorExtenso(bilhoes) + (bilhoes === 1 ? ' bilhão' : ' bilhões')
-        if (resto > 0) {
-            s += (resto < 100 || resto % 1000 === 0) ? ' e ' : ', '
-            s += numeroPorExtenso(resto)
-        }
-        return s
+  if (n >= 1_000_000_000) {
+    const bilhoes = Math.floor(n / 1_000_000_000)
+    const resto = n % 1_000_000_000
+    let s = numeroPorExtenso(bilhoes) + (bilhoes === 1 ? ' bilhão' : ' bilhões')
+    if (resto > 0) {
+      s += (resto < 100 || resto % 1000 === 0) ? ' e ' : ', '
+      s += numeroPorExtenso(resto)
     }
+    return s
+  }
 
-    if (n >= 1_000_000) {
-        const milhoes = Math.floor(n / 1_000_000)
-        const resto = n % 1_000_000
-        let s = numeroPorExtenso(milhoes) + (milhoes === 1 ? ' milhão' : ' milhões')
-        if (resto > 0) {
-            s += (resto < 100 || resto % 1000 === 0) ? ' e ' : ', '
-            s += numeroPorExtenso(resto)
-        }
-        return s
+  if (n >= 1_000_000) {
+    const milhoes = Math.floor(n / 1_000_000)
+    const resto = n % 1_000_000
+    let s = numeroPorExtenso(milhoes) + (milhoes === 1 ? ' milhão' : ' milhões')
+    if (resto > 0) {
+      s += (resto < 100 || resto % 1000 === 0) ? ' e ' : ', '
+      s += numeroPorExtenso(resto)
     }
+    return s
+  }
 
-    if (n >= 1000) {
-        const milhares = Math.floor(n / 1000)
-        const resto = n % 1000
-        let s = milhares === 1 ? 'mil' : numeroPorExtenso(milhares) + ' mil'
-        if (resto > 0) {
-            s += (resto < 100 || resto % 100 === 0) ? ' e ' : ', '
-            s += numeroPorExtenso(resto)
-        }
-        return s
+  if (n >= 1000) {
+    const milhares = Math.floor(n / 1000)
+    const resto = n % 1000
+    let s = milhares === 1 ? 'mil' : numeroPorExtenso(milhares) + ' mil'
+    if (resto > 0) {
+      s += (resto < 100 || resto % 100 === 0) ? ' e ' : ', '
+      s += numeroPorExtenso(resto)
     }
+    return s
+  }
 
-    if (n === 100) return 'cem'
+  if (n === 100) return 'cem'
 
-    if (n >= 100) {
-        const c = Math.floor(n / 100)
-        const resto = n % 100
-        let s = CENTENAS[c] ?? ''
-        if (resto > 0) s += ' e ' + numeroPorExtenso(resto)
-        return s
-    }
+  if (n >= 100) {
+    const c = Math.floor(n / 100)
+    const resto = n % 100
+    let s = CENTENAS[c] ?? ''
+    if (resto > 0) s += ' e ' + numeroPorExtenso(resto)
+    return s
+  }
 
-    if (n >= 20) {
-        const d = Math.floor(n / 10)
-        const u = n % 10
-        let s = DEZENAS[d] ?? ''
-        if (u > 0) s += ' e ' + unidadeTexto(u)
-        return s
-    }
+  if (n >= 20) {
+    const d = Math.floor(n / 10)
+    const u = n % 10
+    let s = DEZENAS[d] ?? ''
+    if (u > 0) s += ' e ' + unidadeTexto(u)
+    return s
+  }
 
-    if (n >= 10) return ESPECIAIS[n - 10] ?? ''
+  if (n >= 10) return ESPECIAIS[n - 10] ?? ''
 
-    return unidadeTexto(n)
+  return unidadeTexto(n)
 }
 
 function unidadeTexto(n: number): string {
-    return UNIDADES[n] ?? ''
+  return UNIDADES[n] ?? ''
 }
 
 export function valorPorExtenso(valor: number): string {
-    if (valor === 0) return 'zero reais'
+  if (valor === 0) return 'zero reais'
 
-    const inteiro = Math.floor(Math.abs(valor))
-    const centavos = Math.round((Math.abs(valor) - inteiro) * 100)
+  const inteiro = Math.floor(Math.abs(valor))
+  const centavos = Math.round((Math.abs(valor) - inteiro) * 100)
 
-    let resultado = ''
+  let resultado = ''
 
-    if (inteiro > 0) {
-        resultado = numeroPorExtenso(inteiro)
-        resultado += inteiro === 1 ? ' real' : ' reais'
-    }
+  if (inteiro > 0) {
+    resultado = numeroPorExtenso(inteiro)
+    resultado += inteiro === 1 ? ' real' : ' reais'
+  }
 
-    if (centavos > 0) {
-        if (inteiro > 0) resultado += ' e '
-        resultado += numeroPorExtenso(centavos)
-        resultado += centavos === 1 ? ' centavo' : ' centavos'
-    }
+  if (centavos > 0) {
+    if (inteiro > 0) resultado += ' e '
+    resultado += numeroPorExtenso(centavos)
+    resultado += centavos === 1 ? ' centavo' : ' centavos'
+  }
 
-    return resultado
+  return resultado
 }
 
 // ─── Formatar valores ──────────────────────────────────────────────────────────
 function formatarMoeda(valor: number): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
 }
 
 function formatarData(dateStr: string): string {
-    if (!dateStr) return '________________________'
-    try {
-        return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date(dateStr + 'T12:00:00'))
-    } catch {
-        return dateStr
-    }
+  if (!dateStr) return '________________________'
+  try {
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date(dateStr + 'T12:00:00'))
+  } catch {
+    return dateStr
+  }
 }
 
 function placeholder(value: string | number | undefined | null, fallback = '________________________'): string {
-    const str = String(value ?? '').trim()
-    return str || fallback
+  const str = String(value ?? '').trim()
+  return str || fallback
 }
 
 // ─── Template do contrato (Markdown) ───────────────────────────────────────────
 function getContratoTemplate(data: ContratoDocumentData): string {
-    const clienteRazaoSocial = placeholder(data.clienteRazaoSocial)
-    const clienteEndereco = placeholder(data.clienteEndereco)
-    const clienteCep = placeholder(data.clienteCep, '________')
-    const clienteCnpj = placeholder(data.clienteCnpj, '______________')
-    const prazoDias = data.prazoDias || 120
-    const prazoGarantiaDias = data.prazoGarantiaDias || 90
-    const emailSuporte = placeholder(data.emailSuporte, EMPRESA_DEFAULTS.emailSuporte)
-    const canalAtendimento = placeholder(data.canalAtendimento, EMPRESA_DEFAULTS.canalAtendimento)
-    const valorTotalFormatado = formatarMoeda(data.valorTotal || 0)
-    const valorExtenso = valorPorExtenso(data.valorTotal || 0)
-    const condicoesPagamento = placeholder(data.condicoesPagamento)
-    const valorHoraSuporte = data.valorHoraSuporte ? formatarMoeda(data.valorHoraSuporte) : 'R$ ________'
-    const multaAbsorcao = placeholder(data.multaAbsorcao, '100.000,00')
-    const percentualResilicao = placeholder(data.percentualResilicao, '80%')
-    const razaoSocialEmpresa = EMPRESA_DEFAULTS.razaoSocial
-    const cnpjEmpresa = EMPRESA_DEFAULTS.cnpj
-    const bancoNome = placeholder(data.bancoNome || EMPRESA_DEFAULTS.bancoNome)
-    const bancoAgencia = placeholder(data.bancoAgencia || EMPRESA_DEFAULTS.bancoAgencia)
-    const bancoConta = placeholder(data.bancoConta || EMPRESA_DEFAULTS.bancoConta)
-    const chavePix = placeholder(data.chavePix || EMPRESA_DEFAULTS.chavePix)
-    const cidadeForo = placeholder(data.cidadeForo || EMPRESA_DEFAULTS.cidadeForo, 'Imperatriz')
-    const estadoForo = placeholder(data.estadoForo || EMPRESA_DEFAULTS.estadoForo, 'Maranhão')
-    const cidadeDataAssinatura = data.dataAssinatura
-        ? `${cidadeForo}, ${formatarData(data.dataAssinatura)}`
-        : '________________________'
+  const clienteRazaoSocial = placeholder(data.clienteRazaoSocial)
+  const clienteEndereco = placeholder(data.clienteEndereco)
+  const clienteCep = placeholder(data.clienteCep, '________')
+  const clienteCnpj = placeholder(data.clienteCnpj, '______________')
+  const prazoDias = data.prazoDias || 120
+  const prazoGarantiaDias = data.prazoGarantiaDias || 90
+  const emailSuporte = placeholder(data.emailSuporte, EMPRESA_DEFAULTS.emailSuporte)
+  const canalAtendimento = placeholder(data.canalAtendimento, EMPRESA_DEFAULTS.canalAtendimento)
+  const valorTotalFormatado = formatarMoeda(data.valorTotal || 0)
+  const valorExtenso = valorPorExtenso(data.valorTotal || 0)
+  const condicoesPagamento = placeholder(data.condicoesPagamento)
+  const valorHoraSuporte = data.valorHoraSuporte ? formatarMoeda(data.valorHoraSuporte) : 'R$ ________'
+  const multaAbsorcao = placeholder(data.multaAbsorcao, '100.000,00')
+  const percentualResilicao = placeholder(data.percentualResilicao, '80%')
+  const razaoSocialEmpresa = EMPRESA_DEFAULTS.razaoSocial
+  const cnpjEmpresa = EMPRESA_DEFAULTS.cnpj
+  const bancoNome = placeholder(data.bancoNome || EMPRESA_DEFAULTS.bancoNome)
+  const bancoAgencia = placeholder(data.bancoAgencia || EMPRESA_DEFAULTS.bancoAgencia)
+  const bancoConta = placeholder(data.bancoConta || EMPRESA_DEFAULTS.bancoConta)
+  const chavePix = placeholder(data.chavePix || EMPRESA_DEFAULTS.chavePix)
+  const cidadeForo = placeholder(data.cidadeForo || EMPRESA_DEFAULTS.cidadeForo, 'Imperatriz')
+  const estadoForo = placeholder(data.estadoForo || EMPRESA_DEFAULTS.estadoForo, 'Maranhão')
+  const cidadeDataAssinatura = data.dataAssinatura
+    ? `${cidadeForo}, ${formatarData(data.dataAssinatura)}`
+    : '________________________'
 
-    return `# Contrato de Prestação de Serviços de Programação
+  return `# Contrato de Prestação de Serviços de Programação
 
 **DEFINIÇÃO:** Esse contrato visa documentar e regular a prestação de serviços de configuração ou programação de software, site, e/ou aplicativo híbrido, assim como, sua devida manutenção mensal, pela CONTRATADA, conforme escopo declarado e aceito previamente pela CONTRATANTE, contendo todas as informações acerca da metodologia de trabalho, do cronograma de atividades, dos recursos necessários para a execução do serviço, bem como as descrições das condições de pagamento e prazos definidos.
 
@@ -401,6 +401,20 @@ E, por estarem assim acordados, assinam o presente Contrato através de platafor
 `
 }
 
+function resolveContratoMarkdown(data: ContratoDocumentData, markdownOverride?: string): string {
+  const custom = String(markdownOverride ?? '').trim()
+  return custom || getContratoTemplate(data)
+}
+
+export function generateContratoMarkdown(data: ContratoDocumentData, markdownOverride?: string): string {
+  return resolveContratoMarkdown(data, markdownOverride)
+}
+
+export function generateContratoBodyHTML(data: ContratoDocumentData, markdownOverride?: string): string {
+  const markdownTemplate = resolveContratoMarkdown(data, markdownOverride)
+  return marked.parse(markdownTemplate) as string
+}
+
 // ─── CSS do documento ──────────────────────────────────────────────────────────
 const DOCUMENT_CSS = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -514,11 +528,10 @@ const DOCUMENT_CSS = `
 `
 
 // ─── Gerar HTML completo ───────────────────────────────────────────────────────
-export function generateContratoHTML(data: ContratoDocumentData): string {
-    const markdownTemplate = getContratoTemplate(data)
-    const htmlContent = marked.parse(markdownTemplate) as string
+export function generateContratoHTML(data: ContratoDocumentData, markdownOverride?: string): string {
+  const htmlContent = generateContratoBodyHTML(data, markdownOverride)
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/>
@@ -542,11 +555,10 @@ export function generateContratoHTML(data: ContratoDocumentData): string {
 }
 
 // ─── Gerar HTML para Word ──────────────────────────────────────────────────────
-export function generateContratoWordHTML(data: ContratoDocumentData): string {
-    const markdownTemplate = getContratoTemplate(data)
-    const htmlContent = marked.parse(markdownTemplate) as string
+export function generateContratoWordHTML(data: ContratoDocumentData, markdownOverride?: string): string {
+  const htmlContent = generateContratoBodyHTML(data, markdownOverride)
 
-    return `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+  return `<html xmlns:o="urn:schemas-microsoft-com:office:office"
   xmlns:w="urn:schemas-microsoft-com:office:word"
   xmlns="http://www.w3.org/TR/REC-html40">
 <head>
@@ -586,85 +598,85 @@ export function generateContratoWordHTML(data: ContratoDocumentData): string {
 }
 
 // ─── Download Word (.doc) ──────────────────────────────────────────────────────
-export function downloadContratoAsWord(data: ContratoDocumentData, filename?: string) {
-    const html = generateContratoWordHTML(data)
-    const nomeArquivo = filename || `Contrato_${(data.clienteRazaoSocial || 'cliente').replace(/[^a-zA-Z0-9]/g, '_')}`
-    const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${nomeArquivo}.doc`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+export function downloadContratoAsWord(data: ContratoDocumentData, filename?: string, markdownOverride?: string) {
+  const html = generateContratoWordHTML(data, markdownOverride)
+  const nomeArquivo = filename || `Contrato_${(data.clienteRazaoSocial || 'cliente').replace(/[^a-zA-Z0-9]/g, '_')}`
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${nomeArquivo}.doc`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 // ─── Abrir preview / imprimir ──────────────────────────────────────────────────
-export function openContratoPreview(data: ContratoDocumentData) {
-    const html = generateContratoHTML(data)
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) {
-        alert('Permita pop-ups para visualizar o contrato.')
-        return
-    }
-    printWindow.document.write(html)
-    printWindow.document.close()
+export function openContratoPreview(data: ContratoDocumentData, markdownOverride?: string) {
+  const html = generateContratoHTML(data, markdownOverride)
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) {
+    alert('Permita pop-ups para visualizar o contrato.')
+    return
+  }
+  printWindow.document.write(html)
+  printWindow.document.close()
 }
 
 // ─── Mapear proposta para dados do documento ───────────────────────────────────
 export function mapPropostaToDocumentData(proposta: {
-    nome_cliente?: string | null
-    email_cliente?: string | null
-    telefone_cliente?: string | null
-    valor_final?: number | null
-    prazo_dias?: number | null
-    suporte_dias?: number | null
-    forma_pagamento?: Array<{ descricao: string; percentual: number; valor: number }> | null
-    nome_proejeto?: string | null
+  nome_cliente?: string | null
+  email_cliente?: string | null
+  telefone_cliente?: string | null
+  valor_final?: number | null
+  prazo_dias?: number | null
+  suporte_dias?: number | null
+  forma_pagamento?: Array<{ descricao: string; percentual: number; valor: number }> | null
+  nome_proejeto?: string | null
 }): Partial<ContratoDocumentData> {
-    const data: Partial<ContratoDocumentData> = {}
+  const data: Partial<ContratoDocumentData> = {}
 
-    if (proposta.nome_cliente) data.clienteRazaoSocial = proposta.nome_cliente
-    if (proposta.valor_final) data.valorTotal = proposta.valor_final
-    if (proposta.prazo_dias) data.prazoDias = proposta.prazo_dias
-    if (proposta.suporte_dias) data.prazoGarantiaDias = proposta.suporte_dias
+  if (proposta.nome_cliente) data.clienteRazaoSocial = proposta.nome_cliente
+  if (proposta.valor_final) data.valorTotal = proposta.valor_final
+  if (proposta.prazo_dias) data.prazoDias = proposta.prazo_dias
+  if (proposta.suporte_dias) data.prazoGarantiaDias = proposta.suporte_dias
 
-    // Formatar condições de pagamento a partir da forma_pagamento
-    if (proposta.forma_pagamento?.length) {
-        data.condicoesPagamento = proposta.forma_pagamento
-            .map(fp => {
-                const valor = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(fp.valor)
-                return `${fp.descricao}: ${valor} (${fp.percentual}%)`
-            })
-            .join('; ')
-    }
+  // Formatar condições de pagamento a partir da forma_pagamento
+  if (proposta.forma_pagamento?.length) {
+    data.condicoesPagamento = proposta.forma_pagamento
+      .map(fp => {
+        const valor = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(fp.valor)
+        return `${fp.descricao}: ${valor} (${fp.percentual}%)`
+      })
+      .join('; ')
+  }
 
-    return data
+  return data
 }
 
 // ─── Valores padrão do formulário ──────────────────────────────────────────────
 export function getDefaultDocumentData(): ContratoDocumentData {
-    return {
-        clienteRazaoSocial: '',
-        clienteEndereco: '',
-        clienteCep: '',
-        clienteCnpj: '',
-        prazoDias: 120,
-        prazoGarantiaDias: 90,
-        valorTotal: 0,
-        condicoesPagamento: '',
-        valorHoraSuporte: 0,
-        multaAbsorcao: '100.000,00',
-        percentualResilicao: '80%',
-        emailSuporte: EMPRESA_DEFAULTS.emailSuporte,
-        canalAtendimento: EMPRESA_DEFAULTS.canalAtendimento,
-        bancoNome: EMPRESA_DEFAULTS.bancoNome,
-        bancoAgencia: EMPRESA_DEFAULTS.bancoAgencia,
-        bancoConta: EMPRESA_DEFAULTS.bancoConta,
-        chavePix: EMPRESA_DEFAULTS.chavePix,
-        cidadeForo: EMPRESA_DEFAULTS.cidadeForo,
-        estadoForo: EMPRESA_DEFAULTS.estadoForo,
-        dataAssinatura: '',
-    }
+  return {
+    clienteRazaoSocial: '',
+    clienteEndereco: '',
+    clienteCep: '',
+    clienteCnpj: '',
+    prazoDias: 120,
+    prazoGarantiaDias: 90,
+    valorTotal: 0,
+    condicoesPagamento: '',
+    valorHoraSuporte: 0,
+    multaAbsorcao: '100.000,00',
+    percentualResilicao: '80%',
+    emailSuporte: EMPRESA_DEFAULTS.emailSuporte,
+    canalAtendimento: EMPRESA_DEFAULTS.canalAtendimento,
+    bancoNome: EMPRESA_DEFAULTS.bancoNome,
+    bancoAgencia: EMPRESA_DEFAULTS.bancoAgencia,
+    bancoConta: EMPRESA_DEFAULTS.bancoConta,
+    chavePix: EMPRESA_DEFAULTS.chavePix,
+    cidadeForo: EMPRESA_DEFAULTS.cidadeForo,
+    estadoForo: EMPRESA_DEFAULTS.estadoForo,
+    dataAssinatura: '',
+  }
 }

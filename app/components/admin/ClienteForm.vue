@@ -1,6 +1,6 @@
 <template>
   <form class="space-y-6" @submit.prevent="onSubmit">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="md:col-span-2">
         <label class="block text-sm font-medium text-zinc-300 mb-1">Nome do cliente *</label>
         <input
@@ -52,6 +52,18 @@
         >
       </div>
       <div>
+        <label class="block text-sm font-medium text-zinc-300 mb-1">CNPJ</label>
+        <input
+          v-model="form.cnpj"
+          type="text"
+          class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100"
+          placeholder="00.000.000/0000-00"
+          inputmode="numeric"
+          maxlength="18"
+          @input="onCnpjInput"
+        >
+      </div>
+      <div>
         <label class="block text-sm font-medium text-zinc-300 mb-1">Responsável</label>
         <input
           v-model="form.responsavel"
@@ -62,6 +74,18 @@
           @input="form.responsavel = limitarTexto(form.responsavel, 80)"
         >
       </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-zinc-300 mb-1">Endereço</label>
+      <input
+        v-model="form.endereco"
+        type="text"
+        class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100"
+        placeholder="Rua, número, bairro, cidade - UF"
+        maxlength="220"
+        @input="form.endereco = limitarTexto(form.endereco, 220)"
+      >
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -331,6 +355,8 @@ const VALOR_MAXIMO_CENTAVOS = 99999999999
 const form = reactive({
   nome: props.initial?.nome ?? '',
   empresa: props.initial?.empresa ?? '',
+  cnpj: props.initial?.cnpj ?? '',
+  endereco: props.initial?.endereco ?? '',
   email: props.initial?.email ?? '',
   telefone: props.initial?.telefone ?? '',
   origem: props.initial?.origem ?? 'site',
@@ -373,7 +399,8 @@ const interacoesOrdenadas = computed(() => {
 })
 
 onMounted(async () => {
-  propostasOptions.value = await fetchPropostas()
+  const propostas = await fetchPropostas()
+  propostasOptions.value = propostas.filter(proposta => proposta.status_proposta !== 'cancelada')
   valorPotencialTexto.value = form.valor_potencial == null ? '' : formatarMoeda(form.valor_potencial)
   proximoFollowupTexto.value = formatarIsoParaDataBR(form.proximo_followup)
 })
@@ -405,6 +432,19 @@ function formatarTelefoneBR(valor: string) {
 
 function onTelefoneInput() {
   form.telefone = formatarTelefoneBR(form.telefone)
+}
+
+function formatarCNPJ(valor: string) {
+  const digitos = String(valor ?? '').replace(/\D/g, '').slice(0, 14)
+  if (digitos.length <= 2) return digitos
+  if (digitos.length <= 5) return `${digitos.slice(0, 2)}.${digitos.slice(2)}`
+  if (digitos.length <= 8) return `${digitos.slice(0, 2)}.${digitos.slice(2, 5)}.${digitos.slice(5)}`
+  if (digitos.length <= 12) return `${digitos.slice(0, 2)}.${digitos.slice(2, 5)}.${digitos.slice(5, 8)}/${digitos.slice(8)}`
+  return `${digitos.slice(0, 2)}.${digitos.slice(2, 5)}.${digitos.slice(5, 8)}/${digitos.slice(8, 12)}-${digitos.slice(12)}`
+}
+
+function onCnpjInput() {
+  form.cnpj = formatarCNPJ(form.cnpj)
 }
 
 function aplicarMascaraDataBR(valor: string) {
@@ -530,6 +570,8 @@ async function onSubmit() {
   const payload = {
     nome: limitarTexto(form.nome, 120),
     empresa: limitarTexto(form.empresa, 120) || null,
+    cnpj: formatarCNPJ(form.cnpj) || null,
+    endereco: limitarTexto(form.endereco, 220) || null,
     email: limitarEmail(form.email) || null,
     telefone: formatarTelefoneBR(form.telefone) || null,
     origem: limitarTexto(form.origem, 60) || 'site',

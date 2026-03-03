@@ -96,18 +96,73 @@
               </td>
               <td class="px-4 py-3 text-brand font-medium">{{ formatarMoeda(contrato.valor_total ?? 0) }}</td>
               <td class="px-4 py-3 text-right">
-                <NuxtLink
-                  :to="`/admin/contratos/editar/${contrato.id}`"
-                  class="text-zinc-300 hover:text-zinc-100"
-                >
-                  Editar
-                </NuxtLink>
+                <div class="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    class="text-zinc-400 hover:text-zinc-100"
+                    @click="visualizarContrato(contrato)"
+                  >
+                    Visualizar
+                  </button>
+                  <button
+                    type="button"
+                    class="text-zinc-400 hover:text-zinc-100"
+                    @click="gerarDocumento(contrato)"
+                  >
+                    Gerar documento
+                  </button>
+                  <button
+                    type="button"
+                    class="text-zinc-400 hover:text-zinc-100"
+                    @click="abrirEdicaoRapida(contrato.id)"
+                  >
+                    Editar rápido
+                  </button>
+                  <NuxtLink
+                    :to="`/admin/contratos/editar/${contrato.id}`"
+                    class="text-zinc-300 hover:text-zinc-100"
+                  >
+                    Editar
+                  </NuxtLink>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="contratoEdicaoRapida"
+        class="fixed inset-0 z-[9999] bg-black/70 p-4 md:p-8 overflow-auto"
+      >
+        <div class="max-w-5xl mx-auto rounded-xl border border-zinc-800 bg-zinc-950">
+          <div class="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
+            <div>
+              <p class="text-xs text-zinc-500 uppercase tracking-wide">Contratos</p>
+              <h2 class="text-sm font-semibold text-zinc-100">Edição rápida · #{{ contratoEdicaoRapida.id }}</h2>
+            </div>
+            <button
+              type="button"
+              class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+              @click="fecharEdicaoRapida"
+            >
+              Fechar
+            </button>
+          </div>
+
+          <div class="p-4 md:p-6">
+            <AdminContratoForm
+              :contrato-id="contratoEdicaoRapida.id"
+              :initial="contratoEdicaoRapida"
+              @success="onEdicaoRapidaSuccess"
+              @deleted="onEdicaoRapidaDeleted"
+            />
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -119,13 +174,25 @@ import {
   type ContratoStatus,
   updateContratoStatus,
 } from '~/composables/useContratos'
+import {
+  type ContratoDocumentData,
+  EMPRESA_DEFAULTS,
+  downloadContratoAsWord,
+  openContratoPreview,
+} from '~/composables/useContratoDocument'
 
 definePageMeta({ layout: 'admin' })
 
-const { data: contratos, pending, error: erro } = await useAsyncData('admin-contratos', fetchContratos)
+const { data: contratos, pending, error: erro, refresh } = await useAsyncData('admin-contratos', fetchContratos)
 const filtroBusca = ref('')
 const filtroStatus = ref<ContratoStatus | 'todos'>('todos')
 const statusOptions = getContratoStatusOptions()
+const contratoEdicaoRapidaId = ref<number | null>(null)
+
+const contratoEdicaoRapida = computed(() => {
+  if (!contratoEdicaoRapidaId.value) return null
+  return (contratos.value ?? []).find(item => item.id === contratoEdicaoRapidaId.value) ?? null
+})
 
 const contratosFiltrados = computed(() => {
   const termo = filtroBusca.value.trim().toLowerCase()
@@ -213,5 +280,58 @@ function atualizarStatusLocal(contratoId: number, status: ContratoStatus) {
       updated_at: new Date().toISOString(),
     } as ContratoRow
   })
+}
+
+function abrirEdicaoRapida(contratoId: number) {
+  contratoEdicaoRapidaId.value = contratoId
+}
+
+function toDocumentData(contrato: ContratoRow): ContratoDocumentData {
+  return {
+    clienteRazaoSocial: contrato.cliente_nome || '',
+    clienteEndereco: contrato.cliente_endereco || '',
+    clienteCep: contrato.cliente_cep || '',
+    clienteCnpj: contrato.cliente_cnpj || '',
+    prazoDias: contrato.prazo_dias || 120,
+    prazoGarantiaDias: contrato.prazo_garantia_dias || 90,
+    valorTotal: Number(contrato.valor_total ?? 0),
+    condicoesPagamento: contrato.condicoes_pagamento || '',
+    valorHoraSuporte: Number(contrato.valor_hora_suporte ?? 0),
+    multaAbsorcao: contrato.multa_absorcao || '100.000,00',
+    percentualResilicao: contrato.percentual_resilicao || '80%',
+    emailSuporte: contrato.email_suporte || EMPRESA_DEFAULTS.emailSuporte,
+    canalAtendimento: contrato.canal_atendimento || EMPRESA_DEFAULTS.canalAtendimento,
+    bancoNome: contrato.banco_nome || EMPRESA_DEFAULTS.bancoNome,
+    bancoAgencia: contrato.banco_agencia || EMPRESA_DEFAULTS.bancoAgencia,
+    bancoConta: contrato.banco_conta || EMPRESA_DEFAULTS.bancoConta,
+    chavePix: contrato.chave_pix || EMPRESA_DEFAULTS.chavePix,
+    cidadeForo: contrato.cidade_foro || EMPRESA_DEFAULTS.cidadeForo,
+    estadoForo: contrato.estado_foro || EMPRESA_DEFAULTS.estadoForo,
+    dataAssinatura: contrato.data_assinatura || '',
+  }
+}
+
+function visualizarContrato(contrato: ContratoRow) {
+  openContratoPreview(toDocumentData(contrato), contrato.observacoes ?? undefined)
+}
+
+function gerarDocumento(contrato: ContratoRow) {
+  const baseNome = contrato.cliente_nome || `Contrato_${contrato.id}`
+  const nomeArquivo = `Contrato_${baseNome.replace(/[^a-zA-Z0-9À-ÿ ]/g, '').replace(/\s+/g, '_')}`
+  downloadContratoAsWord(toDocumentData(contrato), nomeArquivo, contrato.observacoes ?? undefined)
+}
+
+function fecharEdicaoRapida() {
+  contratoEdicaoRapidaId.value = null
+}
+
+async function onEdicaoRapidaSuccess() {
+  await refresh()
+  fecharEdicaoRapida()
+}
+
+async function onEdicaoRapidaDeleted() {
+  await refresh()
+  fecharEdicaoRapida()
 }
 </script>

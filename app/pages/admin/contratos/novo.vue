@@ -184,7 +184,16 @@
 
     <!-- Dados Bancários (Vale Apps) -->
     <section class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-6">
-      <h2 class="text-sm font-semibold text-zinc-300 uppercase tracking-wide mb-4">Dados Bancários (Vale Apps)</h2>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-sm font-semibold text-zinc-300 uppercase tracking-wide">Dados Bancários (Vale Apps)</h2>
+        <button
+          type="button"
+          class="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800"
+          @click="restaurarDadosPadraoValeApps"
+        >
+          Restaurar dados padrão Vale Apps
+        </button>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-zinc-400 mb-1">Banco</label>
@@ -272,6 +281,107 @@
             type="date"
             class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100"
           />
+        </div>
+      </div>
+    </section>
+
+    <!-- Cláusulas do contrato -->
+    <section class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div>
+          <h2 class="text-sm font-semibold text-zinc-300 uppercase tracking-wide">Cláusulas do contrato (edição separada)</h2>
+          <p class="text-xs text-zinc-500 mt-1">
+            Edite cada ponto do contrato individualmente. O sistema monta o documento final automaticamente para prévia, PDF/Word e salvamento.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="px-3 py-2 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors text-xs"
+            @click="atualizarClausulasComDados"
+          >
+            Regerar cláusulas com dados dos campos
+          </button>
+          <button
+            type="button"
+            class="px-3 py-2 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors text-xs"
+            @click="restaurarClausulasPadrao"
+          >
+            Restaurar cláusulas padrão
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-zinc-400 mb-1">Preâmbulo e definição</label>
+          <textarea
+            v-model="introducaoContrato"
+            rows="8"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-3 text-sm text-zinc-100 font-mono focus:border-brand/50 focus:outline-none"
+            placeholder="Texto introdutório do contrato..."
+            @input="onClausulasInput"
+          />
+        </div>
+
+        <div
+          v-for="(clausula, index) in clausulasContrato"
+          :key="clausula.key"
+        >
+          <label class="block text-sm font-medium text-zinc-400 mb-1">{{ index + 1 }}. {{ clausula.heading }}</label>
+          <textarea
+            v-model="clausula.content"
+            rows="8"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-3 text-sm text-zinc-100 font-mono focus:border-brand/50 focus:outline-none"
+            placeholder="Conteúdo da cláusula..."
+            @input="onClausulasInput"
+          />
+        </div>
+      </div>
+
+    </section>
+
+    <section class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-6">
+      <div class="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 space-y-3">
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-sm font-medium text-zinc-300">Links do ANEXO 1</p>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors text-xs"
+            @click="adicionarLinkAnexo"
+          >
+            + Adicionar link
+          </button>
+        </div>
+
+        <p class="text-xs text-zinc-500">Inclua links de briefing/escopo para aparecer no final do contrato.</p>
+
+        <div v-if="anexosLinks.length === 0" class="text-xs text-zinc-500">
+          Nenhum link adicionado.
+        </div>
+
+        <div v-for="(link, index) in anexosLinks" :key="`anexo-link-${index}`" class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
+          <input
+            v-model="link.titulo"
+            type="text"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100"
+            placeholder="Título do link"
+            @input="clausulasForamEditadas = true"
+          >
+          <input
+            v-model="link.url"
+            type="url"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100"
+            placeholder="https://..."
+            @input="clausulasForamEditadas = true"
+          >
+          <button
+            type="button"
+            class="px-3 py-2 rounded-lg border border-zinc-700 text-red-300 hover:bg-zinc-800 transition-colors text-xs"
+            @click="removerLinkAnexo(index)"
+          >
+            Remover
+          </button>
         </div>
       </div>
     </section>
@@ -374,19 +484,20 @@
 </template>
 
 <script setup lang="ts">
-import { createContrato, type ContratoRow } from '~/composables/useContratos'
+import { createContrato } from '~/composables/useContratos'
 import { fetchPropostas, type PropostaRow } from '~/composables/usePropostas'
+import { fetchCRMClienteById } from '~/composables/useClientesCRM'
 import {
   type ContratoDocumentData,
   EMPRESA_DEFAULTS,
   getDefaultDocumentData,
   mapPropostaToDocumentData,
   valorPorExtenso,
-  generateContratoHTML,
+  generateContratoBodyHTML,
+  generateContratoMarkdown,
   openContratoPreview,
   downloadContratoAsWord,
 } from '~/composables/useContratoDocument'
-import { marked } from 'marked'
 
 definePageMeta({ layout: 'admin' })
 
@@ -402,6 +513,10 @@ const salvando = ref(false)
 const msgErro = ref('')
 const msgSucesso = ref('')
 const showPreview = ref(false)
+const introducaoContrato = ref('')
+const clausulasContrato = ref<Array<{ key: string; heading: string; content: string }>>([])
+const clausulasForamEditadas = ref(false)
+const anexosLinks = ref<Array<{ titulo: string; url: string }>>([])
 
 // ─── Campos de moeda formatados ────────────────────────────────────────────────
 const valorTotalTexto = ref('')
@@ -458,7 +573,14 @@ function onCepInput(event: Event) {
 }
 
 // ─── Importar proposta ─────────────────────────────────────────────────────────
-function importarProposta() {
+function extrairCepDoTexto(texto: string | null | undefined): string {
+  const raw = String(texto ?? '')
+  const match = raw.match(/\b\d{5}-?\d{3}\b/)
+  if (!match) return ''
+  return match[0].replace(/(\d{5})(\d{3})/, '$1-$2')
+}
+
+async function importarProposta() {
   if (!propostaSelecionadaId.value) return
 
   const proposta = propostas.value.find((p: PropostaRow) => p.id === propostaSelecionadaId.value)
@@ -474,18 +596,155 @@ function importarProposta() {
   if (dados.prazoDias) form.prazoDias = dados.prazoDias
   if (dados.prazoGarantiaDias) form.prazoGarantiaDias = dados.prazoGarantiaDias
   if (dados.condicoesPagamento) form.condicoesPagamento = dados.condicoesPagamento
+
+  if (proposta.crm_cliente_id) {
+    const cliente = await fetchCRMClienteById(proposta.crm_cliente_id)
+    if (cliente) {
+      form.clienteRazaoSocial = cliente.empresa?.trim() || cliente.nome?.trim() || form.clienteRazaoSocial
+      form.clienteCnpj = cliente.cnpj?.trim() || form.clienteCnpj
+      form.clienteEndereco = cliente.endereco?.trim() || form.clienteEndereco
+
+      const cepExtraido = extrairCepDoTexto(cliente.endereco)
+      if (cepExtraido) {
+        form.clienteCep = cepExtraido
+      }
+    }
+  }
+
+  if (!clausulasForamEditadas.value) {
+    atualizarClausulasComDados()
+  }
+}
+
+function onClausulasInput() {
+  clausulasForamEditadas.value = true
+}
+
+function parseContratoEmClausulas(markdown: string) {
+  const texto = String(markdown ?? '').replace(/\r\n/g, '\n').trim()
+  const headingRegex = /^####\s+(.+)$/gm
+  const matches = [...texto.matchAll(headingRegex)]
+
+  if (!matches.length) {
+    return {
+      introducao: texto,
+      clausulas: [] as Array<{ key: string; heading: string; content: string }>,
+    }
+  }
+
+  const introducao = texto.slice(0, matches[0].index ?? 0).replace(/\n\s*---\s*$/g, '').trim()
+
+  const clausulas = matches.map((match, index) => {
+    const heading = (match[1] ?? '').trim()
+    const matchIndex = match.index ?? 0
+    const start = matchIndex + match[0].length
+    const end = index < matches.length - 1 ? (matches[index + 1].index ?? texto.length) : texto.length
+    const content = texto
+      .slice(start, end)
+      .replace(/^\s+/, '')
+      .replace(/\n\s*---\s*$/g, '')
+      .trim()
+
+    return {
+      key: `clausula-${index + 1}`,
+      heading,
+      content,
+    }
+  })
+
+  return { introducao, clausulas }
+}
+
+function atualizarClausulasComDados() {
+  const markdown = generateContratoMarkdown(form)
+  const parsed = parseContratoEmClausulas(markdown)
+  introducaoContrato.value = parsed.introducao
+  clausulasContrato.value = parsed.clausulas
+  clausulasForamEditadas.value = false
+}
+
+function restaurarClausulasPadrao() {
+  atualizarClausulasComDados()
+}
+
+function restaurarDadosPadraoValeApps() {
+  form.bancoNome = EMPRESA_DEFAULTS.bancoNome
+  form.bancoAgencia = EMPRESA_DEFAULTS.bancoAgencia
+  form.bancoConta = EMPRESA_DEFAULTS.bancoConta
+  form.chavePix = EMPRESA_DEFAULTS.chavePix
+  form.emailSuporte = EMPRESA_DEFAULTS.emailSuporte
+  form.canalAtendimento = EMPRESA_DEFAULTS.canalAtendimento
+  form.cidadeForo = EMPRESA_DEFAULTS.cidadeForo
+  form.estadoForo = EMPRESA_DEFAULTS.estadoForo
+
+  if (!clausulasForamEditadas.value) {
+    atualizarClausulasComDados()
+  }
+}
+
+function buildContratoMarkdownDasClausulas() {
+  const intro = introducaoContrato.value.trim()
+  const blocos = clausulasContrato.value
+    .map((clausula) => {
+      const heading = clausula.heading.trim()
+      const content = clausula.content.trim()
+      if (!heading && !content) return ''
+      return `---\n\n#### ${heading}\n\n${content}`.trim()
+    })
+    .filter(Boolean)
+
+  return [intro, ...blocos].filter(Boolean).join('\n\n')
+}
+
+function sanitizeUrl(url: string): string {
+  const raw = String(url ?? '').trim()
+  if (!raw) return ''
+  if (/^https?:\/\//i.test(raw)) return raw
+  return `https://${raw}`
+}
+
+function buildAnexoLinksMarkdown() {
+  const links = anexosLinks.value
+    .map((item) => ({
+      titulo: String(item.titulo ?? '').trim(),
+      url: sanitizeUrl(item.url),
+    }))
+    .filter(item => item.titulo && item.url)
+
+  if (!links.length) return ''
+
+  const linhas = links.map(item => `- [${item.titulo}](${item.url})`)
+  return ['<!-- ANEXO_LINKS_START -->', '---', '', '#### ANEXO 1 — Links de briefing/escopo', '', ...linhas, '<!-- ANEXO_LINKS_END -->'].join('\n')
+}
+
+function adicionarLinkAnexo() {
+  anexosLinks.value.push({ titulo: '', url: '' })
+  clausulasForamEditadas.value = true
+}
+
+function removerLinkAnexo(index: number) {
+  anexosLinks.value.splice(index, 1)
+  clausulasForamEditadas.value = true
+}
+
+function getContratoMarkdownAtual() {
+  const markdownPorClausulas = buildContratoMarkdownDasClausulas().trim()
+  const markdownLinks = buildAnexoLinksMarkdown()
+
+  if (markdownPorClausulas) {
+    return [markdownPorClausulas, markdownLinks].filter(Boolean).join('\n\n')
+  }
+
+  if (markdownLinks) {
+    return [generateContratoMarkdown(form), markdownLinks].join('\n\n')
+  }
+
+  return generateContratoMarkdown(form)
 }
 
 // ─── Preview ───────────────────────────────────────────────────────────────────
 const previewHTML = computed(() => {
-  // Usa a mesma lógica de preenchimento do template
-  // mas retorna só o conteúdo HTML (sem o wrapper do documento inteiro)
-  const { generateContratoHTML: _gen, ...rest } = { generateContratoHTML }
-  // Gera o HTML completo e extrai o body
-  const fullHTML = generateContratoHTML(form)
-  // Extrair apenas o conteúdo do .content-wrapper
-  const match = fullHTML.match(/<div class="content-wrapper">([\s\S]*?)<\/div>\s*<\/body>/)
-  return match?.[1] ?? ''
+  return generateContratoBodyHTML(form, getContratoMarkdownAtual())
 })
 
 function visualizarContrato() {
@@ -494,14 +753,14 @@ function visualizarContrato() {
 
 // ─── Downloads ─────────────────────────────────────────────────────────────────
 function imprimirPDF() {
-  openContratoPreview(form)
+  openContratoPreview(form, getContratoMarkdownAtual())
 }
 
 function baixarWord() {
   const nome = form.clienteRazaoSocial
     ? `Contrato_${form.clienteRazaoSocial.replace(/[^a-zA-Z0-9À-ÿ ]/g, '').replace(/\s+/g, '_')}`
     : 'Contrato_Prestacao_Servicos'
-  downloadContratoAsWord(form, nome)
+  downloadContratoAsWord(form, nome, getContratoMarkdownAtual())
 }
 
 // ─── Salvar contrato ───────────────────────────────────────────────────────────
@@ -518,6 +777,20 @@ async function salvarContrato() {
   salvando.value = true
 
   try {
+    const clausulasEstruturadas = clausulasContrato.value
+      .map((clausula) => ({
+        heading: String(clausula.heading ?? '').trim(),
+        content: String(clausula.content ?? '').trim(),
+      }))
+      .filter((clausula) => clausula.heading || clausula.content)
+
+    const anexosEstruturados = anexosLinks.value
+      .map((item) => ({
+        titulo: String(item.titulo ?? '').trim(),
+        url: sanitizeUrl(item.url),
+      }))
+      .filter((item) => item.titulo && item.url)
+
     const titulo = `Contrato - ${form.clienteRazaoSocial}`
     const { data, error } = await createContrato({
       titulo,
@@ -530,7 +803,10 @@ async function salvarContrato() {
       data_fim: null,
       data_assinatura: form.dataAssinatura || null,
       descricao: `Contrato gerado automaticamente. Prazo: ${form.prazoDias} dias úteis. Garantia: ${form.prazoGarantiaDias} dias.`,
-      observacoes: null,
+      observacoes: getContratoMarkdownAtual(),
+      contrato_introducao: introducaoContrato.value.trim() || null,
+      contrato_clausulas: clausulasEstruturadas,
+      contrato_anexos_links: anexosEstruturados,
       proposta_id: propostaSelecionadaId.value,
       // Campos do documento
       cliente_endereco: form.clienteEndereco || null,
@@ -563,6 +839,10 @@ async function salvarContrato() {
     salvando.value = false
   }
 }
+
+onMounted(() => {
+  atualizarClausulasComDados()
+})
 </script>
 
 <style>

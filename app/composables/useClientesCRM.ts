@@ -29,6 +29,8 @@ export interface CRMCliente {
     updated_at: string
     nome: string
     empresa: string | null
+    cnpj: string | null
+    endereco: string | null
     email: string | null
     telefone: string | null
     origem: string
@@ -47,6 +49,8 @@ export interface CRMCliente {
 export interface CRMClienteUpsertInput {
     nome?: string
     empresa?: string | null
+    cnpj?: string | null
+    endereco?: string | null
     email?: string | null
     telefone?: string | null
     origem?: string | null
@@ -154,7 +158,9 @@ function buildClientePayload(input: CRMClienteUpsertInput) {
     return {
         nome: String(input.nome ?? '').trim(),
         empresa: input.empresa?.trim() || null,
-        email: input.email?.trim().toLowerCase() || null,
+        cnpj: input.cnpj?.trim() || null,
+        endereco: input.endereco?.trim() || null,
+        email: input.email?.trim()?.toLowerCase() || null,
         telefone: input.telefone?.trim() || null,
         origem: input.origem?.trim() || 'site',
         status: normalizarStatus(input.status),
@@ -269,6 +275,29 @@ export async function updateCRMClienteStatus(
         .eq('id', id)
 
     return { error: error?.message ?? null }
+}
+
+export async function bindCRMClienteToProposta(
+    propostaId: number,
+    clienteId: number | null
+): Promise<{ error: string | null }> {
+    const supabase = useSupabase()
+    if (!supabase) return { error: 'Supabase não configurado' }
+
+    const { error: clearError } = await supabase
+        .from('crm_clientes')
+        .update({ proposta_id: null })
+        .eq('proposta_id', propostaId)
+
+    if (clearError) return { error: clearError.message }
+    if (clienteId == null) return { error: null }
+
+    const { error: bindError } = await supabase
+        .from('crm_clientes')
+        .update({ proposta_id: propostaId })
+        .eq('id', clienteId)
+
+    return { error: bindError?.message ?? null }
 }
 
 export async function deleteCRMCliente(id: number): Promise<{ error: string | null }> {

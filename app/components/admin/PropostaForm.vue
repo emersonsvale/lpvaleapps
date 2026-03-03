@@ -36,6 +36,24 @@
     <div>
       <h3 class="text-sm font-medium text-zinc-300 mb-2">Cliente</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-xs text-zinc-500 mb-1">Vincular cliente do CRM</label>
+          <select
+            v-model="selectedCRMClienteIdModel"
+            class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100"
+            :disabled="crmClientesPending"
+          >
+            <option value="">{{ crmClientesPending ? 'Carregando clientes...' : 'Selecione um cliente (opcional)' }}</option>
+            <option
+              v-for="cliente in crmClientesOptions"
+              :key="cliente.id"
+              :value="String(cliente.id)"
+            >
+              {{ labelCRMCliente(cliente) }}
+            </option>
+          </select>
+          <p class="text-xs text-zinc-500 mt-1">Ao selecionar, Nome/E-mail/Telefone serão preenchidos automaticamente.</p>
+        </div>
         <div>
           <label class="block text-xs text-zinc-500 mb-1">Nome</label>
           <input
@@ -408,6 +426,11 @@
 
 <script setup lang="ts">
 import {
+  bindCRMClienteToProposta,
+  fetchCRMClientes,
+  type CRMCliente,
+} from '~/composables/useClientesCRM'
+import {
   calcularResumoHora,
   createProposta,
   slugifyProposta,
@@ -611,6 +634,26 @@ const form = reactive({
     : [createEtapa(0)]
 })
 
+const selectedCRMClienteId = ref<number | null>(props.initial?.crm_cliente_id ?? null)
+const { data: crmClientesData, pending: crmClientesPending } = await useAsyncData(
+  'admin-proposta-crm-clientes',
+  fetchCRMClientes
+)
+const crmClientes = computed<CRMCliente[]>(() => crmClientesData.value ?? [])
+const crmClientesOptions = computed(() => {
+  return [...crmClientes.value].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+})
+const selectedCRMCliente = computed(() => {
+  return crmClientes.value.find(cliente => cliente.id === selectedCRMClienteId.value) ?? null
+})
+const selectedCRMClienteIdModel = computed({
+  get: () => selectedCRMClienteId.value == null ? '' : String(selectedCRMClienteId.value),
+  set: (value: string) => {
+    const nextId = Number(value)
+    selectedCRMClienteId.value = Number.isFinite(nextId) && nextId > 0 ? nextId : null
+  }
+})
+
 const saving = ref(false)
 const isHora = computed(() => form.tipo_proposta === 'hora')
 const resumoHora = computed(() => calcularResumoHora(form.proposta_itens_hora, form.valor_hora ?? 0))
@@ -664,6 +707,50 @@ watch(
   }
 )
 
+watch(
+  selectedCRMCliente,
+  (cliente) => {
+    if (!cliente) return
+    form.nome_cliente = cliente.nome || ''
+    form.email_cliente = cliente.email || ''
+    form.telefone_cliente = cliente.telefone || ''
+  }
+)
+
+watch(
+  [crmClientes, () => props.propostaId],
+  ([clientes, propostaId]) => {
+    if (!propostaId || selectedCRMClienteId.value) return
+    const clienteVinculado = clientes.find(cliente => cliente.proposta_id === propostaId)
+    if (!clienteVinculado) return
+    selectedCRMClienteId.value = clienteVinculado.id
+  },
+  { immediate: true }
+)
+
+async function sincronizarClienteCRM(propostaId: number) {
+  const clienteSelecionado = selectedCRMCliente.value
+  if (clienteSelecionado?.proposta_id && clienteSelecionado.proposta_id !== propostaId) {
+    const confirmar = confirm(
+      `O cliente ${clienteSelecionado.nome} já está vinculado à proposta #${clienteSelecionado.proposta_id}. Deseja mover o vínculo para esta proposta?`
+    )
+
+    if (!confirmar) return
+  }
+
+  const { error } = await bindCRMClienteToProposta(propostaId, selectedCRMClienteId.value)
+  if (error) {
+    alert(`Proposta salva, mas não foi possível atualizar o vínculo com CRM: ${error}`)
+  }
+}
+
+function labelCRMCliente(cliente: CRMCliente): string {
+  const empresa = cliente.empresa?.trim()
+  return empresa
+    ? `#${cliente.id} · ${cliente.nome} (${empresa})`
+    : `#${cliente.id} · ${cliente.nome}`
+}
+
 function adicionarEtapa() {
   form.proposta_itens_hora.push(createEtapa(form.proposta_itens_hora.length))
 }
@@ -691,6 +778,7 @@ async function onSubmit() {
         nome_cliente: form.nome_cliente || null,
         email_cliente: form.email_cliente || null,
         telefone_cliente: form.telefone_cliente || null,
+        crm_cliente_id: selectedCRMClienteId.value,
         valor_bruto: isHora.value ? resumoHora.value.totalValor : (form.valor_bruto ?? null),
         valor_final: isHora.value ? resumoHora.value.totalValor : (form.valor_final ?? null),
         valor_hora: isHora.value ? (form.valor_hora ?? 0) : null,
@@ -718,6 +806,7 @@ async function onSubmit() {
         alert('Erro ao atualizar: ' + error)
         return
       }
+      await sincronizarClienteCRM(props.propostaId)
       emit('success', { ...form, id: props.propostaId } as PropostaRow)
     } else {
       // Para novas propostas, gerar slug automático a partir do nome
@@ -732,6 +821,7 @@ async function onSubmit() {
         nome_cliente: form.nome_cliente || null,
         email_cliente: form.email_cliente || null,
         telefone_cliente: form.telefone_cliente || null,
+        crm_cliente_id: selectedCRMClienteId.value,
         valor_bruto: isHora.value ? resumoHora.value.totalValor : (form.valor_bruto ?? null),
         valor_final: isHora.value ? resumoHora.value.totalValor : (form.valor_final ?? null),
         valor_hora: isHora.value ? (form.valor_hora ?? 0) : null,
@@ -759,7 +849,10 @@ async function onSubmit() {
         alert('Erro ao criar: ' + error)
         return
       }
-      if (data) emit('success', data)
+      if (data) {
+        await sincronizarClienteCRM(data.id)
+        emit('success', data)
+      }
     }
   } finally {
     saving.value = false

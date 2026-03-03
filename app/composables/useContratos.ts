@@ -1,5 +1,15 @@
 export type ContratoStatus = 'rascunho' | 'enviado' | 'assinado' | 'encerrado' | 'cancelado'
 
+export interface ContratoClausulaItem {
+    heading: string
+    content: string
+}
+
+export interface ContratoAnexoLinkItem {
+    titulo: string
+    url: string
+}
+
 export interface ContratoRow {
     id: number
     created_at: string
@@ -15,6 +25,9 @@ export interface ContratoRow {
     data_assinatura: string | null
     descricao: string | null
     observacoes: string | null
+    contrato_introducao: string | null
+    contrato_clausulas: ContratoClausulaItem[]
+    contrato_anexos_links: ContratoAnexoLinkItem[]
     proposta_id: number | null
     // Campos do documento contratual
     cliente_endereco: string | null
@@ -48,6 +61,9 @@ export interface ContratoUpsertInput {
     data_assinatura?: string | null
     descricao?: string | null
     observacoes?: string | null
+    contrato_introducao?: string | null
+    contrato_clausulas?: ContratoClausulaItem[] | null
+    contrato_anexos_links?: ContratoAnexoLinkItem[] | null
     proposta_id?: number | null
     // Campos do documento contratual
     cliente_endereco?: string | null
@@ -104,15 +120,44 @@ function normalizarContrato(item: ContratoRow): ContratoRow {
     return {
         ...item,
         status: normalizarStatus(item.status),
-        valor_total: item.valor_total == null ? null : roundMoney(toNumber(item.valor_total))
+        valor_total: item.valor_total == null ? null : roundMoney(toNumber(item.valor_total)),
+        contrato_introducao: item.contrato_introducao ?? null,
+        contrato_clausulas: normalizarClausulas(item.contrato_clausulas),
+        contrato_anexos_links: normalizarAnexosLinks(item.contrato_anexos_links),
     }
+}
+
+function normalizarClausulas(value: unknown): ContratoClausulaItem[] {
+    if (!Array.isArray(value)) return []
+
+    return value
+        .map((item) => {
+            const heading = String((item as ContratoClausulaItem | null)?.heading ?? '').trim()
+            const content = String((item as ContratoClausulaItem | null)?.content ?? '').trim()
+            if (!heading && !content) return null
+            return { heading, content }
+        })
+        .filter((item): item is ContratoClausulaItem => !!item)
+}
+
+function normalizarAnexosLinks(value: unknown): ContratoAnexoLinkItem[] {
+    if (!Array.isArray(value)) return []
+
+    return value
+        .map((item) => {
+            const titulo = String((item as ContratoAnexoLinkItem | null)?.titulo ?? '').trim()
+            const url = String((item as ContratoAnexoLinkItem | null)?.url ?? '').trim()
+            if (!titulo || !url) return null
+            return { titulo, url }
+        })
+        .filter((item): item is ContratoAnexoLinkItem => !!item)
 }
 
 function buildContratoPayload(input: ContratoUpsertInput) {
     return {
         titulo: String(input.titulo ?? '').trim(),
         cliente_nome: String(input.cliente_nome ?? '').trim(),
-        cliente_email: input.cliente_email?.trim().toLowerCase() || null,
+        cliente_email: input.cliente_email?.trim()?.toLowerCase() || null,
         cliente_telefone: input.cliente_telefone?.trim() || null,
         status: normalizarStatus(input.status),
         valor_total: input.valor_total == null ? null : roundMoney(Math.max(0, toNumber(input.valor_total))),
@@ -121,6 +166,9 @@ function buildContratoPayload(input: ContratoUpsertInput) {
         data_assinatura: input.data_assinatura || null,
         descricao: input.descricao?.trim() || null,
         observacoes: input.observacoes?.trim() || null,
+        contrato_introducao: input.contrato_introducao?.trim() || null,
+        contrato_clausulas: normalizarClausulas(input.contrato_clausulas),
+        contrato_anexos_links: normalizarAnexosLinks(input.contrato_anexos_links),
         proposta_id: input.proposta_id ?? null,
         // Campos do documento contratual
         cliente_endereco: input.cliente_endereco?.trim() || null,

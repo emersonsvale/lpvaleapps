@@ -85,6 +85,7 @@ export interface PropostaRow {
   prazo_dias: number | null
   telefone_cliente: string | null
   email_cliente: string | null
+  crm_cliente_id: number | null
   tipos_servicos_enuns: TipoServico[] | null
   entregas: Entrega[] | null
   mais_info: string | null
@@ -111,6 +112,7 @@ export interface PropostaUpsertInput {
   prazo_dias?: number | null
   telefone_cliente?: string | null
   email_cliente?: string | null
+  crm_cliente_id?: number | null
   tipos_servicos_enuns?: TipoServico[] | null
   entregas?: Entrega[] | null
   mais_info?: string | null
@@ -445,6 +447,7 @@ export async function createProposta(
       prazo_dias: input.prazo_dias,
       telefone_cliente: input.telefone_cliente,
       email_cliente: input.email_cliente,
+      crm_cliente_id: input.crm_cliente_id ?? null,
       tipos_servicos_enuns: input.tipos_servicos_enuns,
       entregas: input.entregas,
       mais_info: input.mais_info,
@@ -521,6 +524,7 @@ export async function updateProposta(
     prazo_dias: input.prazo_dias,
     telefone_cliente: input.telefone_cliente,
     email_cliente: input.email_cliente,
+    crm_cliente_id: input.crm_cliente_id ?? null,
     tipos_servicos_enuns: input.tipos_servicos_enuns,
     entregas: input.entregas,
     mais_info: input.mais_info,
