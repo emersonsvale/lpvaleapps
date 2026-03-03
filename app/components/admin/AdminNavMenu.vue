@@ -77,6 +77,17 @@
         </li>
         <li>
           <NuxtLink
+            to="/admin/contratos"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+            :class="isActive('/admin/contratos') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
+            @click="open = false"
+          >
+              <PhFileText class="w-5 h-5 shrink-0 opacity-80" />
+            <span>Contratos</span>
+          </NuxtLink>
+        </li>
+        <li>
+          <NuxtLink
             to="/admin/blog"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
             :class="isActive('/admin/blog') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"

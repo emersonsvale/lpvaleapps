@@ -35,6 +35,9 @@ const pageTitle = computed(() => {
   if (path === '/admin/clientes') return 'CRM Clientes'
   if (path === '/admin/clientes/novo') return 'Novo Cliente'
   if (path.match(/^\/admin\/clientes\/editar\/\d+$/)) return 'Editar Cliente'
+  if (path === '/admin/contratos') return 'Contratos'
+  if (path === '/admin/contratos/novo') return 'Novo Contrato'
+  if (path.match(/^\/admin\/contratos\/editar\/\d+$/)) return 'Editar Contrato'
   if (path === '/admin/blog') return 'Blog'
   if (path === '/admin/blog/novo') return 'Novo Artigo'
   if (path.match(/^\/admin\/blog\/editar\/\d+$/)) return 'Editar Artigo'
@@ -65,6 +68,12 @@ const breadcrumbs = computed(() => {
   if (path.startsWith('/admin/clientes')) {
     list.push({ label: 'CRM Clientes', path: '/admin/clientes' })
     if (path === '/admin/clientes/novo') list.push({ label: 'Novo' })
+    else if (path.match(/\/editar\/\d+$/)) list.push({ label: 'Editar' })
+    return list
+  }
+  if (path.startsWith('/admin/contratos')) {
+    list.push({ label: 'Contratos', path: '/admin/contratos' })
+    if (path === '/admin/contratos/novo') list.push({ label: 'Novo' })
     else if (path.match(/\/editar\/\d+$/)) list.push({ label: 'Editar' })
     return list
   }
