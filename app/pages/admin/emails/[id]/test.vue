@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="ts">
+import { renderEmailContent } from '~/utils/emailContentFormatter'
+
 const route = useRoute()
 const emails = useEmail()
 
@@ -48,6 +50,7 @@ const erro = ref<string | null>(null)
 const sucesso = ref<string | null>(null)
 const emailPara = ref('')
 const variaveisTexto = ref('{\n  "nome": "Joao"\n}')
+const template = ref<any | null>(null)
 
 const parseVars = () => {
   try {
@@ -64,10 +67,27 @@ const enviarTeste = async () => {
   enviando.value = true
 
   try {
+    if (!template.value) {
+      const lista = await emails.getTemplates()
+      const id = String(route.params.id)
+      template.value = lista.find(item => String(item.id) === id) || null
+    }
+
+    if (!template.value) {
+      throw new Error('Template nao encontrado')
+    }
+
+    const vars = parseVars()
+
     const resultado = await emails.sendEmail({
-      templateId: Number(route.params.id),
       para: emailPara.value,
-      variaveis: parseVars(),
+      assunto: template.value.assunto || 'Sem assunto',
+      conteudo: renderEmailContent(template.value.conteudo_html || '', vars),
+      variaveis: vars,
+      metadados: {
+        origem: 'admin-emails-test',
+        templateId: template.value.id,
+      },
     })
 
     if (!resultado.sucesso) {

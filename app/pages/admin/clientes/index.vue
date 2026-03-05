@@ -76,7 +76,7 @@
         <section
           v-for="coluna in colunasKanban"
           :key="coluna.status"
-          class="w-[280px] rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 min-h-[460px]"
+          class="w-[280px] h-[560px] rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 flex flex-col"
           @dragover.prevent
           @drop="onDrop(coluna.status)"
         >
@@ -87,7 +87,7 @@
             </span>
           </header>
 
-          <div class="space-y-3">
+          <div class="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
             <article
               v-for="cliente in clientesPorStatus[coluna.status]"
               :key="cliente.id"
@@ -115,7 +115,7 @@
               </div>
 
               <div class="mt-3 flex items-center justify-between gap-2">
-                <span class="text-brand font-medium text-xs">{{ formatarMoeda(cliente.valor_potencial ?? 0) }}</span>
+                <span class="text-brand font-medium text-xs">{{ formatarMoeda(valorCliente(cliente.id)) }}</span>
                 <NuxtLink
                   :to="`/admin/clientes/editar/${cliente.id}`"
                   class="text-xs text-zinc-400 hover:text-zinc-200"
@@ -153,10 +153,12 @@ import {
   type ClienteStatus,
   updateCRMClienteStatus,
 } from '~/composables/useClientesCRM'
+import { fetchPropostas } from '~/composables/usePropostas'
 
 definePageMeta({ layout: 'admin' })
 
 const { data: clientes, pending, error: erro } = await useAsyncData('admin-crm-clientes', fetchCRMClientes)
+const { data: propostas } = await useAsyncData('admin-crm-propostas-linked', fetchPropostas)
 const clienteArrastadoId = ref<number | null>(null)
 const filtroBusca = ref('')
 const filtroPrioridade = ref<ClientePrioridade | ''>('')
@@ -188,7 +190,31 @@ const clientesFiltrados = computed(() => {
   })
 })
 
-const metrics = computed(() => calcularCRMMetrics(clientesFiltrados.value))
+const valorPorCliente = computed(() => {
+  const mapa = new Map<number, number>()
+
+  for (const proposta of propostas.value ?? []) {
+    if (!proposta.crm_cliente_id) continue
+    if (proposta.status_proposta === 'entregue' || proposta.status_proposta === 'cancelada') continue
+
+    const valorAtual = mapa.get(proposta.crm_cliente_id) ?? 0
+    mapa.set(proposta.crm_cliente_id, valorAtual + (proposta.valor_final ?? 0))
+  }
+
+  return mapa
+})
+
+const metrics = computed(() => {
+  const base = calcularCRMMetrics(clientesFiltrados.value)
+  const valorPipeline = clientesFiltrados.value.reduce((acc, cliente) => {
+    return acc + (valorPorCliente.value.get(cliente.id) ?? 0)
+  }, 0)
+
+  return {
+    ...base,
+    valorPipeline,
+  }
+})
 const possuiFiltros = computed(() => Boolean(filtroBusca.value || filtroPrioridade.value || filtroStatus.value))
 
 const clientesPorStatus = computed(() => {
@@ -263,6 +289,10 @@ function atualizarStatusLocal(clienteId: number, status: ClienteStatus) {
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
+}
+
+function valorCliente(clienteId: number) {
+  return valorPorCliente.value.get(clienteId) ?? 0
 }
 
 function formatarData(valor: string) {

@@ -57,7 +57,7 @@
         <section
           v-for="coluna in colunasKanban"
           :key="coluna.status"
-          class="w-[280px] rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 min-h-[460px]"
+          class="w-[280px] h-[560px] rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 flex flex-col"
           @dragover.prevent
           @drop="onDrop(coluna.status)"
         >
@@ -68,7 +68,7 @@
             </span>
           </header>
 
-          <div class="space-y-3">
+          <div class="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
             <article
               v-for="p in propostasPorStatus[coluna.status]"
               :key="p.id"
@@ -188,7 +188,9 @@ const metricas = computed(() => {
   const lista = propostas.value ?? []
   const aprovadas = lista.filter(item => item.status_proposta === 'aprovada').length
   const emExecucao = lista.filter(item => item.status_proposta === 'em_execucao').length
-  const valorTotal = lista.reduce((acc, item) => acc + (item.valor_final ?? 0), 0)
+  const valorTotal = lista
+    .filter(item => item.status_proposta !== 'entregue' && item.status_proposta !== 'cancelada')
+    .reduce((acc, item) => acc + (item.valor_final ?? 0), 0)
 
   return {
     total: lista.length,

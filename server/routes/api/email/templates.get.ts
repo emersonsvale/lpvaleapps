@@ -1,8 +1,7 @@
 /**
  * GET /api/email/templates
  * Lista templates de email disponiveis.
- * Usuarios comuns veem apenas templates ativos.
- * Admins veem todos.
+ * Usuarios autenticados veem todos os templates.
  */
 
 import { requireAuth } from '~~/server/utils/auth'
@@ -17,15 +16,7 @@ export default defineEventHandler(async (event) => {
             throw new Error('Supabase nao esta configurado')
         }
 
-        // Determinar se e admin
-        const isAdmin = user.user_metadata?.role === 'admin'
-
         let query = supabase.from('email_templates').select('*')
-
-        // Usuarios comuns: apenas templates ativos
-        if (!isAdmin) {
-            query = query.eq('ativo', true)
-        }
 
         query = query.order('tipo', { ascending: true }).order('nome', { ascending: true })
 

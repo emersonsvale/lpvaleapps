@@ -14,6 +14,8 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+
+    <UiAppFeedbackCenter />
   </div>
 </template>
 

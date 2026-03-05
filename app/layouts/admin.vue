@@ -6,7 +6,7 @@
     <div class="flex-1 flex flex-col min-w-0 lg:pl-64">
       <AdminHeader :title="pageTitle" :breadcrumbs="breadcrumbs" @toggle-menu="menuOpen = !menuOpen" />
       <main class="flex-1 overflow-auto">
-        <div class="p-6 max-w-6xl mx-auto">
+        <div class="p-6 w-full">
           <slot />
         </div>
       </main>

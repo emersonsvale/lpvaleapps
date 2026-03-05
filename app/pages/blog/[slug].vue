@@ -11,7 +11,7 @@
     </div>
 
     <!-- Breadcrumb Navigation -->
-    <nav class="container mx-auto px-6 max-w-4xl pt-32 md:pt-36 pb-4">
+    <nav class="container mx-auto px-6 max-w-[61.6rem] pt-32 md:pt-36 pb-4">
       <ol class="flex items-center gap-1.5 text-sm text-zinc-500">
         <li>
           <NuxtLink to="/" class="hover:text-zinc-300 transition-colors">Início</NuxtLink>
@@ -25,7 +25,7 @@
       </ol>
     </nav>
 
-    <article class="container mx-auto px-6 max-w-4xl">
+    <article class="container mx-auto px-6 max-w-[61.6rem]">
       <!-- Article Header -->
       <header class="mb-10 pt-6 md:pt-8">
         <!-- Categories -->

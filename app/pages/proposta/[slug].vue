@@ -44,7 +44,7 @@
           <div class="absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-brand/10 via-brand/5 to-transparent" />
           
           <div class="relative pt-20 pb-24 px-4 sm:px-6 w-full">
-            <div class="mx-auto max-w-4xl">
+            <div class="mx-auto max-w-[61.6rem]">
               <!-- Back button -->
               <div
                 v-motion
@@ -145,7 +145,7 @@
 
         <!-- Execution Plan Section -->
         <section class="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
-          <div class="mx-auto max-w-4xl">
+          <div class="mx-auto max-w-[61.6rem]">
             <div
               v-motion
               :initial="{ opacity: 0, y: 20 }"
@@ -182,7 +182,7 @@
         </section>
 
         <section v-if="isPropostaHora" class="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
-          <div class="mx-auto max-w-4xl">
+          <div class="mx-auto max-w-[61.6rem]">
             <div
               v-motion
               :initial="{ opacity: 0, y: 20 }"
@@ -231,7 +231,7 @@
         </section>
 
         <section class="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
-          <div class="mx-auto max-w-4xl">
+          <div class="mx-auto max-w-[61.6rem]">
             <div class="grid md:grid-cols-2 gap-6 sm:gap-8">
               <div
                 v-motion
@@ -297,7 +297,7 @@
 
         <!-- Services & Deliverables -->
         <section class="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
-          <div class="mx-auto max-w-4xl">
+          <div class="mx-auto max-w-[61.6rem]">
             <div class="grid md:grid-cols-2 gap-6 sm:gap-8">
               <!-- Services -->
               <div
@@ -336,7 +336,7 @@
 
         <!-- Why Choose Section -->
         <section class="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
-          <div class="mx-auto max-w-4xl">
+          <div class="mx-auto max-w-[61.6rem]">
             <div
               v-motion
               :initial="{ opacity: 0, y: 20 }"
@@ -367,7 +367,7 @@
 
         <!-- Cases Section -->
         <section v-if="casesDestaque.length" class="py-16 sm:py-24 md:py-32 px-4 sm:px-6">
-          <div class="mx-auto max-w-4xl">
+          <div class="mx-auto max-w-[61.6rem]">
             <div
               v-motion
               :initial="{ opacity: 0, y: 20 }"
@@ -478,7 +478,7 @@
 
         <!-- Footer -->
         <footer class="py-10 sm:py-12 px-4 sm:px-6 border-t border-border/40 mt-16 sm:mt-20">
-          <div class="mx-auto max-w-4xl text-center text-xs sm:text-sm text-muted-foreground">
+          <div class="mx-auto max-w-[61.6rem] text-center text-xs sm:text-sm text-muted-foreground">
             <p>© 2024 Vale Apps. Desenvolvimento de soluções digitais sob medida.</p>
           </div>
         </footer>

@@ -308,6 +308,47 @@ export default function useEmail() {
     }
 
     /**
+     * Exclui um template.
+     */
+    const deleteTemplate = async (id: string): Promise<{
+        sucesso: boolean
+        erro?: string
+    }> => {
+        loading.value = true
+        erro.value = null
+
+        try {
+            const token = await getAuthToken()
+
+            const response: any = await $fetch('/api/email/templates', {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: { id },
+            })
+
+            if (response.sucesso) {
+                ultimaMensagem.value = response.mensagem
+                return { sucesso: true }
+            }
+
+            throw new Error(response.erro || 'Erro ao excluir template')
+        }
+        catch (e: any) {
+            const mensagem = e?.data?.statusMessage || e?.message || 'Erro ao excluir template'
+            erro.value = mensagem
+            return {
+                sucesso: false,
+                erro: mensagem,
+            }
+        }
+        finally {
+            loading.value = false
+        }
+    }
+
+    /**
      * Limpa mensagens de erro
      */
     const limparErro = () => {
@@ -333,6 +374,7 @@ export default function useEmail() {
         getTemplates,
         getPreview,
         saveTemplate,
+        deleteTemplate,
         limparErro,
         limparMensagem,
     }

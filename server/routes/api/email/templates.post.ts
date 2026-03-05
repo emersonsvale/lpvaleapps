@@ -1,17 +1,16 @@
 /**
  * POST /api/email/templates
  * Criar ou atualizar um template de email.
- * Requer autenticacao de admin.
+ * Requer autenticacao.
  */
 
-import { requireAdmin, requireAuth } from '~~/server/utils/auth'
+import { requireAuth } from '~~/server/utils/auth'
 import { useSupabaseServer } from '~~/server/utils/supabase'
 import { validarTemplate } from '~~/server/utils/emailValidator'
 
 export default defineEventHandler(async (event) => {
-    // Verificar autenticacao e admin
+    // Verificar autenticacao
     const user = await requireAuth(event)
-    await requireAdmin(event)
 
     const body = await readBody(event)
 

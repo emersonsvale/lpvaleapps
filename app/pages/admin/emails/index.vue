@@ -145,6 +145,13 @@
           >
             Visualizar
           </NuxtLink>
+          <button
+            type="button"
+            class="flex-1 py-1.5 px-3 bg-red-500/20 text-red-200 hover:bg-red-500/30 rounded text-xs font-medium transition-colors text-center"
+            @click="excluirTemplate(template.id)"
+          >
+            Excluir
+          </button>
         </div>
       </div>
     </div>
@@ -162,11 +169,13 @@ useHead({
   title: 'Email Templates - Vale Apps Admin',
 })
 
+const emails = useEmail()
+
 interface EmailTemplate {
   id: string
   nome: string
   slug: string
-  tipo: 'sistema' | 'marketing' | 'notificacao'
+  tipo: 'boas_vindas' | 'proposta' | 'leads' | 'newsletter' | 'admin' | 'relatorio'
   assunto: string
   variaveis_suportadas?: string[]
   ativo: boolean
@@ -228,10 +237,27 @@ function formatarData(valor: string) {
 
 function getBadgeClass(tipo: string) {
   const classes: Record<string, string> = {
-    sistema: 'bg-blue-500/20 text-blue-200',
-    marketing: 'bg-purple-500/20 text-purple-200',
-    notificacao: 'bg-orange-500/20 text-orange-200'
+    boas_vindas: 'bg-cyan-500/20 text-cyan-200',
+    proposta: 'bg-blue-500/20 text-blue-200',
+    leads: 'bg-emerald-500/20 text-emerald-200',
+    newsletter: 'bg-purple-500/20 text-purple-200',
+    admin: 'bg-rose-500/20 text-rose-200',
+    relatorio: 'bg-amber-500/20 text-amber-200',
   }
   return classes[tipo] || 'bg-zinc-700/50 text-zinc-300'
+}
+
+async function excluirTemplate(id: string) {
+  const confirmado = window.confirm('Deseja realmente excluir este template?')
+  if (!confirmado) return
+
+  const resultado = await emails.deleteTemplate(id)
+
+  if (!resultado.sucesso) {
+    alert(resultado.erro || 'Erro ao excluir template')
+    return
+  }
+
+  await refreshNuxtData('email-templates')
 }
 </script>

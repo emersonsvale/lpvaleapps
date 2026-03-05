@@ -12,6 +12,21 @@ export interface AuthUser {
 }
 
 /**
+ * Determina se o usuario tem privilegios de admin.
+ * Suporta role no metadata, permissao explicita e email admin configurado.
+ */
+export function isAdminUser(user: AuthUser): boolean {
+    const config = useRuntimeConfig()
+    const permissoes = user.user_metadata?.permissoes || []
+    const adminEmail = (config.public?.adminEmail || '').toLowerCase()
+    const userEmail = (user.email || '').toLowerCase()
+
+    return user.user_metadata?.role === 'admin'
+        || permissoes.includes('admin')
+        || (!!adminEmail && userEmail === adminEmail)
+}
+
+/**
  * Requer que o usuario esteja autenticado.
  * Retorna o usuario autenticado ou lanca erro 401.
  */
@@ -70,7 +85,7 @@ export async function requireAuth(event: H3Event): Promise<AuthUser> {
 export async function requireAdmin(event: H3Event): Promise<void> {
     const user = await requireAuth(event)
 
-    if (user.user_metadata?.role !== 'admin') {
+    if (!isAdminUser(user)) {
         throw createError({
             statusCode: 403,
             statusMessage: 'Acesso negado. Permissao de admin obrigatoria.',
@@ -95,5 +110,5 @@ export async function getAuthUserOptional(event: H3Event): Promise<AuthUser | nu
  */
 export function hasPermission(user: AuthUser, permissao: string): boolean {
     const permissoes = user.user_metadata?.permissoes || []
-    return permissoes.includes(permissao) || user.user_metadata?.role === 'admin'
+    return permissoes.includes(permissao) || isAdminUser(user)
 }

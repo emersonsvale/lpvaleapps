@@ -52,14 +52,14 @@
         </article>
 
         <article class="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 hover:border-zinc-700 transition-colors">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-zinc-500">Valor potencial</p>
-              <p class="text-2xl font-semibold text-brand mt-1">{{ valorTotalFormatado }}</p>
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-zinc-500 leading-snug">Valor potencial</p>
+              <p class="text-2xl font-semibold text-brand mt-1 leading-tight break-words">{{ valorTotalFormatado }}</p>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-brand/15 flex items-center justify-center"><PhTrendUp class="w-5 h-5 text-brand" /></div>
+            <div class="w-10 h-10 rounded-lg bg-brand/15 flex items-center justify-center shrink-0"><PhTrendUp class="w-5 h-5 text-brand" /></div>
           </div>
-          <p class="mt-3 text-xs text-zinc-500">Soma de propostas com valor final</p>
+          <p class="mt-3 text-xs text-zinc-500 leading-snug">Soma de propostas<br>com valor final</p>
         </article>
 
         <article class="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-5 border-dashed hover:border-brand/40 hover:bg-brand/5 transition-colors">
@@ -137,7 +137,7 @@
                   <p class="text-xs text-zinc-500 mt-2">{{ tituloStatusCliente(cliente.status) }}</p>
                 </div>
                 <div class="text-right">
-                  <p class="font-medium text-brand">{{ formatarMoeda(cliente.valor_potencial ?? 0) }}</p>
+                  <p class="font-medium text-brand">{{ formatarMoeda(valorCliente(cliente.id)) }}</p>
                   <NuxtLink :to="`/admin/clientes/editar/${cliente.id}`" class="mt-2 inline-block text-sm text-zinc-400 hover:text-zinc-200">Editar</NuxtLink>
                 </div>
               </div>
@@ -171,7 +171,9 @@ const { data: dashboardData, pending } = useAsyncData(
     const propostasList = await fetchPropostas()
     const clientesList = await fetchCRMClientes()
     const propostas = propostasList.length
-    const valorTotal = propostasList.reduce((s, p) => s + (p.valor_final ?? 0), 0)
+    const valorTotal = propostasList
+      .filter((proposta) => proposta.status_proposta !== 'entregue' && proposta.status_proposta !== 'cancelada')
+      .reduce((s, p) => s + (p.valor_final ?? 0), 0)
     const clientes = clientesList.length
     return { projetos, propostas, valorTotal, propostasList, clientes, clientesList }
   }
@@ -231,6 +233,24 @@ const valorTotalFormatado = computed(() => {
   const v = dashboardData.value?.valorTotal ?? 0
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 })
+
+const valorPorCliente = computed(() => {
+  const mapa = new Map<number, number>()
+
+  for (const proposta of dashboardData.value?.propostasList ?? []) {
+    if (!proposta.crm_cliente_id) continue
+    if (proposta.status_proposta === 'entregue' || proposta.status_proposta === 'cancelada') continue
+
+    const valorAtual = mapa.get(proposta.crm_cliente_id) ?? 0
+    mapa.set(proposta.crm_cliente_id, valorAtual + (proposta.valor_final ?? 0))
+  }
+
+  return mapa
+})
+
+function valorCliente(clienteId: number) {
+  return valorPorCliente.value.get(clienteId) ?? 0
+}
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)

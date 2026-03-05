@@ -277,29 +277,6 @@ export async function updateCRMClienteStatus(
     return { error: error?.message ?? null }
 }
 
-export async function bindCRMClienteToProposta(
-    propostaId: number,
-    clienteId: number | null
-): Promise<{ error: string | null }> {
-    const supabase = useSupabase()
-    if (!supabase) return { error: 'Supabase não configurado' }
-
-    const { error: clearError } = await supabase
-        .from('crm_clientes')
-        .update({ proposta_id: null })
-        .eq('proposta_id', propostaId)
-
-    if (clearError) return { error: clearError.message }
-    if (clienteId == null) return { error: null }
-
-    const { error: bindError } = await supabase
-        .from('crm_clientes')
-        .update({ proposta_id: propostaId })
-        .eq('id', clienteId)
-
-    return { error: bindError?.message ?? null }
-}
-
 export async function deleteCRMCliente(id: number): Promise<{ error: string | null }> {
     const supabase = useSupabase()
     if (!supabase) return { error: 'Supabase não configurado' }

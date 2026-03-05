@@ -73,9 +73,12 @@
               v-model="template.tipo"
               class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 focus:border-brand/50 focus:outline-none"
             >
-              <option value="sistema">Sistema</option>
-              <option value="marketing">Marketing</option>
-              <option value="notificacao">Notificação</option>
+              <option value="boas_vindas">Boas-vindas</option>
+              <option value="proposta">Proposta</option>
+              <option value="leads">Leads</option>
+              <option value="newsletter">Newsletter</option>
+              <option value="admin">Admin</option>
+              <option value="relatorio">Relatório</option>
             </select>
           </div>
 
@@ -94,23 +97,31 @@
         <div class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
           <label class="block text-xs font-medium text-zinc-400">Assunto do Email</label>
           <input
+            ref="assuntoInputRef"
             v-model="template.assunto"
             type="text"
             class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 focus:border-brand/50 focus:outline-none"
             placeholder="Ex: Bem-vindo {{ nome }}!"
           />
           <p class="text-xs text-zinc-500">Use <span v-pre>{{ variableName }}</span> para inserir variáveis</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="variavel in variaveisSugestao"
+              :key="`assunto-var-${variavel}`"
+              type="button"
+              class="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+              @click="inserirVariavelNoAssunto(variavel)"
+            >
+              {{ formatarTokenVariavel(variavel) }}
+            </button>
+          </div>
         </div>
 
-        <!-- Conteúdo HTML -->
+        <!-- Conteúdo do Email -->
         <div class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
-          <label class="block text-xs font-medium text-zinc-400">Conteúdo do Email (HTML)</label>
-          <textarea
-            v-model="template.conteudo_html"
-            class="w-full h-96 rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 font-mono focus:border-brand/50 focus:outline-none resize-none"
-            placeholder="<h1>Olá {{ nome }}!</h1>&#10;<p>Bem-vindo ao nosso sistema.</p>"
-          />
-          <p class="text-xs text-zinc-500">Escreva HTML puro. Use <span v-pre>{{ variableName }}</span> para variáveis.</p>
+          <label class="block text-xs font-medium text-zinc-400">Conteúdo do Email</label>
+          <AdminEmailRichTextEditor v-model="template.conteudo_html" :available-variables="variaveisSugestao" />
+          <p class="text-xs text-zinc-500">Digite normalmente e use <span v-pre>{{ variableName }}</span> para variáveis dinâmicas.</p>
         </div>
 
         <!-- Variáveis -->
@@ -130,11 +141,54 @@
       <div class="space-y-6">
         <!-- Teste com variáveis -->
         <div class="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
-          <label class="block text-xs font-medium text-zinc-400">Testar com Variáveis (JSON)</label>
-          <textarea
-            v-model="previewVarsText"
-            class="w-full h-32 rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 font-mono focus:border-brand/50 focus:outline-none resize-none"
-          />
+          <label class="block text-xs font-medium text-zinc-400">Testar com Variáveis</label>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div>
+              <label class="mb-1 block text-xs text-zinc-400">Nome</label>
+              <input
+                v-model="previewVars.nome"
+                type="text"
+                class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 focus:border-brand/50 focus:outline-none"
+                placeholder="Nome"
+              >
+            </div>
+            <div>
+              <label class="mb-1 block text-xs text-zinc-400">E-mail</label>
+              <input
+                v-model="previewVars.email"
+                type="email"
+                class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 focus:border-brand/50 focus:outline-none"
+                placeholder="E-mail"
+              >
+            </div>
+            <div>
+              <label class="mb-1 block text-xs text-zinc-400">Empresa</label>
+              <input
+                v-model="previewVars.empresa"
+                type="text"
+                class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 focus:border-brand/50 focus:outline-none"
+                placeholder="Empresa"
+              >
+            </div>
+            <div>
+              <label class="mb-1 block text-xs text-zinc-400">Contato</label>
+              <input
+                v-model="previewVars.contato"
+                type="text"
+                class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 focus:border-brand/50 focus:outline-none"
+                placeholder="Contato"
+              >
+            </div>
+            <div class="sm:col-span-2">
+              <label class="mb-1 block text-xs text-zinc-400">Responsável</label>
+              <input
+                v-model="previewVars.responsavel"
+                type="text"
+                class="w-full rounded-lg border border-zinc-700 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100 focus:border-brand/50 focus:outline-none"
+                placeholder="Responsável"
+              >
+            </div>
+          </div>
         </div>
 
         <!-- Preview do assunto -->
@@ -204,6 +258,8 @@
 </template>
 
 <script setup lang="ts">
+import { applyTemplateVariables, renderEmailContent } from '~/utils/emailContentFormatter'
+
 definePageMeta({
   layout: 'admin',
 })
@@ -227,38 +283,70 @@ const template = reactive({
   id: null as string | null,
   nome: '',
   slug: '',
-  tipo: 'sistema',
+  tipo: 'boas_vindas',
   assunto: '',
   conteudo_html: '',
   ativo: true,
 })
 
 const variaveisTexto = ref('')
-const previewVarsText = ref('{\n  "nome": "João",\n  "email": "cliente@exemplo.com"\n}')
+const assuntoInputRef = ref<HTMLInputElement | null>(null)
+const previewVars = reactive({
+  nome: 'João Silva',
+  email: 'joao@empresa.com',
+  empresa: 'Empresa Brasil',
+  contato: '(11) 99999-0000',
+  responsavel: 'Emerson',
+})
 
-const parsePreviewVars = () => {
-  try {
-    return JSON.parse(previewVarsText.value || '{}')
-  } catch {
-    return {}
+const variaveisSugestao = computed(() => {
+  const lista = variaveisTexto.value
+    .split(',')
+    .map(item => item.trim())
+    .filter(item => item.length > 0)
+
+  if (lista.length > 0) return lista
+  return ['nome', 'email', 'empresa', 'contato', 'responsavel']
+})
+
+const inserirVariavelNoAssunto = (variavel: string) => {
+  const token = `{{ ${variavel} }}`
+  const input = assuntoInputRef.value
+
+  if (!input) {
+    const separador = template.assunto && !template.assunto.endsWith(' ') ? ' ' : ''
+    template.assunto = `${template.assunto}${separador}${token}`
+    return
   }
+
+  const inicio = input.selectionStart ?? template.assunto.length
+  const fim = input.selectionEnd ?? inicio
+
+  template.assunto = template.assunto.slice(0, inicio) + token + template.assunto.slice(fim)
+
+  nextTick(() => {
+    input.focus()
+    const cursor = inicio + token.length
+    input.setSelectionRange(cursor, cursor)
+  })
 }
 
-const applyVariables = (texto: string, vars: Record<string, any>) => {
-  let result = texto
-  Object.entries(vars).forEach(([key, value]) => {
-    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
-    result = result.replace(regex, String(value ?? ''))
-  })
-  return result
-}
+const formatarTokenVariavel = (variavel: string) => `{{ ${variavel} }}`
+
+const parsePreviewVars = () => ({
+  nome: previewVars.nome,
+  email: previewVars.email,
+  empresa: previewVars.empresa,
+  contato: previewVars.contato,
+  responsavel: previewVars.responsavel,
+})
 
 const assuntoPreview = computed(() => {
-  return applyVariables(template.assunto || 'Assunto do email', parsePreviewVars())
+  return applyTemplateVariables(template.assunto || 'Assunto do email', parsePreviewVars())
 })
 
 const htmlPreview = computed(() => {
-  return applyVariables(template.conteudo_html || '<p>Conteúdo vazio</p>', parsePreviewVars())
+  return renderEmailContent(template.conteudo_html || '', parsePreviewVars())
 })
 
 const iframeSrcdoc = computed(() => {
@@ -365,7 +453,7 @@ const enviarEmailTeste = async () => {
     const resultado = await emails.sendEmail({
       para: emailTeste.value.trim(),
       assunto: template.assunto || 'Sem assunto',
-      conteudo: template.conteudo_html || '<p>Conteúdo vazio</p>',
+      conteudo: renderEmailContent(template.conteudo_html || '', parsePreviewVars()),
       variaveis: parsePreviewVars(),
       metadados: {
         origem: 'admin-emails-edit',

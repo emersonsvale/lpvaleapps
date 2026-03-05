@@ -29,6 +29,7 @@
 
 <script setup lang="ts">
 import EmailPreview from '~/components/admin/EmailPreview.vue'
+import { applyTemplateVariables, renderEmailContent } from '~/utils/emailContentFormatter'
 
 const route = useRoute()
 const emails = useEmail()
@@ -47,23 +48,14 @@ const parsePreviewVars = () => {
   }
 }
 
-const applyVariables = (texto: string, vars: Record<string, any>) => {
-  let result = texto || ''
-  Object.entries(vars).forEach(([key, value]) => {
-    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
-    result = result.replace(regex, String(value ?? ''))
-  })
-  return result
-}
-
 const htmlPreview = computed(() => {
   if (!template.value?.conteudo_html) return ''
-  return applyVariables(template.value.conteudo_html, parsePreviewVars())
+  return renderEmailContent(template.value.conteudo_html, parsePreviewVars())
 })
 
 const assuntoPreview = computed(() => {
   if (!template.value?.assunto) return 'Assunto do email'
-  return applyVariables(template.value.assunto, parsePreviewVars())
+  return applyTemplateVariables(template.value.assunto, parsePreviewVars())
 })
 
 const carregarTemplate = async () => {

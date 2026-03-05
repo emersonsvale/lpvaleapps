@@ -286,6 +286,8 @@ const emit = defineEmits<{
   deleted: []
 }>()
 
+const { showConfirm } = useUiFeedback()
+
 const statusOptions = getContratoStatusOptions()
 const isEdit = computed(() => !!props.contratoId)
 
@@ -709,7 +711,13 @@ async function onSubmit() {
 
 async function confirmarExclusao() {
   if (!props.contratoId) return
-  const ok = confirm('Tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita.')
+  const ok = await showConfirm({
+    title: 'Excluir contrato',
+    message: 'Tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita.',
+    confirmLabel: 'Excluir contrato',
+    cancelLabel: 'Manter contrato',
+    danger: true,
+  })
   if (!ok) return
 
   erro.value = ''

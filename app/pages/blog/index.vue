@@ -2,7 +2,7 @@
   <FloatingNav :nav-items="navItems" />
 
   <main class="min-h-screen bg-background pt-32 pb-20 md:pt-36 md:pb-24">
-    <div class="container mx-auto px-6 max-w-6xl">
+    <div class="container mx-auto px-6 max-w-[79.2rem]">
       <header class="mb-10">
         <p class="text-sm uppercase tracking-widest text-brand mb-3 font-medium">Blog Vale Apps</p>
         <h1 class="text-4xl md:text-6xl font-medium leading-tight mb-4">

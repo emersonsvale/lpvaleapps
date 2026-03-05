@@ -426,7 +426,6 @@
 
 <script setup lang="ts">
 import {
-  bindCRMClienteToProposta,
   fetchCRMClientes,
   type CRMCliente,
 } from '~/composables/useClientesCRM'
@@ -717,33 +716,6 @@ watch(
   }
 )
 
-watch(
-  [crmClientes, () => props.propostaId],
-  ([clientes, propostaId]) => {
-    if (!propostaId || selectedCRMClienteId.value) return
-    const clienteVinculado = clientes.find(cliente => cliente.proposta_id === propostaId)
-    if (!clienteVinculado) return
-    selectedCRMClienteId.value = clienteVinculado.id
-  },
-  { immediate: true }
-)
-
-async function sincronizarClienteCRM(propostaId: number) {
-  const clienteSelecionado = selectedCRMCliente.value
-  if (clienteSelecionado?.proposta_id && clienteSelecionado.proposta_id !== propostaId) {
-    const confirmar = confirm(
-      `O cliente ${clienteSelecionado.nome} já está vinculado à proposta #${clienteSelecionado.proposta_id}. Deseja mover o vínculo para esta proposta?`
-    )
-
-    if (!confirmar) return
-  }
-
-  const { error } = await bindCRMClienteToProposta(propostaId, selectedCRMClienteId.value)
-  if (error) {
-    alert(`Proposta salva, mas não foi possível atualizar o vínculo com CRM: ${error}`)
-  }
-}
-
 function labelCRMCliente(cliente: CRMCliente): string {
   const empresa = cliente.empresa?.trim()
   return empresa
@@ -806,7 +778,6 @@ async function onSubmit() {
         alert('Erro ao atualizar: ' + error)
         return
       }
-      await sincronizarClienteCRM(props.propostaId)
       emit('success', { ...form, id: props.propostaId } as PropostaRow)
     } else {
       // Para novas propostas, gerar slug automático a partir do nome
@@ -850,7 +821,6 @@ async function onSubmit() {
         return
       }
       if (data) {
-        await sincronizarClienteCRM(data.id)
         emit('success', data)
       }
     }

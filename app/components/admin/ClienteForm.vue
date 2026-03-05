@@ -345,6 +345,8 @@ const emit = defineEmits<{
   deleted: []
 }>()
 
+const { showConfirm } = useUiFeedback()
+
 const colunasStatus = getCRMStatusColumns()
 const isEdit = computed(() => !!props.clienteId)
 const clienteAtualId = ref<number | null>(props.clienteId ?? null)
@@ -629,8 +631,13 @@ async function onSubmit() {
 
 async function confirmarExclusao() {
   if (!props.clienteId) return
-  if (!import.meta.client) return
-  const ok = window.confirm('Deseja realmente excluir este cliente e todo o histórico de interações?')
+  const ok = await showConfirm({
+    title: 'Excluir cliente',
+    message: 'Deseja realmente excluir este cliente e todo o histórico de interações?',
+    confirmLabel: 'Excluir cliente',
+    cancelLabel: 'Cancelar',
+    danger: true,
+  })
   if (!ok) return
 
   const { error } = await deleteCRMCliente(props.clienteId)

@@ -5,7 +5,7 @@
     
     <!-- Main Content -->
     <main class="pt-40 pb-16">
-      <div class="container mx-auto px-6 max-w-4xl">
+      <div class="container mx-auto px-6 max-w-[61.6rem]">
         <!-- Header -->
         <div class="text-center mb-12">
           <h1 class="text-4xl md:text-5xl font-bold mb-4">
