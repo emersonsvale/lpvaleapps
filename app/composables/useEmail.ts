@@ -56,7 +56,27 @@ export default function useEmail() {
             throw new Error('Usuario nao autenticado')
         }
 
-        return data.session.access_token
+        let sessaoAtual = data.session
+
+        // Tenta renovar o token alguns segundos antes do vencimento.
+        const expiraEm = (sessaoAtual.expires_at || 0) * 1000
+        const tokenExpiradoOuPerto = expiraEm > 0 && expiraEm <= Date.now() + 30_000
+
+        if (tokenExpiradoOuPerto) {
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+
+            if (refreshError || !refreshData.session) {
+                throw new Error('Sessao expirada. Faca login novamente.')
+            }
+
+            sessaoAtual = refreshData.session
+        }
+
+        if (!sessaoAtual.access_token) {
+            throw new Error('Nao foi possivel obter token de autenticacao')
+        }
+
+        return sessaoAtual.access_token
     }
 
     /**

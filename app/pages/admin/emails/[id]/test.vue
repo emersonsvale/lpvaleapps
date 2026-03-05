@@ -69,8 +69,15 @@ const enviarTeste = async () => {
   try {
     if (!template.value) {
       const lista = await emails.getTemplates()
-      const id = String(route.params.id)
-      template.value = lista.find(item => String(item.id) === id) || null
+      const chaveTemplate = decodeURIComponent(String(route.params.id ?? '')).trim()
+
+      if (!lista.length && emails.erro.value) {
+        throw new Error(emails.erro.value)
+      }
+
+      template.value = lista.find(
+        item => String(item.id) === chaveTemplate || String(item.slug) === chaveTemplate,
+      ) || null
     }
 
     if (!template.value) {

@@ -9,7 +9,7 @@ import { useSupabaseServer } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
     try {
-        const user = await requireAuth(event)
+        await requireAuth(event)
         const supabase = useSupabaseServer()
 
         if (!supabase) {
@@ -34,6 +34,10 @@ export default defineEventHandler(async (event) => {
     }
     catch (erro: any) {
         console.error('[/api/email/templates GET] Erro:', erro)
+
+        if (erro?.statusCode) {
+            throw erro
+        }
 
         throw createError({
             statusCode: 500,

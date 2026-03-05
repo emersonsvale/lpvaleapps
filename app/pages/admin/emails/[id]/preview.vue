@@ -63,9 +63,16 @@ const carregarTemplate = async () => {
   erro.value = null
 
   try {
-    const id = Number(route.params.id)
+    const chaveTemplate = decodeURIComponent(String(route.params.id ?? '')).trim()
     const lista = await emails.getTemplates()
-    template.value = lista.find(item => item.id === id) || null
+
+    if (!lista.length && emails.erro.value) {
+      throw new Error(emails.erro.value)
+    }
+
+    template.value = lista.find(
+      item => String(item.id) === chaveTemplate || String(item.slug) === chaveTemplate,
+    ) || null
 
     if (!template.value) {
       throw new Error('Template nao encontrado')
