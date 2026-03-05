@@ -24,15 +24,15 @@
           :initial="timelineReveal.initial"
           :visible-once="timelineReveal.visibleOnce"
           ref="valeTimelineRef"
-          class="relative p-8 md:p-10 lg:p-12 rounded-2xl border border-brand/10 bg-brand/[0.02]"
+          class="relative p-8 md:p-10 lg:p-12 rounded-2xl"
         >
           <div class="flex items-center gap-4 mb-8 md:mb-10">
             <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center">
               <PhLightning :size="20" weight="fill" class="text-brand" />
             </div>
             <div>
-              <h3 class="text-xl font-semibold text-white">Vale Apps</h3>
-              <p class="text-sm text-zinc-400">Desenvolvimento ágil e acelerado</p>
+              <h3 class="text-xl font-semibold text-brand">Desenvolvimento Vale Apps</h3>
+              <p class="text-sm text-zinc-500">Processo acelerado</p>
             </div>
           </div>
 
@@ -51,18 +51,22 @@
               <!-- Week 8-12 icon -->
               <div class="absolute left-[40%] bottom-0 -translate-x-1/2 flex items-end justify-center">
                 <div
-                  class="w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-500"
+                  class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500"
                   :class="timelineProgress >= 40 && timelineProgress < 52
-                    ? 'bg-brand/25 border-brand/55 scale-125 -translate-y-2 shadow-[0_0_28px_rgba(255,192,0,0.45),0_0_56px_rgba(255,192,0,0.25)] animate-bounce'
+                    ? 'scale-125 -translate-y-2 animate-bounce'
                     : timelineProgress >= 52
-                      ? 'bg-brand/18 border-brand/45 scale-110 shadow-[0_0_22px_rgba(255,192,0,0.32)] animate-[pulse_2.2s_ease-in-out_infinite]'
-                      : 'bg-brand/5 border-brand/20 opacity-70 scale-95'"
+                      ? 'scale-110 animate-[pulse_2.2s_ease-in-out_infinite]'
+                      : 'opacity-70 scale-95'"
                 >
                   <PhRocket
-                    :size="18"
+                    :size="24"
                     weight="fill"
                     class="text-brand transition-transform duration-300"
-                    :class="timelineProgress >= 40 ? 'scale-110' : 'scale-100'"
+                    :class="timelineProgress >= 40 && timelineProgress < 52
+                      ? 'scale-110 drop-shadow-[0_0_14px_rgba(255,192,0,0.55)]'
+                      : timelineProgress >= 52
+                        ? 'scale-110 drop-shadow-[0_0_12px_rgba(255,192,0,0.45)]'
+                        : 'scale-100 drop-shadow-[0_0_6px_rgba(255,192,0,0.22)]'"
                   />
                 </div>
               </div>
@@ -138,7 +142,7 @@
           v-motion
           :initial="timelineReveal.initial"
           :visible-once="timelineReveal.visibleOnce"
-          class="relative p-8 md:p-10 lg:p-12 rounded-2xl border border-white/[0.04] bg-zinc-900/30"
+          class="relative p-8 md:p-10 lg:p-12 rounded-2xl"
         >
           <div class="flex items-center gap-4 mb-8 md:mb-10">
             <div class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center">
@@ -227,19 +231,19 @@
           :visible-once="{ opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 20, delay: 300 } }"
           class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-10 md:mt-12"
         >
-          <div class="text-center p-5 md:p-6 rounded-xl bg-zinc-900/40 border border-white/[0.04]">
+          <div class="text-center p-5 md:p-6 rounded-xl">
             <div class="text-3xl md:text-4xl font-bold text-brand mb-2">3x</div>
             <div class="text-sm text-zinc-500">Mais rápido</div>
           </div>
-          <div class="text-center p-5 md:p-6 rounded-xl bg-zinc-900/40 border border-white/[0.04]">
+          <div class="text-center p-5 md:p-6 rounded-xl">
             <div class="text-3xl md:text-4xl font-bold text-brand mb-2">-40%</div>
             <div class="text-sm text-zinc-500">Custo</div>
           </div>
-          <div class="text-center p-5 md:p-6 rounded-xl bg-zinc-900/40 border border-white/[0.04]">
+          <div class="text-center p-5 md:p-6 rounded-xl">
             <div class="text-3xl md:text-4xl font-bold text-brand mb-2">v3</div>
             <div class="text-sm text-zinc-500">Em 20 semanas</div>
           </div>
-          <div class="text-center p-5 md:p-6 rounded-xl bg-zinc-900/40 border border-white/[0.04]">
+          <div class="text-center p-5 md:p-6 rounded-xl">
             <div class="text-3xl md:text-4xl font-bold text-brand mb-2">∞</div>
             <div class="text-sm text-zinc-500">Iterações</div>
           </div>

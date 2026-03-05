@@ -11,6 +11,7 @@ export const useSEO = () => {
         author?: string
         publishedTime?: string
         modifiedTime?: string
+        robots?: string
     }) => {
         const {
             title = 'Vale Apps - Soluções Digitais sob Medida',
@@ -21,7 +22,8 @@ export const useSEO = () => {
             type = 'website',
             author = 'Vale Apps',
             publishedTime,
-            modifiedTime
+            modifiedTime,
+            robots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
         } = options
 
         useHead({
@@ -31,7 +33,7 @@ export const useSEO = () => {
                 { name: 'description', content: description },
                 { name: 'keywords', content: keywords },
                 { name: 'author', content: author },
-                { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
+                { name: 'robots', content: robots },
 
                 // Open Graph
                 { property: 'og:title', content: title },
@@ -42,6 +44,7 @@ export const useSEO = () => {
                 { property: 'og:type', content: type },
                 { property: 'og:site_name', content: 'Vale Apps' },
                 { property: 'og:locale', content: 'pt_BR' },
+                ...(type === 'article' ? [{ property: 'article:author', content: author }] : []),
 
                 // Twitter Card
                 { name: 'twitter:card', content: 'summary_large_image' },

@@ -107,8 +107,8 @@ const { setPageSEO, generateBreadcrumb } = useSEO()
 
 setPageSEO({
   title: 'Vale Apps - Desenvolvimento de Aplicativos Mobile e Web | Soluções Digitais',
-  description: 'Transformamos suas ideias em soluções digitais extraordinárias. Desenvolvimento de apps mobile, web, IA e automação. Acelere seu negócio 10x mais rápido.',
-  keywords: 'desenvolvimento de apps, aplicativos mobile, desenvolvimento web, React Native, Flutter, Vue.js, React, produtos digitais, Vale Apps, IA, automação, soluções digitais, startup, MVP',
+  description: 'A Vale Apps e uma fabrica de software especializada em desenvolvimento de aplicativos mobile e web, IA e automacao para empresas. Transformamos ideias em produtos digitais escalaveis.',
+  keywords: 'Vale Apps, valeapps, fabrica de software, desenvolvimento de software sob medida, desenvolvimento de aplicativos mobile, desenvolvimento web, empresa de tecnologia em Sao Paulo, React Native, Flutter, Vue.js, produtos digitais, IA para empresas, automacao de processos, startup, MVP',
   url: 'https://valeapps.com.br/',
   type: 'website'
 })

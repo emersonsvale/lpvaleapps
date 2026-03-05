@@ -1,11 +1,21 @@
 import { useSupabaseServer } from '../utils/supabase'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
     setHeader(event, 'content-type', 'application/xml')
+    setHeader(event, 'cache-control', 'public, s-maxage=1800, stale-while-revalidate=43200')
 
     const baseUrl = 'https://valeapps.com.br'
     const currentDate = new Date().toISOString().split('T')[0]
-    const supabase = useSupabaseServer()
+    const runtimeConfig = useRuntimeConfig()
+    let supabase: SupabaseClient | null = useSupabaseServer()
+
+    // Fallback para chave pública quando a chave admin não está disponível.
+    if (!supabase && runtimeConfig.public.supabaseUrl && runtimeConfig.public.supabaseAnonKey) {
+        supabase = createClient(runtimeConfig.public.supabaseUrl, runtimeConfig.public.supabaseAnonKey, {
+            auth: { persistSession: false }
+        })
+    }
 
     const urls = [
         {
@@ -37,7 +47,7 @@ export default defineEventHandler(async (event) => {
     if (supabase) {
         const { data, error } = await supabase
             .from('blog_posts')
-            .select('slug, updated_at, published_at')
+            .select('slug, updated_at, published_at, canonical_url')
             .eq('status', 'published')
             .eq('noindex', false)
             .order('published_at', { ascending: false, nullsFirst: false })
@@ -49,7 +59,7 @@ export default defineEventHandler(async (event) => {
                 if (post.published_at && new Date(post.published_at) > now) continue
 
                 urls.push({
-                    loc: `${baseUrl}/blog/${post.slug}`,
+                    loc: post.canonical_url || `${baseUrl}/blog/${post.slug}`,
                     lastmod: (post.updated_at || post.published_at || currentDate).split('T')[0],
                     changefreq: 'weekly',
                     priority: '0.7'

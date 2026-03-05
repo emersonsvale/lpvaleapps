@@ -149,20 +149,19 @@
                   class="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"
                 />
                 <ContainerScroll>
-                  <img
-                    class="bg-background aspect-[15/8] relative hidden rounded-lg dark:block w-full h-full object-cover"
-                    src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
-                    width="2700"
-                    height="1440"
-                  />
-                  <img
-                    class="aspect-[15/8] relative rounded-lg w-full h-full object-cover dark:hidden"
-                    src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
-                    width="2700"
-                    height="1440"
-                  />
+                  <video
+                    class="bg-background aspect-[15/8] relative rounded-lg w-full h-full object-cover"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    disablepictureinpicture
+                    controlslist="nodownload nofullscreen noremoteplayback"
+                    aria-label="Video demonstrativo de dashboard desenvolvido pela Vale Apps"
+                  >
+                    <source src="/0305(1)%20(1).mp4" type="video/mp4" />
+                  </video>
                 </ContainerScroll>
               </div>
             </div>
@@ -173,20 +172,19 @@
                   class="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"
                 />
                 <div class="mx-auto max-w-5xl px-6">
-                  <img
-                    class="bg-background aspect-[15/8] relative hidden rounded-lg dark:block w-full h-full object-cover"
-                    src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
-                    width="2700"
-                    height="1440"
-                  />
-                  <img
-                    class="aspect-[15/8] relative rounded-lg w-full h-full object-cover dark:hidden"
-                    src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=2700&h=1440&fit=crop&crop=center"
-                    alt="Dashboard de aplicativo web desenvolvido pela Vale Apps - Interface moderna e responsiva"
-                    width="2700"
-                    height="1440"
-                  />
+                  <video
+                    class="bg-background aspect-[15/8] relative rounded-lg w-full h-full object-cover"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    disablepictureinpicture
+                    controlslist="nodownload nofullscreen noremoteplayback"
+                    aria-label="Video demonstrativo de dashboard desenvolvido pela Vale Apps"
+                  >
+                    <source src="/0305(1)%20(1).mp4" type="video/mp4" />
+                  </video>
                 </div>
               </div>
             </template>

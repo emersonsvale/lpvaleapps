@@ -194,12 +194,52 @@ const canonicalUrl = computed(() => {
   return `https://valeapps.com.br/blog${queryString ? `?${queryString}` : ''}`
 })
 
-setPageSEO({
-  title: 'Blog Vale Apps | Desenvolvimento Web, Mobile, IA e Automação',
-  description: 'Artigos sobre desenvolvimento de aplicativos, software sob medida, IA, automação e crescimento digital para empresas.',
-  keywords: 'blog desenvolvimento de apps, software sob medida, IA para empresas, automação de processos, desenvolvimento web e mobile',
-  url: canonicalUrl.value,
-  type: 'website',
+const isPrimaryListingPage = computed(() => {
+  return currentPage.value === 1 && !categoryParam.value && !tagParam.value
+})
+
+watchEffect(() => {
+  setPageSEO({
+    title: 'Blog Vale Apps | Desenvolvimento Web, Mobile, IA e Automação',
+    description: 'Artigos sobre desenvolvimento de aplicativos, software sob medida, IA, automação e crescimento digital para empresas.',
+    keywords: 'blog desenvolvimento de apps, software sob medida, IA para empresas, automação de processos, desenvolvimento web e mobile',
+    url: canonicalUrl.value,
+    type: 'website',
+    robots: isPrimaryListingPage.value
+      ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+      : 'noindex, follow, max-image-preview:large',
+  })
+})
+
+useHead(() => {
+  const current = currentPage.value
+  const links: Array<{ rel: string; href: string }> = []
+
+  if (current > 1) {
+    links.push({ rel: 'prev', href: `https://valeapps.com.br${buildListUrl(categoryParam.value, tagParam.value, current - 1)}` })
+  }
+
+  if (current < totalPages.value) {
+    links.push({ rel: 'next', href: `https://valeapps.com.br${buildListUrl(categoryParam.value, tagParam.value, current + 1)}` })
+  }
+
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: posts.value.map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1 + ((current - 1) * pageSize),
+      url: `https://valeapps.com.br/blog/${post.slug}`,
+      name: post.title,
+    })),
+  }
+
+  return {
+    link: links,
+    script: posts.value.length
+      ? [{ type: 'application/ld+json', innerHTML: JSON.stringify(itemListSchema) }]
+      : [],
+  }
 })
 
 generateBreadcrumb([
