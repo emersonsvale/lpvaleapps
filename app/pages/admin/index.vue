@@ -312,3 +312,4 @@ function linkProposta(slug: string) {
   return `${base.replace(/\/$/, '')}/proposta/${slug}`
 }
 </script>
+

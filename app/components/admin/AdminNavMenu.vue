@@ -14,9 +14,7 @@
   >
     <div class="p-5 border-b border-zinc-800/80">
       <NuxtLink to="/admin" class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-brand/20 flex items-center justify-center">
-          <PhCode class="w-5 h-5 text-brand" />
-        </div>
+        <img src="/logo-header.png" alt="Logo Vale Apps" class="h-5 w-auto object-contain" />
         <div>
           <span class="font-semibold text-zinc-100">Vale Apps</span>
           <span class="block text-[11px] text-zinc-500 uppercase tracking-wider">Gestão</span>
@@ -42,6 +40,17 @@
 
       <p class="px-4 mt-6 mb-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Gestão</p>
       <ul class="space-y-0.5 px-3">
+        <li>
+          <NuxtLink
+            to="/admin/projetos"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+            :class="isActive('/admin/projetos') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
+            @click="open = false"
+          >
+            <PhStack class="w-5 h-5 shrink-0 opacity-80" />
+            <span>Projetos</span>
+          </NuxtLink>
+        </li>
         <li>
           <NuxtLink
             to="/admin/portifolio"
@@ -137,6 +146,7 @@ import {
   PhSignOut,
   PhEnvelopeSimple,
   PhArticle,
+  PhStack,
 } from '@phosphor-icons/vue'
 
 const route = useRoute()

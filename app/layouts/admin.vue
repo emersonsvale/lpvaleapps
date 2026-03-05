@@ -26,6 +26,9 @@ onMounted(() => {
 const pageTitle = computed(() => {
   const path = route.path
   if (path === '/admin') return 'Dashboard'
+  if (path === '/admin/projetos') return 'Projetos'
+  if (path === '/admin/projetos/novo') return 'Novo Projeto'
+  if (path.match(/^\/admin\/projetos\/\d+(\/.*)?$/)) return 'Workspace do Projeto'
   if (path === '/admin/portifolio') return 'Portifolio'
   if (path === '/admin/portifolio/nova') return 'Novo projeto'
   if (path.match(/^\/admin\/portifolio\/editar\/\d+$/)) return 'Editar projeto'
@@ -53,6 +56,12 @@ const breadcrumbs = computed(() => {
   const path = route.path
   const list: { label: string; path?: string }[] = [{ label: 'Dashboard', path: '/admin' }]
   if (path === '/admin') return list
+  if (path.startsWith('/admin/projetos')) {
+    list.push({ label: 'Projetos', path: '/admin/projetos' })
+    if (path === '/admin/projetos/novo') list.push({ label: 'Novo' })
+    else if (path.match(/^\/admin\/projetos\/\d+(\/.*)?$/)) list.push({ label: 'Workspace' })
+    return list
+  }
   if (path.startsWith('/admin/portifolio')) {
     list.push({ label: 'Portifolio', path: '/admin/portifolio' })
     if (path === '/admin/portifolio/nova') list.push({ label: 'Novo' })
