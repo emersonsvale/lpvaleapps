@@ -129,6 +129,9 @@
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace' 
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
+const emit = defineEmits<{
+  (e: 'refresh'): void
+}>()
 const client = useSupabase()
 const salvando = ref(false)
 
@@ -163,7 +166,9 @@ async function salvar() {
   if (!client) return
   salvando.value = true
 
-  let techs = form.value.tech_stack ? form.value.tech_stack.split(',').map(x => x.trim()) : null
+  const techs = form.value.tech_stack
+    ? form.value.tech_stack.split(',').map(x => x.trim()).filter(Boolean)
+    : null
   
   let cliente_nome_resolvido = null
   if (form.value.cliente_id && clientes.value.length > 0) {
@@ -173,26 +178,32 @@ async function salvar() {
     }
   }
   
+  const projetoRow = props.projeto as Record<string, unknown>
+  const payload: Record<string, unknown> = {
+    nome: form.value.nome,
+    cliente_nome: cliente_nome_resolvido,
+    horas_previstas: Number(form.value.horas_previstas) || 0
+  }
+
+  // Suporta bases em estagios diferentes de migration sem quebrar o save.
+  if ('descricao_comercial' in projetoRow) payload.descricao_comercial = form.value.descricao_comercial || null
+  if ('cliente_id' in projetoRow) payload.cliente_id = form.value.cliente_id || null
+  if ('contrato_id' in projetoRow) payload.contrato_id = form.value.contrato_id || null
+  if ('proposta_id' in projetoRow) payload.proposta_id = form.value.proposta_id || null
+  if ('tech_stack' in projetoRow) payload.tech_stack = techs
+  if ('status_visualizacao' in projetoRow) payload.status_visualizacao = form.value.status_visualizacao
+
   const { error } = await client
     .from('projetos_admin')
-    .update({
-      nome: form.value.nome,
-      descricao_comercial: form.value.descricao_comercial,
-      cliente_id: form.value.cliente_id || null,
-      cliente_nome: cliente_nome_resolvido,
-      contrato_id: form.value.contrato_id || null,
-      proposta_id: form.value.proposta_id || null,
-      tech_stack: techs,
-      status_visualizacao: form.value.status_visualizacao,
-      horas_previstas: form.value.horas_previstas,
-      updated_at: new Date().toISOString()
-    })
+    .update(payload)
     .eq('id', props.projeto.id)
 
   salvando.value = false
   if (error) {
-    alert('Erro ao salvar configurações!')
+    console.error('[configuracoes-projeto] Erro ao salvar:', error)
+    alert(`Erro ao salvar configurações: ${error.message}`)
   } else {
+    emit('refresh')
     alert('Salvo com sucesso!')
   }
 }

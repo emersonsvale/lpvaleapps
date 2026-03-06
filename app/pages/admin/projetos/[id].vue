@@ -28,6 +28,17 @@
         <p class="text-sm text-zinc-400 flex items-center gap-2">
           <span>Cliente: {{ projeto.cliente_nome || 'Nenhum' }}</span>
         </p>
+        <p class="mt-1 text-xs text-zinc-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span>
+            Horas contratadas:
+            <strong class="font-semibold text-zinc-300">{{ horasContratadasLabel }}</strong>
+          </span>
+          <span class="hidden sm:inline text-zinc-700">|</span>
+          <span>
+            Horas executadas:
+            <strong class="font-semibold text-zinc-300">{{ horasExecutadasLabel }}</strong>
+          </span>
+        </p>
       </div>
       <div>
         <button
@@ -233,6 +244,14 @@ const tabs = computed(() => {
   ]
 })
 
+const horasContratadasLabel = computed(() => {
+  return `${formatHorasResumo(projeto.value?.horas_previstas)}h`
+})
+
+const horasExecutadasLabel = computed(() => {
+  return `${formatHorasResumo(projeto.value?.horas_executadas)}h`
+})
+
 const modalNovaTarefaAberto = ref(false)
 const salvandoNovaTarefa = ref(false)
 const erroNovaTarefa = ref<string | null>(null)
@@ -359,5 +378,11 @@ async function salvarNovaTarefa() {
 function irParaAba(path: string) {
   if (route.path === path) return
   navigateTo(path)
+}
+
+function formatHorasResumo(value: unknown): string {
+  const numero = Number(value || 0)
+  if (!Number.isFinite(numero)) return '0'
+  return Number.isInteger(numero) ? String(numero) : numero.toFixed(1)
 }
 </script>
