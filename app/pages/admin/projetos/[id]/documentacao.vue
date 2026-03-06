@@ -100,6 +100,10 @@ const { data: documentos, pending, refresh } = await useAsyncData(
       .eq('projeto_id', props.projeto.id)
       .order('criado_em', { ascending: true })
     return data as ProjetoDoc[] | null
+  },
+  {
+    server: false,
+    default: () => []
   }
 )
 

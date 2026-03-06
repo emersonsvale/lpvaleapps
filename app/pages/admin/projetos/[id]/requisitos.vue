@@ -87,6 +87,10 @@ const { data: requisitos, pending, refresh } = await useAsyncData(
       .eq('projeto_id', props.projeto.id)
       .order('id', { ascending: false })
     return data as ProjetoRequisito[] | null
+  },
+  {
+    server: false,
+    default: () => []
   }
 )
 

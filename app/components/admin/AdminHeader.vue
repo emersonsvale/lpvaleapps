@@ -24,6 +24,20 @@
         </span>
       </nav>
     </div>
+
+    <div v-if="timerState.active" class="hidden md:flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900/90 px-2 py-1.5 text-xs text-zinc-200">
+      <span class="max-w-[220px] truncate text-zinc-300">#{{ timerState.tarefaCodigo || timerState.tarefaId }} {{ timerState.tarefaTitulo }}</span>
+      <span class="font-semibold text-zinc-100">{{ timerClock }}</span>
+      <span class="text-emerald-400">></span>
+      <button
+        type="button"
+        class="rounded-sm bg-red-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-red-500"
+        title="Parar cronometro"
+        @click="solicitarParadaTimer"
+      >
+        []
+      </button>
+    </div>
   </header>
 </template>
 
@@ -45,4 +59,14 @@ interface Breadcrumb {
 defineEmits<{
   'toggle-menu': []
 }>()
+
+const timerState = useWorkspaceRunningTimerState()
+
+const timerClock = computed(() => {
+  return formatWorkspaceTimerClock(timerState.value.elapsedSegundos)
+})
+
+function solicitarParadaTimer() {
+  timerState.value.stopRequestAt = Date.now()
+}
 </script>

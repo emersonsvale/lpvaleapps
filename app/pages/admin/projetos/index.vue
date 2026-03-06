@@ -122,7 +122,14 @@ import { fetchProjetosWorkspace } from '~/composables/useProjetosWorkspace'
 
 definePageMeta({ layout: 'admin' })
 
-const { data: projetos, pending, error } = await useAsyncData('admin-projetos-workspace', fetchProjetosWorkspace)
+const { data: projetos, pending, error } = await useAsyncData(
+  'admin-projetos-workspace',
+  fetchProjetosWorkspace,
+  {
+    server: false,
+    default: () => []
+  }
+)
 
 const filtroBusca = ref('')
 const filtroStatus = ref<string>('todos')

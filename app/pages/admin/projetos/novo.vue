@@ -61,7 +61,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium text-zinc-300 mb-1.5">Prioridade</label>
             <select v-model="form.prioridade" class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand">
@@ -70,6 +70,17 @@
               <option value="alta">Alta</option>
               <option value="urgente">Urgente</option>
             </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-zinc-300 mb-1.5">Horas Vendidas</label>
+            <input
+              v-model="form.horas_previstas"
+              type="number"
+              min="0"
+              step="0.5"
+              class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand"
+              placeholder="Ex: 120"
+            >
           </div>
           <div>
             <label class="block text-sm font-medium text-zinc-300 mb-1.5">Orçamento Estimado (R$)</label>
@@ -127,6 +138,7 @@ const form = reactive({
   data_inicio: '',
   data_fim_prevista: '',
   prioridade: 'media' as const,
+  horas_previstas: 0,
   orcamento_total: 0,
 })
 
@@ -165,6 +177,7 @@ async function salvar() {
     data_inicio: form.data_inicio || null,
     data_fim_prevista: form.data_fim_prevista || null,
     prioridade: form.prioridade,
+    horas_previstas: Number(form.horas_previstas) || 0,
     orcamento_total: Number(form.orcamento_total) || 0,
   }
 

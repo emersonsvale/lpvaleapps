@@ -49,6 +49,12 @@ export interface ProjetoTarefa {
     updated_at?: string
 }
 
+export interface EquipeMembro {
+    id: number
+    nome: string | null
+    cargo: string | null
+}
+
 // ==========================================
 // API DE PROJETOS
 // ==========================================
@@ -147,4 +153,30 @@ export async function updateTarefa(
 
 export async function updateTarefaStatus(id: number, novoStatus: ProjetoTarefa['status']): Promise<{ error: string | null }> {
     return updateTarefa(id, { status: novoStatus })
+}
+
+export async function deleteTarefa(id: number): Promise<{ error: string | null }> {
+    const supabase = useSupabase()
+    if (!supabase) return { error: 'Supabase não configurado' }
+
+    const { error } = await supabase.from('projetos_tarefas').delete().eq('id', id)
+    return { error: error?.message ?? null }
+}
+
+export async function fetchEquipeMembros(): Promise<EquipeMembro[]> {
+    const supabase = useSupabase()
+    if (!supabase) return []
+
+    const { data, error } = await supabase
+        .from('equipe')
+        .select('id, nome, cargo')
+        .not('nome', 'is', null)
+        .order('nome', { ascending: true })
+
+    if (error) {
+        console.warn('[fetchEquipeMembros] Erro:', error.message)
+        return []
+    }
+
+    return data as EquipeMembro[]
 }

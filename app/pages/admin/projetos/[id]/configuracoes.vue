@@ -86,9 +86,9 @@
       </div>
 
        <label class="block space-y-2">
-          <span class="text-sm font-medium text-zinc-300">Tempo Estimado (em horas)</span>
+          <span class="text-sm font-medium text-zinc-300">Horas Vendidas no Projeto</span>
           <input
-            v-model.number="form.horas_estimadas"
+            v-model.number="form.horas_previstas"
             type="number"
             class="w-full px-4 py-3 rounded-xl bg-zinc-950/50 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
             placeholder="Ex: 120"
@@ -156,7 +156,7 @@ const form = ref({
   proposta_id: props.projeto.proposta_id as number | null,
   tech_stack: props.projeto.tech_stack?.join(', ') || '',
   status_visualizacao: props.projeto.status_visualizacao || 'interno',
-  horas_estimadas: props.projeto.horas_estimadas || 0
+  horas_previstas: props.projeto.horas_previstas || 0
 })
 
 async function salvar() {
@@ -184,7 +184,7 @@ async function salvar() {
       proposta_id: form.value.proposta_id || null,
       tech_stack: techs,
       status_visualizacao: form.value.status_visualizacao,
-      horas_estimadas: form.value.horas_estimadas,
+      horas_previstas: form.value.horas_previstas,
       updated_at: new Date().toISOString()
     })
     .eq('id', props.projeto.id)
