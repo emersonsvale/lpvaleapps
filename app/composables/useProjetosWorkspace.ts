@@ -29,6 +29,7 @@ export interface ProjetoTarefa {
     codigo: string | null
     titulo: string
     descricao: string | null
+    tags: string[] | null
     status: 'refinar' | 'fazer' | 'em_progresso' | 'sob_revisao' | 'concluido'
     tipo: 'funcionalidade' | 'bug' | 'melhoria' | 'documentacao' | 'design'
     prioridade: 'baixa' | 'media' | 'alta' | 'urgente'
@@ -53,6 +54,49 @@ export interface EquipeMembro {
     id: number
     nome: string | null
     cargo: string | null
+    uid?: string | null
+}
+
+export function normalizeProjetoTarefaTags(value: unknown): string[] {
+    if (!Array.isArray(value)) return []
+
+    const normalized: string[] = []
+    const seen = new Set<string>()
+
+    for (const item of value) {
+        const tag = String(item ?? '')
+            .replace(/\s{2,}/g, ' ')
+            .trim()
+            .slice(0, 40)
+
+        if (!tag) continue
+
+        const key = tag.toLocaleLowerCase('pt-BR')
+        if (seen.has(key)) continue
+
+        seen.add(key)
+        normalized.push(tag)
+    }
+
+    return normalized
+}
+
+function normalizeProjetoTarefa(item: ProjetoTarefa): ProjetoTarefa {
+    return {
+        ...item,
+        tags: normalizeProjetoTarefaTags(item.tags)
+    }
+}
+
+function normalizeProjetoTarefaPayload<T extends Record<string, any>>(input: T): T {
+    if (!Object.prototype.hasOwnProperty.call(input, 'tags')) {
+        return input
+    }
+
+    return {
+        ...input,
+        tags: normalizeProjetoTarefaTags(input.tags)
+    }
 }
 
 // ==========================================
@@ -128,7 +172,24 @@ export async function fetchTarefasByProjetoId(projetoId: number): Promise<Projet
         console.warn('[fetchTarefasByProjetoId] Erro:', error.message)
         return []
     }
-    return data as ProjetoTarefa[]
+    return ((data as ProjetoTarefa[] | null) || []).map(normalizeProjetoTarefa)
+}
+
+export async function fetchTarefasWorkspace(): Promise<ProjetoTarefa[]> {
+    const supabase = useSupabase()
+    if (!supabase) return []
+
+    const { data, error } = await supabase
+        .from('projetos_tarefas')
+        .select('*')
+        .order('updated_at', { ascending: false })
+
+    if (error) {
+        console.warn('[fetchTarefasWorkspace] Erro:', error.message)
+        return []
+    }
+
+    return ((data as ProjetoTarefa[] | null) || []).map(normalizeProjetoTarefa)
 }
 
 export async function createTarefa(
@@ -136,9 +197,10 @@ export async function createTarefa(
 ): Promise<{ data: ProjetoTarefa | null; error: string | null }> {
     const supabase = useSupabase()
     if (!supabase) return { data: null, error: 'Supabase não configurado' }
-    const { data, error } = await supabase.from('projetos_tarefas').insert(input).select().single()
+    const payload = normalizeProjetoTarefaPayload(input)
+    const { data, error } = await supabase.from('projetos_tarefas').insert(payload).select().single()
     if (error) return { data: null, error: error.message }
-    return { data: data as ProjetoTarefa, error: null }
+    return { data: normalizeProjetoTarefa(data as ProjetoTarefa), error: null }
 }
 
 export async function updateTarefa(
@@ -147,7 +209,8 @@ export async function updateTarefa(
 ): Promise<{ error: string | null }> {
     const supabase = useSupabase()
     if (!supabase) return { error: 'Supabase não configurado' }
-    const { error } = await supabase.from('projetos_tarefas').update(input).eq('id', id)
+    const payload = normalizeProjetoTarefaPayload(input)
+    const { error } = await supabase.from('projetos_tarefas').update(payload).eq('id', id)
     return { error: error?.message ?? null }
 }
 
@@ -169,7 +232,7 @@ export async function fetchEquipeMembros(): Promise<EquipeMembro[]> {
 
     const { data, error } = await supabase
         .from('equipe')
-        .select('id, nome, cargo')
+        .select('id, nome, cargo, uid')
         .not('nome', 'is', null)
         .order('nome', { ascending: true })
 

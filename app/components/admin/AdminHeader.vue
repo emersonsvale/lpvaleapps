@@ -26,14 +26,21 @@
     </div>
 
     <div v-if="timerState.active" class="hidden md:flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900/90 px-2 py-1.5 text-xs text-zinc-200">
-      <span class="max-w-[220px] truncate text-zinc-300">#{{ timerState.tarefaCodigo || timerState.tarefaId }} {{ timerState.tarefaTitulo }}</span>
-      <span class="font-semibold text-zinc-100">{{ timerClock }}</span>
-      <span class="text-emerald-400">></span>
+      <button
+        type="button"
+        class="flex min-w-0 items-center gap-2 text-left"
+        title="Abrir tarefa em execucao"
+        @click="abrirTarefaAtiva"
+      >
+        <span class="max-w-[220px] truncate text-zinc-300">#{{ timerState.tarefaCodigo || timerState.tarefaId }} {{ timerState.tarefaTitulo }}</span>
+        <span class="font-semibold text-zinc-100">{{ timerClock }}</span>
+        <span class="text-emerald-400">></span>
+      </button>
       <button
         type="button"
         class="rounded-sm bg-red-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-red-500"
         title="Parar cronometro"
-        @click="solicitarParadaTimer"
+        @click.stop="solicitarParadaTimer"
       >
         []
       </button>
@@ -61,12 +68,68 @@ defineEmits<{
 }>()
 
 const timerState = useWorkspaceRunningTimerState()
+const nowMs = ref(Date.now())
+let timerClockHandle: ReturnType<typeof setInterval> | null = null
 
 const timerClock = computed(() => {
-  return formatWorkspaceTimerClock(timerState.value.elapsedSegundos)
+  void nowMs.value
+  return formatWorkspaceTimerClock(getWorkspaceRunningTimerElapsedSegundos(timerState.value))
 })
+
+function syncTimerClock() {
+  nowMs.value = Date.now()
+}
+
+function startTimerClock() {
+  if (timerClockHandle || !timerState.value.active) return
+  syncTimerClock()
+  timerClockHandle = setInterval(syncTimerClock, 1000)
+}
+
+function stopTimerClock() {
+  if (!timerClockHandle) return
+  clearInterval(timerClockHandle)
+  timerClockHandle = null
+}
 
 function solicitarParadaTimer() {
   timerState.value.stopRequestAt = Date.now()
 }
+
+async function abrirTarefaAtiva() {
+  if (!timerState.value.projetoId || !timerState.value.tarefaId) return
+
+  await navigateTo({
+    path: `/admin/projetos/${timerState.value.projetoId}/tarefas`,
+    query: {
+      tarefa: String(timerState.value.tarefaId)
+    }
+  })
+}
+
+onMounted(() => {
+  hydrateWorkspaceRunningTimerState()
+  syncTimerClock()
+
+  if (timerState.value.active) {
+    startTimerClock()
+  }
+})
+
+watch(
+  () => timerState.value.active,
+  (active) => {
+    if (active) {
+      startTimerClock()
+      return
+    }
+
+    stopTimerClock()
+  },
+  { immediate: true }
+)
+
+onBeforeUnmount(() => {
+  stopTimerClock()
+})
 </script>

@@ -8,23 +8,6 @@
         placeholder="Buscar tarefa..."
         class="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand text-sm w-64"
       >
-      <!-- Criar Tarefa Rapida -->
-      <form @submit.prevent="criarNovaTarefa" class="flex flex-1 gap-2">
-        <input 
-          v-model="novaTarefaTitulo"
-          required
-          type="text"
-          placeholder="Adicionar nova tarefa a Refinar (Enter para salvar)"
-          class="flex-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand text-sm"
-        >
-        <button
-          type="submit"
-          :disabled="criando"
-          class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-200 text-sm hover:bg-zinc-700 transition-colors disabled:opacity-50"
-        >
-          {{ criando ? '+' : '+' }}
-        </button>
-      </form>
 
       <div class="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/70 p-1">
         <button
@@ -57,21 +40,42 @@
           @drop="onDrop(coluna.status)"
         >
           <!-- Cabeçalho Coluna -->
-          <header class="mb-3 flex items-center justify-between gap-2 px-1">
-            <div class="flex items-center gap-2">
-              <div 
-                class="w-2.5 h-2.5 rounded-full"
-                :class="{
-                  'bg-purple-500': coluna.status === 'refinar',
-                  'bg-orange-400': coluna.status === 'fazer',
-                  'bg-blue-500': coluna.status === 'em_progresso',
-                  'bg-yellow-400': coluna.status === 'sob_revisao',
-                  'bg-emerald-500': coluna.status === 'concluido',
-                }"
-              />
-              <h3 class="text-sm font-semibold text-zinc-200">{{ coluna.titulo }}</h3>
+          <header class="mb-3 rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <div 
+                  class="w-2.5 h-2.5 rounded-full"
+                  :class="{
+                    'bg-purple-500': coluna.status === 'refinar',
+                    'bg-orange-400': coluna.status === 'fazer',
+                    'bg-blue-500': coluna.status === 'em_progresso',
+                    'bg-yellow-400': coluna.status === 'sob_revisao',
+                    'bg-emerald-500': coluna.status === 'concluido',
+                  }"
+                />
+                <h3 class="text-sm font-semibold text-zinc-200">{{ coluna.titulo }}</h3>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-md bg-zinc-800 text-zinc-400">{{ tarefasPorStatus[coluna.status]?.length || 0 }}</span>
             </div>
-            <span class="text-xs px-2 py-1 rounded-md bg-zinc-800 text-zinc-400">{{ tarefasPorStatus[coluna.status]?.length || 0 }}</span>
+
+            <div class="mt-3 grid grid-cols-2 gap-2 text-[11px] text-zinc-400">
+              <div class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2.5 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Inicio</span>
+                <span class="mt-1 block font-medium text-zinc-100">{{ resumoStatus[coluna.status].inicio }}</span>
+              </div>
+              <div class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2.5 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Fim</span>
+                <span class="mt-1 block font-medium text-zinc-100">{{ resumoStatus[coluna.status].fim }}</span>
+              </div>
+              <div class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2.5 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Horas</span>
+                <span class="mt-1 block font-medium text-zinc-100">{{ resumoStatus[coluna.status].horas }}</span>
+              </div>
+              <div class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2.5 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Progresso</span>
+                <span class="mt-1 block font-medium text-zinc-100">{{ resumoStatus[coluna.status].progresso }}</span>
+              </div>
+            </div>
           </header>
 
           <!-- Itens -->
@@ -98,6 +102,16 @@
               <p class="text-sm text-zinc-100 font-medium leading-snug mb-3">
                 {{ t.titulo }}
               </p>
+
+              <div v-if="t.tags?.length" class="mb-3 flex flex-wrap gap-1.5">
+                <span
+                  v-for="tag in t.tags"
+                  :key="`kanban-tag-${t.id}-${tag}`"
+                  class="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-1 text-[10px] font-medium text-zinc-300"
+                >
+                  #{{ tag }}
+                </span>
+              </div>
               
               <div class="flex items-center justify-between text-xs text-zinc-500">
                 <div class="flex items-center gap-2">
@@ -138,20 +152,41 @@
         class="overflow-visible rounded-xl border border-zinc-800 bg-zinc-900/40"
         :class="statusBorderLeftClass[coluna.status]"
       >
-        <header class="flex items-center justify-between gap-2 border-b border-zinc-800 bg-zinc-900/80 px-3 py-2">
-          <div class="flex items-center gap-2">
-            <span
-              class="h-2 w-2 rounded-full"
-              :class="{
-                'bg-purple-500': coluna.status === 'refinar',
-                'bg-orange-400': coluna.status === 'fazer',
-                'bg-blue-500': coluna.status === 'em_progresso',
-                'bg-yellow-400': coluna.status === 'sob_revisao',
-                'bg-emerald-500': coluna.status === 'concluido',
-              }"
-            />
-            <h3 class="text-sm font-semibold text-zinc-100">{{ coluna.titulo }}</h3>
-            <span class="text-xs text-zinc-400">{{ tarefasPorStatus[coluna.status]?.length || 0 }}</span>
+        <header class="border-b border-zinc-800 bg-zinc-900/80 px-3 py-3">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div class="flex items-center gap-2">
+              <span
+                class="h-2 w-2 rounded-full"
+                :class="{
+                  'bg-purple-500': coluna.status === 'refinar',
+                  'bg-orange-400': coluna.status === 'fazer',
+                  'bg-blue-500': coluna.status === 'em_progresso',
+                  'bg-yellow-400': coluna.status === 'sob_revisao',
+                  'bg-emerald-500': coluna.status === 'concluido',
+                }"
+              />
+              <h3 class="text-sm font-semibold text-zinc-100">{{ coluna.titulo }}</h3>
+              <span class="text-xs text-zinc-400">{{ tarefasPorStatus[coluna.status]?.length || 0 }}</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:min-w-[640px]">
+              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Data inicio</span>
+                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].inicio }}</span>
+              </div>
+              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Data fim</span>
+                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].fim }}</span>
+              </div>
+              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Horas totais</span>
+                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].horas }}</span>
+              </div>
+              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Progresso</span>
+                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].progresso }}</span>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -160,7 +195,12 @@
             <thead>
               <tr class="border-b border-zinc-800 bg-zinc-950/50">
                 <th class="w-[4%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                  <input type="checkbox" class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand"
+                    :checked="isStatusSelecionado(coluna.status)"
+                    @change="toggleSelecaoStatus(coluna.status, ($event.target as HTMLInputElement).checked)"
+                  >
                 </th>
                 <th class="w-[36%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tarefa</th>
                 <th class="w-[8%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Resp.</th>
@@ -169,27 +209,76 @@
                 <th class="w-[14%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prazo</th>
                 <th class="w-[10%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas</th>
                 <th class="w-[8%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Progresso</th>
+                <th class="w-[6%] px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Acoes</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="t in tarefasPorStatus[coluna.status]"
                 :key="`lista-row-${t.id}`"
-                class="border-b border-zinc-900 hover:bg-zinc-900/50 transition-colors"
+                class="border-b border-zinc-900 transition-colors"
+                :class="isTarefaSelecionada(t.id) ? 'bg-zinc-900/70' : 'hover:bg-zinc-900/50'"
               >
                 <td class="px-3 py-3 align-middle">
-                  <input type="checkbox" class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand"
+                    :checked="isTarefaSelecionada(t.id)"
+                    @change="toggleSelecaoTarefa(t.id, ($event.target as HTMLInputElement).checked)"
+                  >
                 </td>
                 <td class="px-4 py-3 align-middle">
-                  <div class="flex items-center gap-2">
-                    <span class="text-[10px] rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-400">{{ t.codigo || `T-${t.id}` }}</span>
-                    <span class="text-sm font-medium text-zinc-100">{{ t.titulo }}</span>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-400">{{ t.codigo || `T-${t.id}` }}</span>
+                      <span class="text-sm font-medium text-zinc-100">{{ t.titulo }}</span>
+                    </div>
+                    <div v-if="t.tags?.length" class="mt-2 flex flex-wrap gap-1.5">
+                      <span
+                        v-for="tag in t.tags"
+                        :key="`lista-tag-${t.id}-${tag}`"
+                        class="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-1 text-[10px] font-medium text-zinc-300"
+                      >
+                        #{{ tag }}
+                      </span>
+                    </div>
                   </div>
                 </td>
                 <td class="px-3 py-3 align-middle">
-                  <div class="flex items-center">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-700 text-[11px] font-semibold text-zinc-100">
-                      {{ getResponsavelInitials(t.responsavel_texto) }}
+                  <div class="relative inline-flex" @click.stop>
+                    <button
+                      type="button"
+                      class="flex h-8 min-w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-700 px-2 text-[11px] font-semibold text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-600"
+                      :title="t.responsavel_texto || 'Selecionar responsavel'"
+                      @click.stop="toggleResponsavelInline(t.id)"
+                    >
+                      <span v-if="salvandoResponsavelId === t.id" class="text-[10px] text-zinc-300">...</span>
+                      <span v-else>{{ getResponsavelInitials(t.responsavel_texto) }}</span>
+                    </button>
+
+                    <div
+                      v-if="responsavelAbertoId === t.id"
+                      class="absolute left-0 top-full z-20 mt-2 min-w-[220px] rounded-lg border border-zinc-800 bg-zinc-950 p-2 shadow-2xl"
+                    >
+                      <label class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-zinc-500">Responsavel</label>
+                      <select
+                        class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+                        :value="t.responsavel_texto || ''"
+                        @change="alterarResponsavelInline(t, ($event.target as HTMLSelectElement).value)"
+                      >
+                        <option value="">Sem responsavel</option>
+                        <option
+                          v-for="membro in equipeOptions"
+                          :key="`responsavel-inline-${t.id}-${membro.id}`"
+                          :value="membro.nome"
+                        >
+                          {{ membro.label }}
+                        </option>
+                      </select>
+
+                      <p class="mt-2 text-[11px] text-zinc-500">
+                        {{ t.responsavel_texto || 'Nenhum responsavel definido' }}
+                      </p>
                     </div>
                   </div>
                 </td>
@@ -234,10 +323,42 @@
                   </div>
                 </td>
                 <td class="px-3 py-3 align-middle text-xs text-zinc-400">{{ formatProgresso(t.progresso) }}</td>
+                <td class="px-3 py-3 align-middle text-right">
+                  <div class="relative inline-flex" @click.stop>
+                    <button
+                      type="button"
+                      class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100"
+                      title="Mais acoes"
+                      @click.stop="toggleMenuAcoes(t.id)"
+                    >
+                      ...
+                    </button>
+
+                    <div
+                      v-if="menuAcoesAbertoId === t.id"
+                      class="absolute right-0 top-full z-20 mt-2 min-w-[140px] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-2xl"
+                    >
+                      <button
+                        type="button"
+                        class="block w-full px-3 py-2 text-left text-xs text-zinc-200 transition-colors hover:bg-zinc-900"
+                        @click="abrirEdicaoPeloMenu(t.id)"
+                      >
+                        Editar tarefa
+                      </button>
+                      <button
+                        type="button"
+                        class="block w-full px-3 py-2 text-left text-xs text-red-300 transition-colors hover:bg-zinc-900"
+                        @click="excluirPeloMenu(t.id)"
+                      >
+                        Excluir tarefa
+                      </button>
+                    </div>
+                  </div>
+                </td>
               </tr>
 
               <tr v-if="!tarefasPorStatus[coluna.status]?.length">
-                <td colspan="8" class="px-4 py-3 text-xs text-zinc-600">Nenhuma tarefa nesta etapa.</td>
+                <td colspan="9" class="px-4 py-3 text-xs text-zinc-600">Nenhuma tarefa nesta etapa.</td>
               </tr>
             </tbody>
           </table>
@@ -254,7 +375,7 @@
       class="fixed inset-0 z-[10020] flex items-center justify-center bg-black/70 p-4"
       @click.self="fecharModalEdicao"
     >
-      <div class="w-full max-w-xl rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
+      <div class="flex max-h-[calc(100vh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
         <div class="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
           <h3 class="text-lg font-semibold text-zinc-100">Editar Tarefa</h3>
           <button
@@ -266,7 +387,7 @@
           </button>
         </div>
 
-        <form class="space-y-4 p-5" @submit.prevent="salvarEdicaoTarefa">
+        <form class="min-h-0 overflow-y-auto space-y-4 p-5" @submit.prevent="salvarEdicaoTarefa">
           <div>
             <label class="mb-1 block text-sm font-medium text-zinc-300">Titulo</label>
             <input
@@ -275,6 +396,70 @@
               required
               class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
             >
+          </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium text-zinc-300">Descricao</label>
+            <textarea
+              v-model="formEdicao.descricao"
+              rows="4"
+              class="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <div class="mb-1 flex items-center justify-between gap-3">
+              <label class="block text-sm font-medium text-zinc-300">Tags</label>
+              <span class="text-[11px] text-zinc-500">Reaproveite tags deste projeto</span>
+            </div>
+
+            <div class="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-3">
+              <div v-if="formEdicao.tags.length" class="mb-3 flex flex-wrap gap-2">
+                <span
+                  v-for="tag in formEdicao.tags"
+                  :key="`edicao-tag-${tag}`"
+                  class="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-200"
+                >
+                  <span>#{{ tag }}</span>
+                  <button
+                    type="button"
+                    class="text-zinc-400 transition-colors hover:text-zinc-100"
+                    @click="removerTagEdicao(tag)"
+                  >
+                    x
+                  </button>
+                </span>
+              </div>
+
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <input
+                  v-model="edicaoTagInput"
+                  type="text"
+                  placeholder="Digite e pressione Enter ou use virgula"
+                  class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
+                  @keydown="onEdicaoTagKeydown"
+                >
+                <button
+                  type="button"
+                  class="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
+                  @click="adicionarTagEdicao()"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            <div v-if="tagsSugestoesEdicao.length" class="mt-2 flex flex-wrap gap-2">
+              <button
+                v-for="tag in tagsSugestoesEdicao"
+                :key="`edicao-sugestao-${tag}`"
+                type="button"
+                class="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
+                @click="adicionarTagEdicao(tag)"
+              >
+                #{{ tag }}
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -376,9 +561,10 @@
 
 <script setup lang="ts">
 import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProjetosWorkspace'
-import { fetchTarefasByProjetoId, updateTarefaStatus, createTarefa, deleteTarefa, updateTarefa, fetchEquipeMembros } from '~/composables/useProjetosWorkspace'
+import { fetchTarefasByProjetoId, updateTarefaStatus, deleteTarefa, updateTarefa, fetchEquipeMembros, normalizeProjetoTarefaTags } from '~/composables/useProjetosWorkspace'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
+const route = useRoute()
 const { showConfirm, showAlert } = useUiFeedback()
 
 const { data: tarefas, pending, refresh } = await useAsyncData(
@@ -408,10 +594,12 @@ const colunas = [
 ] as const
 
 const filtroBusca = ref('')
-const modoVisualizacao = ref<'kanban' | 'lista'>('kanban')
-const novaTarefaTitulo = ref('')
-const criando = ref(false)
+const modoVisualizacao = ref<'kanban' | 'lista'>('lista')
+const tarefasSelecionadasIds = ref<number[]>([])
 const dragId = ref<number | null>(null)
+const menuAcoesAbertoId = ref<number | null>(null)
+const responsavelAbertoId = ref<number | null>(null)
+const salvandoResponsavelId = ref<number | null>(null)
 const modalEdicaoAberto = ref(false)
 const salvandoEdicao = ref(false)
 const tarefaEditandoId = ref<number | null>(null)
@@ -423,8 +611,13 @@ let timerTickHandle: ReturnType<typeof setInterval> | null = null
 const salvandoTimer = ref(false)
 const workspaceTimer = useWorkspaceRunningTimerState()
 const stopRequestHandledAt = ref<number | null>(null)
+
+hydrateWorkspaceRunningTimerState()
+
 const formEdicao = reactive({
   titulo: '',
+  descricao: '',
+  tags: [] as string[],
   status: 'refinar' as ProjetoTarefa['status'],
   prioridade: 'media' as ProjetoTarefa['prioridade'],
   horas_estimadas: 0,
@@ -432,6 +625,8 @@ const formEdicao = reactive({
   prazo_fim: '',
   responsavel_texto: '',
 })
+
+const edicaoTagInput = ref('')
 
 const equipeOptions = computed(() => {
   return (equipeMembros.value || [])
@@ -507,9 +702,65 @@ const tarefasFiltradas = computed(() => {
   const termo = filtroBusca.value.toLowerCase().trim()
   return (tarefas.value || []).filter((t) => {
     if (!termo) return true
-    return t.titulo.toLowerCase().includes(termo) || (t.codigo || '').toLowerCase().includes(termo)
+    return t.titulo.toLowerCase().includes(termo)
+      || (t.codigo || '').toLowerCase().includes(termo)
+      || normalizeProjetoTarefaTags(t.tags).some(tag => tag.toLowerCase().includes(termo))
   })
 })
+
+const tagsDisponiveisProjeto = computed(() => {
+  const uniqueTags = new Map<string, string>()
+
+  for (const tarefa of tarefas.value || []) {
+    for (const tag of normalizeProjetoTarefaTags(tarefa.tags)) {
+      const key = tag.toLocaleLowerCase('pt-BR')
+      if (!uniqueTags.has(key)) {
+        uniqueTags.set(key, tag)
+      }
+    }
+  }
+
+  return Array.from(uniqueTags.values()).sort((left, right) => left.localeCompare(right, 'pt-BR'))
+})
+
+const tagsSugestoesEdicao = computed(() => {
+  const selecionadas = new Set(formEdicao.tags.map(tag => tag.toLocaleLowerCase('pt-BR')))
+  const termo = edicaoTagInput.value.trim().toLocaleLowerCase('pt-BR')
+
+  return tagsDisponiveisProjeto.value
+    .filter(tag => !selecionadas.has(tag.toLocaleLowerCase('pt-BR')))
+    .filter(tag => !termo || tag.toLocaleLowerCase('pt-BR').includes(termo))
+    .slice(0, 10)
+})
+
+function adicionarTagsAoArray(target: string[], rawValue: string) {
+  const novasTags = normalizeProjetoTarefaTags(String(rawValue ?? '').split(','))
+  if (!novasTags.length) return
+
+  const existentes = new Set(target.map(tag => tag.toLocaleLowerCase('pt-BR')))
+
+  for (const tag of novasTags) {
+    const key = tag.toLocaleLowerCase('pt-BR')
+    if (existentes.has(key)) continue
+    existentes.add(key)
+    target.push(tag)
+  }
+}
+
+function adicionarTagEdicao(rawValue = edicaoTagInput.value) {
+  adicionarTagsAoArray(formEdicao.tags, rawValue)
+  edicaoTagInput.value = ''
+}
+
+function removerTagEdicao(tagToRemove: string) {
+  formEdicao.tags = formEdicao.tags.filter(tag => tag !== tagToRemove)
+}
+
+function onEdicaoTagKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Enter' && event.key !== ',') return
+  event.preventDefault()
+  adicionarTagEdicao()
+}
 
 const tarefasPorStatus = computed(() => {
   const map = Object.fromEntries(colunas.map(c => [c.status, [] as ProjetoTarefa[]])) as Record<string, ProjetoTarefa[]>
@@ -521,6 +772,87 @@ const tarefasPorStatus = computed(() => {
   }
   return map
 })
+
+const resumoStatus = computed(() => {
+  const currentTickMs = tickMs.value
+
+  const formatarDataResumo = (value: string | null | undefined) => {
+    if (!value) return '--'
+
+    const data = new Date(value)
+    if (Number.isNaN(data.getTime())) return '--'
+
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(data)
+  }
+
+  return Object.fromEntries(
+    colunas.map((coluna) => {
+      const itens = tarefasPorStatus.value[coluna.status] || []
+      const inicios = itens
+        .map(item => item.prazo_inicio)
+        .filter((value): value is string => Boolean(value))
+      const fins = itens
+        .map(item => item.prazo_fim)
+        .filter((value): value is string => Boolean(value))
+      const horasEstimadas = itens.reduce((acc, item) => acc + Number(item.horas_estimadas || 0), 0)
+      const horasExecutadas = itens.reduce((acc, item) => acc + getHorasExecutadasValueAt(item, currentTickMs), 0)
+      const progressoMedio = itens.length
+        ? Math.round(itens.reduce((acc, item) => acc + Number(item.progresso || 0), 0) / itens.length)
+        : 0
+
+      return [
+        coluna.status,
+        {
+          inicio: formatarDataResumo(inicios.sort()[0]),
+          fim: formatarDataResumo(fins.sort().at(-1)),
+          horas: `${formatHoras(horasExecutadas)} / ${formatHoras(horasEstimadas)}h`,
+          progresso: `${progressoMedio}%`
+        }
+      ]
+    })
+  ) as Record<ProjetoTarefa['status'], { inicio: string; fim: string; horas: string; progresso: string }>
+})
+
+function isTarefaSelecionada(id: number) {
+  return tarefasSelecionadasIds.value.includes(id)
+}
+
+function toggleSelecaoTarefa(id: number, checked: boolean) {
+  if (checked) {
+    if (!tarefasSelecionadasIds.value.includes(id)) {
+      tarefasSelecionadasIds.value = [...tarefasSelecionadasIds.value, id]
+    }
+    return
+  }
+
+  tarefasSelecionadasIds.value = tarefasSelecionadasIds.value.filter(itemId => itemId !== id)
+}
+
+function isStatusSelecionado(status: ProjetoTarefa['status']) {
+  const ids = (tarefasPorStatus.value[status] || []).map(tarefa => tarefa.id)
+  return ids.length > 0 && ids.every(id => tarefasSelecionadasIds.value.includes(id))
+}
+
+function toggleSelecaoStatus(status: ProjetoTarefa['status'], checked: boolean) {
+  const idsStatus = (tarefasPorStatus.value[status] || []).map(tarefa => tarefa.id)
+  if (!idsStatus.length) return
+
+  if (checked) {
+    const selecionadas = new Set(tarefasSelecionadasIds.value)
+    for (const id of idsStatus) {
+      selecionadas.add(id)
+    }
+    tarefasSelecionadasIds.value = Array.from(selecionadas)
+    return
+  }
+
+  const idsStatusSet = new Set(idsStatus)
+  tarefasSelecionadasIds.value = tarefasSelecionadasIds.value.filter(id => !idsStatusSet.has(id))
+}
 
 function formatHoras(value: number): string {
   return Number((value || 0).toFixed(2)).toString()
@@ -616,6 +948,42 @@ async function alterarTipoInline(tarefa: ProjetoTarefa, novoTipo: ProjetoTarefa[
   await selecionarTipo(tarefa, novoTipo)
 }
 
+function toggleResponsavelInline(id: number) {
+  responsavelAbertoId.value = responsavelAbertoId.value === id ? null : id
+}
+
+async function alterarResponsavelInline(tarefa: ProjetoTarefa, novoResponsavel: string) {
+  const responsavelNormalizado = novoResponsavel.trim() || null
+  const responsavelAnterior = tarefa.responsavel_texto || null
+
+  if (responsavelAnterior === responsavelNormalizado) {
+    responsavelAbertoId.value = null
+    return
+  }
+
+  salvandoResponsavelId.value = tarefa.id
+  tarefas.value = (tarefas.value || []).map((item) =>
+    item.id === tarefa.id ? { ...item, responsavel_texto: responsavelNormalizado } : item
+  )
+
+  const { error } = await updateTarefa(tarefa.id, {
+    responsavel_texto: responsavelNormalizado
+  })
+
+  salvandoResponsavelId.value = null
+
+  if (error) {
+    tarefas.value = (tarefas.value || []).map((item) =>
+      item.id === tarefa.id ? { ...item, responsavel_texto: responsavelAnterior } : item
+    )
+    showAlert('Erro ao atualizar responsavel: ' + error, { title: 'Erro', type: 'error' })
+    return
+  }
+
+  responsavelAbertoId.value = null
+  await refresh()
+}
+
 function formatPrazo(t: ProjetoTarefa): string {
   if (!t.prazo_inicio && !t.prazo_fim) return '-'
 
@@ -643,14 +1011,18 @@ function formatProgresso(value: number | null | undefined): string {
   return `${Math.max(0, Math.min(100, Math.round(Number(value))))}%`
 }
 
-function getHorasExecutadasValue(t: ProjetoTarefa): number {
+function getHorasExecutadasValueAt(t: ProjetoTarefa, currentTickMs: number): number {
   if (tarefaRodandoId.value !== t.id || !timerInicioMs.value) {
     return Number(t.horas_executadas || 0)
   }
 
-  const elapsedSegundos = Math.floor((tickMs.value - timerInicioMs.value) / 1000)
+  const elapsedSegundos = Math.floor((currentTickMs - timerInicioMs.value) / 1000)
   const totalSegundos = timerBaseSegundos.value + Math.max(elapsedSegundos, 0)
   return totalSegundos / 3600
+}
+
+function getHorasExecutadasValue(t: ProjetoTarefa): number {
+  return getHorasExecutadasValueAt(t, tickMs.value)
 }
 
 function getHorasExecutadasDisplay(t: ProjetoTarefa): string {
@@ -678,7 +1050,7 @@ function atualizarWorkspaceTimerEstado() {
   if (!tarefaAtual) return
 
   const elapsedSegundos = Math.floor((tickMs.value - timerInicioMs.value) / 1000)
-  workspaceTimer.value = {
+  persistWorkspaceRunningTimerState({
     ...workspaceTimer.value,
     active: true,
     projetoId: props.projeto.id,
@@ -688,7 +1060,31 @@ function atualizarWorkspaceTimerEstado() {
     startedAtMs: timerInicioMs.value,
     baseSegundos: timerBaseSegundos.value,
     elapsedSegundos: timerBaseSegundos.value + Math.max(elapsedSegundos, 0)
+  })
+}
+
+function restaurarTimerDaWorkspace() {
+  const timerAtivo = workspaceTimer.value
+
+  if (!timerAtivo.active || timerAtivo.projetoId !== props.projeto.id || !timerAtivo.tarefaId || !timerAtivo.startedAtMs) {
+    return
   }
+
+  const tarefaAtual = (tarefas.value || []).find((t) => t.id === timerAtivo.tarefaId)
+  if (!tarefaAtual) {
+    return
+  }
+
+  if (tarefaRodandoId.value === tarefaAtual.id && timerInicioMs.value === timerAtivo.startedAtMs) {
+    return
+  }
+
+  tarefaRodandoId.value = tarefaAtual.id
+  timerBaseSegundos.value = Math.max(0, Math.floor(timerAtivo.baseSegundos || 0))
+  timerInicioMs.value = timerAtivo.startedAtMs
+  tickMs.value = Date.now()
+  atualizarWorkspaceTimerEstado()
+  iniciarTickTimer()
 }
 
 async function persistirHorasExecutadas(id: number, horasExecutadas: number) {
@@ -769,13 +1165,50 @@ watch(
   }
 )
 
+watch(
+  tarefas,
+  () => {
+    restaurarTimerDaWorkspace()
+    abrirTarefaPelaQuery()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => route.query.tarefa,
+  () => {
+    abrirTarefaPelaQuery()
+  }
+)
+
 onBeforeUnmount(() => {
   pararTickTimer()
-  resetWorkspaceRunningTimerState()
 })
 
 function onDragStart(id: number) {
   dragId.value = id
+}
+
+function fecharMenuAcoes() {
+  menuAcoesAbertoId.value = null
+}
+
+function fecharSeletorResponsavel() {
+  responsavelAbertoId.value = null
+}
+
+function toggleMenuAcoes(id: number) {
+  menuAcoesAbertoId.value = menuAcoesAbertoId.value === id ? null : id
+}
+
+async function abrirEdicaoPeloMenu(id: number) {
+  fecharMenuAcoes()
+  await editarTarefa(id)
+}
+
+async function excluirPeloMenu(id: number) {
+  fecharMenuAcoes()
+  await excluirTarefa(id)
 }
 
 async function onDrop(newStatus: string) {
@@ -809,26 +1242,6 @@ async function onDrop(newStatus: string) {
   await refresh()
 }
 
-async function criarNovaTarefa() {
-  if (!novaTarefaTitulo.value.trim()) return
-  criando.value = true
-  const { error } = await createTarefa({
-    projeto_id: props.projeto.id,
-    titulo: novaTarefaTitulo.value.trim(),
-    status: 'refinar',
-    prioridade: 'media',
-    tipo: 'funcionalidade'
-  })
-  
-  if (!error) {
-    novaTarefaTitulo.value = ''
-    refresh()
-  } else {
-    alert('Erro ao criar: ' + error)
-  }
-  criando.value = false
-}
-
 async function editarTarefa(id: number) {
   if (!(equipeMembros.value || []).length) {
     await refreshEquipeMembros()
@@ -842,19 +1255,34 @@ async function editarTarefa(id: number) {
 
   tarefaEditandoId.value = tarefa.id
   formEdicao.titulo = tarefa.titulo || ''
+  formEdicao.descricao = tarefa.descricao || ''
+  formEdicao.tags = normalizeProjetoTarefaTags(tarefa.tags)
   formEdicao.status = tarefa.status
   formEdicao.prioridade = tarefa.prioridade
   formEdicao.horas_estimadas = Number(tarefa.horas_estimadas) || 0
   formEdicao.prazo_inicio = toDateInputValue(tarefa.prazo_inicio)
   formEdicao.prazo_fim = toDateInputValue(tarefa.prazo_fim)
   formEdicao.responsavel_texto = tarefa.responsavel_texto || ''
+  edicaoTagInput.value = ''
   modalEdicaoAberto.value = true
+}
+
+async function abrirTarefaPelaQuery() {
+  const tarefaId = Number(route.query.tarefa)
+  if (!Number.isFinite(tarefaId) || tarefaId <= 0) return
+  if (modalEdicaoAberto.value && tarefaEditandoId.value === tarefaId) return
+
+  const tarefaExiste = (tarefas.value || []).some((t) => t.id === tarefaId)
+  if (!tarefaExiste) return
+
+  await editarTarefa(tarefaId)
 }
 
 function fecharModalEdicao() {
   if (salvandoEdicao.value) return
   modalEdicaoAberto.value = false
   tarefaEditandoId.value = null
+  edicaoTagInput.value = ''
 }
 
 async function salvarEdicaoTarefa() {
@@ -873,6 +1301,8 @@ async function salvarEdicaoTarefa() {
 
   const payload = {
     titulo: formEdicao.titulo.trim(),
+    descricao: formEdicao.descricao.trim() || null,
+    tags: formEdicao.tags,
     status: formEdicao.status,
     prioridade: formEdicao.prioridade,
     horas_estimadas: Number(formEdicao.horas_estimadas) || 0,
@@ -922,6 +1352,19 @@ async function excluirTarefa(id: number) {
 
   refresh()
 }
+
+function handleDocumentClick() {
+  fecharSeletorResponsavel()
+  fecharMenuAcoes()
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleDocumentClick)
+})
 </script>
 
 <style scoped>

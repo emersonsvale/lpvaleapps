@@ -77,7 +77,7 @@
         @click="fecharModalNovaTarefa"
       />
 
-      <div class="relative w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl">
+      <div class="relative flex max-h-[calc(100vh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl">
         <header class="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
           <h2 class="text-3xl font-semibold text-zinc-100">Nova Tarefa</h2>
           <button
@@ -89,7 +89,7 @@
           </button>
         </header>
 
-        <form class="space-y-4 px-6 py-5" @submit.prevent="salvarNovaTarefa">
+        <form class="min-h-0 overflow-y-auto space-y-4 px-6 py-5" @submit.prevent="salvarNovaTarefa">
           <div>
             <label for="nova-tarefa-titulo" class="mb-1 block text-sm font-medium text-zinc-200">Titulo</label>
             <input
@@ -100,6 +100,73 @@
               placeholder="Nome da tarefa..."
               class="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-400 focus:outline-none"
             >
+          </div>
+
+          <div>
+            <label for="nova-tarefa-descricao" class="mb-1 block text-sm font-medium text-zinc-200">Descricao</label>
+            <textarea
+              id="nova-tarefa-descricao"
+              v-model="formNovaTarefa.descricao"
+              rows="4"
+              placeholder="Descreva o objetivo, contexto ou detalhes da tarefa..."
+              class="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <div class="mb-1 flex items-center justify-between gap-3">
+              <label for="nova-tarefa-tags" class="block text-sm font-medium text-zinc-200">Tags</label>
+              <span class="text-[11px] text-zinc-500">Reaproveite tags do projeto ou crie novas</span>
+            </div>
+
+            <div class="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-3">
+              <div v-if="formNovaTarefa.tags.length" class="mb-3 flex flex-wrap gap-2">
+                <span
+                  v-for="tag in formNovaTarefa.tags"
+                  :key="`nova-tarefa-tag-${tag}`"
+                  class="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-200"
+                >
+                  <span>#{{ tag }}</span>
+                  <button
+                    type="button"
+                    class="text-zinc-400 transition-colors hover:text-zinc-100"
+                    @click="removerTagNovaTarefa(tag)"
+                  >
+                    x
+                  </button>
+                </span>
+              </div>
+
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="nova-tarefa-tags"
+                  v-model="novaTarefaTagInput"
+                  type="text"
+                  placeholder="Digite e pressione Enter ou use virgula"
+                  class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none"
+                  @keydown="onNovaTarefaTagKeydown"
+                >
+                <button
+                  type="button"
+                  class="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
+                  @click="adicionarTagNovaTarefa()"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            <div v-if="tagsSugestoesNovaTarefa.length" class="mt-2 flex flex-wrap gap-2">
+              <button
+                v-for="tag in tagsSugestoesNovaTarefa"
+                :key="`sugestao-nova-tarefa-${tag}`"
+                type="button"
+                class="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
+                @click="adicionarTagNovaTarefa(tag)"
+              >
+                #{{ tag }}
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -206,7 +273,7 @@
 
 <script setup lang="ts">
 import { PhFolderOpen } from '@phosphor-icons/vue'
-import { createTarefa, fetchEquipeMembros, fetchProjetoWorkspaceById, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { createTarefa, fetchEquipeMembros, fetchProjetoWorkspaceById, fetchTarefasByProjetoId, normalizeProjetoTarefaTags, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 
 definePageMeta({ layout: 'admin' })
 
@@ -225,6 +292,15 @@ const { data: projeto, pending, error, refresh } = await useAsyncData(
 const { data: equipeMembros, refresh: refreshEquipeMembros } = await useAsyncData(
   `admin-equipe-membros-${projetoId}`,
   () => fetchEquipeMembros(),
+  {
+    server: false,
+    default: () => []
+  }
+)
+
+const { data: tarefasProjeto, refresh: refreshTarefasProjeto } = await useAsyncData(
+  `admin-projeto-tarefas-tags-${projetoId}`,
+  () => fetchTarefasByProjetoId(projetoId),
   {
     server: false,
     default: () => []
@@ -274,6 +350,8 @@ const opcoesEtapa: Array<{ label: string; value: ProjetoTarefa['status'] }> = [
 
 const formNovaTarefa = reactive<{
   titulo: string
+  descricao: string
+  tags: string[]
   tipo: '' | ProjetoTarefa['tipo']
   status: ProjetoTarefa['status']
   responsavel_texto: string
@@ -282,6 +360,8 @@ const formNovaTarefa = reactive<{
   prazo_fim: string
 }>({
   titulo: '',
+  descricao: '',
+  tags: [],
   tipo: '',
   status: 'refinar',
   responsavel_texto: '',
@@ -289,6 +369,8 @@ const formNovaTarefa = reactive<{
   prazo_inicio: '',
   prazo_fim: ''
 })
+
+const novaTarefaTagInput = ref('')
 
 const equipeOptions = computed(() => {
   return (equipeMembros.value || [])
@@ -304,14 +386,71 @@ const equipeOptions = computed(() => {
     })
 })
 
+const tagsDisponiveisProjeto = computed(() => {
+  const uniqueTags = new Map<string, string>()
+
+  for (const tarefa of tarefasProjeto.value || []) {
+    for (const tag of normalizeProjetoTarefaTags(tarefa.tags)) {
+      const key = tag.toLocaleLowerCase('pt-BR')
+      if (!uniqueTags.has(key)) {
+        uniqueTags.set(key, tag)
+      }
+    }
+  }
+
+  return Array.from(uniqueTags.values()).sort((left, right) => left.localeCompare(right, 'pt-BR'))
+})
+
+const tagsSugestoesNovaTarefa = computed(() => {
+  const selecionadas = new Set(formNovaTarefa.tags.map(tag => tag.toLocaleLowerCase('pt-BR')))
+  const termo = novaTarefaTagInput.value.trim().toLocaleLowerCase('pt-BR')
+
+  return tagsDisponiveisProjeto.value
+    .filter(tag => !selecionadas.has(tag.toLocaleLowerCase('pt-BR')))
+    .filter(tag => !termo || tag.toLocaleLowerCase('pt-BR').includes(termo))
+    .slice(0, 10)
+})
+
+function adicionarTagsAoArray(target: string[], rawValue: string) {
+  const novasTags = normalizeProjetoTarefaTags(String(rawValue ?? '').split(','))
+  if (!novasTags.length) return
+
+  const existentes = new Set(target.map(tag => tag.toLocaleLowerCase('pt-BR')))
+
+  for (const tag of novasTags) {
+    const key = tag.toLocaleLowerCase('pt-BR')
+    if (existentes.has(key)) continue
+    existentes.add(key)
+    target.push(tag)
+  }
+}
+
+function adicionarTagNovaTarefa(rawValue = novaTarefaTagInput.value) {
+  adicionarTagsAoArray(formNovaTarefa.tags, rawValue)
+  novaTarefaTagInput.value = ''
+}
+
+function removerTagNovaTarefa(tagToRemove: string) {
+  formNovaTarefa.tags = formNovaTarefa.tags.filter(tag => tag !== tagToRemove)
+}
+
+function onNovaTarefaTagKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Enter' && event.key !== ',') return
+  event.preventDefault()
+  adicionarTagNovaTarefa()
+}
+
 function resetFormNovaTarefa() {
   formNovaTarefa.titulo = ''
+  formNovaTarefa.descricao = ''
+  formNovaTarefa.tags = []
   formNovaTarefa.tipo = ''
   formNovaTarefa.status = 'refinar'
   formNovaTarefa.responsavel_texto = ''
   formNovaTarefa.horas_estimadas = 0
   formNovaTarefa.prazo_inicio = ''
   formNovaTarefa.prazo_fim = ''
+  novaTarefaTagInput.value = ''
   erroNovaTarefa.value = null
 }
 
@@ -319,6 +458,7 @@ async function abrirModalNovaTarefa() {
   if (!(equipeMembros.value || []).length) {
     await refreshEquipeMembros()
   }
+  await refreshTarefasProjeto()
   modalNovaTarefaAberto.value = true
   erroNovaTarefa.value = null
 }
@@ -350,6 +490,8 @@ async function salvarNovaTarefa() {
   const { error } = await createTarefa({
     projeto_id: projeto.value.id,
     titulo: formNovaTarefa.titulo.trim(),
+    descricao: formNovaTarefa.descricao.trim() || null,
+    tags: formNovaTarefa.tags,
     tipo: formNovaTarefa.tipo,
     status: formNovaTarefa.status,
     prioridade: 'media',
@@ -365,7 +507,10 @@ async function salvarNovaTarefa() {
     return
   }
 
-  await refreshNuxtData(`tarefas-proj-${projeto.value.id}`)
+  await Promise.all([
+    refreshNuxtData(`tarefas-proj-${projeto.value.id}`),
+    refreshTarefasProjeto()
+  ])
   salvandoNovaTarefa.value = false
   modalNovaTarefaAberto.value = false
   resetFormNovaTarefa()

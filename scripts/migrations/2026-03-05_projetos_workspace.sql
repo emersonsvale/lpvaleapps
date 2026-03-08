@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS public.projetos_tarefas (
     codigo TEXT, -- ex: R-001
     titulo TEXT NOT NULL,
     descricao TEXT,
+  tags TEXT[] NOT NULL DEFAULT '{}'::text[],
     status TEXT NOT NULL DEFAULT 'fazer' CHECK (status IN ('refinar', 'fazer', 'em_progresso', 'sob_revisao', 'concluido')),
     tipo TEXT DEFAULT 'funcionalidade' CHECK (tipo IN ('funcionalidade', 'bug', 'melhoria', 'documentacao', 'design')),
     prioridade TEXT DEFAULT 'media' CHECK (prioridade IN ('baixa', 'media', 'alta', 'urgente')),
@@ -79,6 +80,7 @@ CREATE TRIGGER trg_projetos_tarefas_updated_at BEFORE UPDATE ON public.projetos_
 
 -- Cria index para buscar tarefas por projeto de forma rápida
 CREATE INDEX IF NOT EXISTS idx_projetos_tarefas_projeto_id ON public.projetos_tarefas(projeto_id);
+CREATE INDEX IF NOT EXISTS idx_projetos_tarefas_tags_gin ON public.projetos_tarefas USING gin(tags);
 
 
 -- Criar tabela de Requisitos
