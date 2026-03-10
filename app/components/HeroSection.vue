@@ -1,21 +1,25 @@
 <template>
   <div class="relative min-h-screen">
-    <!-- Dark Veil Background -->
-    <div class="absolute inset-0 w-full h-full">
-      <DarkVeil
-        :hue-shift="0"
-        :noise-intensity="0.01"
-        :scanline-intensity="0"
-        :speed="0.4"
-        :scanline-frequency="0"
-        :warp-amount="0.08"
-        :resolution-scale="1"
-      />
-    </div>
-    
     <main class="overflow-hidden relative z-10">
-      <section>
-        <div class="relative pt-24">
+      <section class="relative isolate overflow-hidden">
+        <div class="absolute inset-0">
+          <video
+            class="absolute inset-0 h-full w-full object-cover object-center brightness-90 contrast-125 saturate-110"
+            src="/videohome (1).mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            webkit-playsinline
+            preload="metadata"
+            disablepictureinpicture
+            controlslist="nodownload nofullscreen noremoteplayback"
+            aria-hidden="true"
+          />
+          <div class="absolute inset-0 bg-black/45" />
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,196,0,0.10),transparent_30%),linear-gradient(180deg,rgba(0,0,0,0.18)_0%,rgba(0,0,0,0.45)_55%,hsl(var(--background))_100%)]" />
+        </div>
+        <div class="relative pt-24 pb-24 md:pb-32">
           <div class="mx-auto max-w-5xl px-6">
             <div class="sm:mx-auto lg:mr-auto">
               <ClientOnly>
@@ -68,16 +72,15 @@
                     :enter="transitionVariants.item.visible"
                     class="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4"
                   >
-                    <a 
-                      href="https://wa.me/5511969210065?text=Olá! Gostaria de começar meu projeto com a Vale Apps."
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
                       class="group relative inline-flex items-center gap-2.5 px-7 py-3.5 bg-brand text-black font-semibold rounded-xl hover:bg-brand/90 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,192,0,0.3)] hover:-translate-y-0.5"
+                      @click="openTypebot({ source: 'hero-cta', message: 'Começar meu projeto' })"
                     >
                       <PhRocketLaunch :size="20" weight="bold" />
                       Começar Meu Projeto
                       <PhArrowRight :size="16" weight="bold" class="transition-transform duration-300 group-hover:translate-x-1" />
-                    </a>
+                    </button>
                     <a 
                       href="#projetos"
                       class="inline-flex items-center gap-2 px-6 py-3.5 border border-white/[0.15] text-foreground/80 rounded-xl hover:bg-white/5 hover:border-white/[0.25] transition-all duration-300 backdrop-blur-sm"
@@ -131,64 +134,6 @@
               </ClientOnly>
             </div>
           </div>
-          <ClientOnly>
-            <div
-              v-motion
-              :initial="{ opacity: 0 }"
-              :enter="{ 
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.05,
-                  delayChildren: 0.75,
-                }
-              }"
-            >
-              <div class="relative">
-                <div
-                  aria-hidden="true"
-                  class="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"
-                />
-                <ContainerScroll>
-                  <video
-                    class="bg-background aspect-[15/8] relative rounded-lg w-full h-full object-cover"
-                    autoplay
-                    muted
-                    loop
-                    playsinline
-                    preload="metadata"
-                    disablepictureinpicture
-                    controlslist="nodownload nofullscreen noremoteplayback"
-                    aria-label="Video demonstrativo de dashboard desenvolvido pela Vale Apps"
-                  >
-                    <source src="/0305(1)%20(1).mp4" type="video/mp4" />
-                  </video>
-                </ContainerScroll>
-              </div>
-            </div>
-            <template #fallback>
-              <div class="relative">
-                <div
-                  aria-hidden="true"
-                  class="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"
-                />
-                <div class="mx-auto max-w-5xl px-6">
-                  <video
-                    class="bg-background aspect-[15/8] relative rounded-lg w-full h-full object-cover"
-                    autoplay
-                    muted
-                    loop
-                    playsinline
-                    preload="metadata"
-                    disablepictureinpicture
-                    controlslist="nodownload nofullscreen noremoteplayback"
-                    aria-label="Video demonstrativo de dashboard desenvolvido pela Vale Apps"
-                  >
-                    <source src="/0305(1)%20(1).mp4" type="video/mp4" />
-                  </video>
-                </div>
-              </div>
-            </template>
-          </ClientOnly>
         </div>
       </section>
 
@@ -205,11 +150,11 @@
 </template>
 
 <script setup lang="ts">
-import DarkVeil from '~/components/ui/DarkVeil.vue'
-import ContainerScroll from '~/components/ui/ContainerScroll.vue'
 import LogoLoop from '~/components/ui/LogoLoop.vue'
 import BlurText from '~/components/ui/BlurText.vue'
 import { PhRocketLaunch, PhArrowRight, PhPlay, PhStar } from '@phosphor-icons/vue'
+
+const { openTypebot } = useTypebot()
 
 const transitionVariants = {
   item: {

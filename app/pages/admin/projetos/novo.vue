@@ -83,9 +83,24 @@
             >
           </div>
           <div>
-            <label class="block text-sm font-medium text-zinc-300 mb-1.5">Orçamento Estimado (R$)</label>
-            <input v-model="form.orcamento_total" type="number" step="0.01" class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand">
+            <label class="block text-sm font-medium text-zinc-300 mb-1.5">Valor da Hora Vendida (R$)</label>
+            <input
+              v-model="form.valor_hora_vendida"
+              type="number"
+              min="0"
+              step="0.01"
+              class="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand"
+              placeholder="Ex: 50"
+            >
           </div>
+        </div>
+
+        <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-4">
+          <div class="flex items-center justify-between gap-3 text-sm">
+            <span class="text-zinc-400">Orçamento total calculado</span>
+            <strong class="text-base font-semibold text-zinc-100">{{ formatMoeda(orcamentoTotalCalculado) }}</strong>
+          </div>
+          <p class="mt-1 text-xs text-zinc-500">Calculado automaticamente com base em horas vendidas x valor da hora.</p>
         </div>
       </div>
 
@@ -105,6 +120,7 @@
 
 <script setup lang="ts">
 import { createProjetoWorkspace } from '~/composables/useProjetosWorkspace'
+import { useSupabase } from '~/composables/useSupabase'
 
 definePageMeta({ layout: 'admin' })
 
@@ -139,7 +155,13 @@ const form = reactive({
   data_fim_prevista: '',
   prioridade: 'media' as const,
   horas_previstas: 0,
-  orcamento_total: 0,
+  valor_hora_vendida: 0,
+})
+
+const orcamentoTotalCalculado = computed(() => {
+  const horas = Number(form.horas_previstas) || 0
+  const valorHora = Number(form.valor_hora_vendida) || 0
+  return Number((horas * valorHora).toFixed(2))
 })
 
 watch(() => form.nome, (val) => {
@@ -178,7 +200,8 @@ async function salvar() {
     data_fim_prevista: form.data_fim_prevista || null,
     prioridade: form.prioridade,
     horas_previstas: Number(form.horas_previstas) || 0,
-    orcamento_total: Number(form.orcamento_total) || 0,
+    valor_hora_vendida: Number(form.valor_hora_vendida) || 0,
+    orcamento_total: orcamentoTotalCalculado.value,
   }
 
   const { data, error } = await createProjetoWorkspace(payload)
@@ -189,5 +212,13 @@ async function salvar() {
   } else if (data) {
     await navigateTo(`/admin/projetos/${data.id || ''}`)
   }
+}
+
+function formatMoeda(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 2
+  }).format(Number(value || 0))
 }
 </script>

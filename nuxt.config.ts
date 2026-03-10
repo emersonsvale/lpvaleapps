@@ -47,6 +47,12 @@ export default defineNuxtConfig({
       baseURL: 'https://valeapps.com.br',
       supabaseUrl: '',
       supabaseAnonKey: '',
+      typebotEnabled: false,
+      typebotBot: '',
+      typebotApiHost: 'https://typebot.io',
+      typebotPreviewMessage: 'Precisa tirar uma dúvida? Fale com a Vale Apps aqui.',
+      typebotPreviewAutoShowDelay: 8000,
+      typebotPreviewAvatarUrl: '',
       blogImagesBucket: 'images',
       blogImagesFolder: 'blog',
 

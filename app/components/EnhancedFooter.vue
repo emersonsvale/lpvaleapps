@@ -85,8 +85,16 @@
               <div class="w-8 h-8 rounded-lg bg-brand/5 flex items-center justify-center flex-shrink-0">
                 <component :is="item.icon" :size="16" class="text-brand" />
               </div>
+              <button
+                v-if="item.action === 'typebot'"
+                type="button"
+                class="text-sm hover:text-brand transition-colors text-muted-foreground text-left"
+                @click="openTypebot({ source: item.source, message: item.text })"
+              >
+                {{ item.text }}
+              </button>
               <a
-                v-if="item.href"
+                v-else-if="item.href"
                 :href="item.href"
                 class="text-sm hover:text-brand transition-colors text-muted-foreground"
               >
@@ -156,6 +164,7 @@ import TextHoverEffect from '~/components/ui/TextHoverEffect.vue'
 import FooterBackgroundGradient from '~/components/ui/FooterBackgroundGradient.vue'
 
 const footerCol = useRevealFade()
+const { openTypebot } = useTypebot()
 
 const services = [
   { label: 'Desenvolvimento Mobile', href: '#servicos' },
@@ -179,7 +188,8 @@ const contactInfo = [
   {
     icon: PhWhatsappLogo,
     text: '(11) 96921-0065',
-    href: 'https://wa.me/5511969210065',
+    action: 'typebot',
+    source: 'footer-contact'
   },
 ]
 

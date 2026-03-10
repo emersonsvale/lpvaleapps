@@ -54,15 +54,14 @@
         class="text-center mt-12"
       >
         <p class="text-zinc-400 mb-4">Ainda tem dúvidas?</p>
-        <a
-          href="https://wa.me/5511969210065?text=Olá! Tenho uma dúvida sobre os serviços da Vale Apps."
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
           class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-brand/20 text-brand hover:bg-brand/10 transition-all duration-300 text-sm font-medium"
+          @click="openTypebot({ source: 'faq-cta', message: 'Tenho uma dúvida sobre os serviços' })"
         >
           <PhWhatsappLogo :size="18" />
-          Fale conosco pelo WhatsApp
-        </a>
+          Fale conosco no chat
+        </button>
       </div>
     </div>
   </section>
@@ -73,6 +72,7 @@ import { PhPlus, PhWhatsappLogo } from '@phosphor-icons/vue'
 import { sectionTitleReveal, useRevealFadeUp } from '~/composables/useScrollRevealVariants'
 
 const faqReveal = useRevealFadeUp({ y: 15 })
+const { openTypebot } = useTypebot()
 
 const faqs = [
   {

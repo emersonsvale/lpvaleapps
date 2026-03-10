@@ -29,19 +29,18 @@
         class="max-w-3xl mx-auto"
       >
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <!-- WhatsApp Card -->
-          <a
-            href="https://wa.me/5511969210065?text=Olá! Gostaria de começar meu projeto com a Vale Apps."
-            target="_blank"
-            rel="noopener noreferrer"
+          <!-- Chat Card -->
+          <button
+            type="button"
             class="group relative p-6 rounded-2xl border border-white/[0.06] bg-zinc-900/60 backdrop-blur-sm hover:border-green-500/30 transition-all duration-500 hover:shadow-[0_8px_40px_rgba(34,197,94,0.1)]"
+            @click="openTypebot({ source: 'contact-card', message: 'Iniciar conversa' })"
           >
             <div class="flex items-start gap-4">
               <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors duration-300">
                 <PhWhatsappLogo :size="24" class="text-green-500" />
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-white mb-1 group-hover:text-green-400 transition-colors duration-300">WhatsApp</h3>
+                <h3 class="text-lg font-semibold text-white mb-1 group-hover:text-green-400 transition-colors duration-300">Chat</h3>
                 <p class="text-sm text-zinc-400">Resposta rápida. Fale diretamente com nossa equipe.</p>
               </div>
             </div>
@@ -49,7 +48,7 @@
               <span>Iniciar conversa</span>
               <PhArrowRight :size="14" class="transition-transform duration-300 group-hover:translate-x-1" />
             </div>
-          </a>
+          </button>
 
           <!-- Email Card -->
           <a
@@ -74,16 +73,15 @@
 
         <!-- Main CTA -->
         <div class="text-center">
-          <a 
-            href="https://wa.me/5511969210065?text=Olá! Gostaria de começar meu projeto com a Vale Apps."
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             class="group inline-flex items-center gap-3 px-10 py-5 bg-brand text-black font-bold text-lg rounded-2xl hover:bg-brand/90 transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,192,0,0.3)] hover:-translate-y-0.5"
+            @click="openTypebot({ source: 'contact-main-cta', message: 'Começar meu projeto' })"
           >
             <PhRocketLaunch :size="22" weight="bold" />
             Começar Meu Projeto
             <PhArrowRight :size="18" weight="bold" class="transition-transform duration-300 group-hover:translate-x-1" />
-          </a>
+          </button>
           <p class="mt-4 text-sm text-zinc-500">Sem compromisso &middot; Resposta em até 24h &middot; Orçamento gratuito</p>
         </div>
       </div>
@@ -96,4 +94,5 @@ import { PhWhatsappLogo, PhEnvelope, PhArrowRight, PhRocketLaunch } from '@phosp
 import { sectionTitleReveal, useRevealFadeUp } from '~/composables/useScrollRevealVariants'
 
 const ctaReveal = useRevealFadeUp({ y: 20 })
+const { openTypebot } = useTypebot()
 </script>

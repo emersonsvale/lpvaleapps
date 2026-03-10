@@ -107,24 +107,20 @@
           <div class="flex-1">
             <div class="flex items-center justify-between mb-1.5 text-xs">
               <span class="text-zinc-500">Progresso</span>
-              <span class="font-medium text-zinc-300">{{ p.progresso_percentual }}%</span>
+              <span class="font-medium text-zinc-300">{{ getProjetoProgressoPercentual(p.id) }}%</span>
             </div>
             <div class="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
               <div 
                 class="h-full bg-brand transition-all duration-500" 
-                :style="{ width: `${Math.min(100, Math.max(0, p.progresso_percentual))}%` }"
+                :style="{ width: `${getProjetoProgressoPercentual(p.id)}%` }"
               />
             </div>
           </div>
 
           <div class="flex items-center gap-4 shrink-0 text-xs text-zinc-500">
-            <span v-if="p.data_fim_prevista" class="flex items-center gap-1.5" title="Entrega prevista">
+            <span class="flex items-center gap-1.5" title="Tarefas concluídas">
               <PhCalendarBlank class="w-4 h-4" />
-              {{ formatarData(p.data_fim_prevista) }}
-            </span>
-            <span v-else class="flex items-center gap-1.5">
-              <PhCalendarBlank class="w-4 h-4" />
-               A definir
+              {{ getProjetoTarefasConcluidas(p.id) }} de {{ getProjetoTotalTarefas(p.id) }} tarefas
             </span>
           </div>
         </div>
@@ -270,6 +266,7 @@
 import { PhFolderOpen, PhCalendarBlank, PhListChecks } from '@phosphor-icons/vue'
 import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import { fetchEquipeMembros, fetchProjetosWorkspace, fetchTarefasWorkspace, updateTarefa, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
+import { useSupabase } from '~/composables/useSupabase'
 import { hydrateWorkspaceRunningTimerState, persistWorkspaceRunningTimerState, resetWorkspaceRunningTimerState, useWorkspaceRunningTimerState } from '~/composables/useWorkspaceRunningTimer'
 
 definePageMeta({ layout: 'admin' })
@@ -463,6 +460,23 @@ const minhasTarefasResumo = computed(() => {
   })
 })
 
+const tarefasPorProjeto = computed(() => {
+  const resumo = new Map<number, { total: number; concluidas: number }>()
+
+  for (const tarefa of tarefasWorkspace.value ?? []) {
+    const atual = resumo.get(tarefa.projeto_id) || { total: 0, concluidas: 0 }
+    atual.total += 1
+
+    if (tarefa.status === 'concluido') {
+      atual.concluidas += 1
+    }
+
+    resumo.set(tarefa.projeto_id, atual)
+  }
+
+  return resumo
+})
+
 const projetosFiltrados = computed(() => {
   const termo = filtroBusca.value.trim().toLowerCase()
   return (projetos.value ?? []).filter((p) => {
@@ -478,6 +492,22 @@ const projetosFiltrados = computed(() => {
     return true
   })
 })
+
+function getProjetoTotalTarefas(projetoId: number) {
+  return tarefasPorProjeto.value.get(projetoId)?.total || 0
+}
+
+function getProjetoTarefasConcluidas(projetoId: number) {
+  return tarefasPorProjeto.value.get(projetoId)?.concluidas || 0
+}
+
+function getProjetoProgressoPercentual(projetoId: number) {
+  const total = getProjetoTotalTarefas(projetoId)
+  if (!total) return 0
+
+  const concluidas = getProjetoTarefasConcluidas(projetoId)
+  return Math.round((concluidas / total) * 100)
+}
 
 watch(abaAtiva, () => {
   filtroBusca.value = ''

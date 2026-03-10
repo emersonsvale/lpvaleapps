@@ -179,15 +179,9 @@
               Vamos transformar sua ideia em realidade com tecnologia de ponta e design excepcional.
             </p>
             <div class="group-hover:scale-105 transition-transform duration-300">
-              <a 
-                href="https://wa.me/5511969210065?text=Olá! Gostaria de iniciar um projeto com a Vale Apps."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button size="lg">
-                  Iniciar Projeto
-                </Button>
-              </a>
+              <Button size="lg" @click="openTypebot({ source: 'services-cta', message: 'Gostaria de iniciar um projeto' })">
+                Iniciar Projeto
+              </Button>
             </div>
           </div>
           <!-- Efeito de brilho animado -->
@@ -208,6 +202,8 @@ import {
   PhGlobe
 } from '@phosphor-icons/vue'
 import Button from '~/components/ui/Button.vue'
+
+const { openTypebot } = useTypebot()
 
 // Refs para os cards
 const card1 = ref<HTMLElement>()

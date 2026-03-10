@@ -4,14 +4,17 @@
       <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
         <div class="flex items-center justify-between mb-2">
           <h2 class="font-medium text-zinc-200">Progresso geral</h2>
-          <span class="text-2xl font-semibold text-zinc-100">{{ projeto?.progresso_percentual }}%</span>
+          <span class="text-2xl font-semibold text-zinc-100">{{ progressoTarefasPercentual }}%</span>
         </div>
         <div class="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
           <div 
             class="h-full bg-brand transition-all duration-500" 
-            :style="{ width: `${Math.min(100, Math.max(0, projeto?.progresso_percentual || 0))}%` }"
+            :style="{ width: `${progressoTarefasPercentual}%` }"
           />
         </div>
+        <p class="mt-2 text-sm text-zinc-500">
+          {{ tarefasConcluidas }} de {{ totalTarefas }} tarefas concluidas
+        </p>
       </div>
     </section>
 
@@ -66,10 +69,31 @@
 
 <script setup lang="ts">
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace'
+import { fetchTarefasByProjetoId } from '~/composables/useProjetosWorkspace'
 
 const props = defineProps<{
   projeto: ProjetoAdminWorkspace
 }>()
+
+const { data: tarefasProjeto } = await useAsyncData(
+  `tarefas-proj-${props.projeto.id}`,
+  () => fetchTarefasByProjetoId(props.projeto.id),
+  {
+    server: false,
+    default: () => []
+  }
+)
+
+const totalTarefas = computed(() => (tarefasProjeto.value || []).length)
+
+const tarefasConcluidas = computed(() => {
+  return (tarefasProjeto.value || []).filter(tarefa => tarefa.status === 'concluido').length
+})
+
+const progressoTarefasPercentual = computed(() => {
+  if (!totalTarefas.value) return 0
+  return Math.round((tarefasConcluidas.value / totalTarefas.value) * 100)
+})
 
 const saldoHoras = computed(() => {
   return (props.projeto?.horas_previstas || 0) - (props.projeto?.horas_executadas || 0)

@@ -85,15 +85,39 @@
         </label>
       </div>
 
-       <label class="block space-y-2">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <label class="block space-y-2">
           <span class="text-sm font-medium text-zinc-300">Horas Vendidas no Projeto</span>
           <input
             v-model.number="form.horas_previstas"
             type="number"
+            min="0"
+            step="0.5"
             class="w-full px-4 py-3 rounded-xl bg-zinc-950/50 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
             placeholder="Ex: 120"
           />
         </label>
+
+        <label class="block space-y-2">
+          <span class="text-sm font-medium text-zinc-300">Valor da Hora Vendida (R$)</span>
+          <input
+            v-model.number="form.valor_hora_vendida"
+            type="number"
+            min="0"
+            step="0.01"
+            class="w-full px-4 py-3 rounded-xl bg-zinc-950/50 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+            placeholder="Ex: 50"
+          />
+        </label>
+      </div>
+
+      <div class="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
+        <div class="flex items-center justify-between gap-3 text-sm">
+          <span class="text-zinc-400">Orçamento total calculado</span>
+          <strong class="text-base font-semibold text-zinc-100">{{ formatMoeda(orcamentoTotalCalculado) }}</strong>
+        </div>
+        <p class="mt-1 text-xs text-zinc-500">Esse valor é usado no extrato para calcular consumo financeiro e custo das horas executadas.</p>
+      </div>
 
        <label class="block space-y-2">
         <span class="text-sm font-medium text-zinc-300">Descrição Comercial / Resumo</span>
@@ -127,6 +151,7 @@
 
 <script setup lang="ts">
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace' 
+import { useSupabase } from '~/composables/useSupabase'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 const emit = defineEmits<{
@@ -159,7 +184,14 @@ const form = ref({
   proposta_id: props.projeto.proposta_id as number | null,
   tech_stack: props.projeto.tech_stack?.join(', ') || '',
   status_visualizacao: props.projeto.status_visualizacao || 'interno',
-  horas_previstas: props.projeto.horas_previstas || 0
+  horas_previstas: props.projeto.horas_previstas || 0,
+  valor_hora_vendida: Number(props.projeto.valor_hora_vendida || 0)
+})
+
+const orcamentoTotalCalculado = computed(() => {
+  const horas = Number(form.value.horas_previstas) || 0
+  const valorHora = Number(form.value.valor_hora_vendida) || 0
+  return Number((horas * valorHora).toFixed(2))
 })
 
 async function salvar() {
@@ -168,7 +200,7 @@ async function salvar() {
 
   const techs = form.value.tech_stack
     ? form.value.tech_stack.split(',').map(x => x.trim()).filter(Boolean)
-    : null
+    : []
   
   let cliente_nome_resolvido = null
   if (form.value.cliente_id && clientes.value.length > 0) {
@@ -178,20 +210,19 @@ async function salvar() {
     }
   }
   
-  const projetoRow = props.projeto as Record<string, unknown>
   const payload: Record<string, unknown> = {
     nome: form.value.nome,
-    cliente_nome: cliente_nome_resolvido,
-    horas_previstas: Number(form.value.horas_previstas) || 0
+    cliente_nome: cliente_nome_resolvido || '',
+    horas_previstas: Number(form.value.horas_previstas) || 0,
+    valor_hora_vendida: Number(form.value.valor_hora_vendida) || 0,
+    orcamento_total: orcamentoTotalCalculado.value,
+    descricao_comercial: (form.value.descricao_comercial || '').trim(),
+    cliente_id: form.value.cliente_id || null,
+    contrato_id: form.value.contrato_id || null,
+    proposta_id: form.value.proposta_id || null,
+    tech_stack: techs,
+    status_visualizacao: form.value.status_visualizacao || 'interno'
   }
-
-  // Suporta bases em estagios diferentes de migration sem quebrar o save.
-  if ('descricao_comercial' in projetoRow) payload.descricao_comercial = form.value.descricao_comercial || null
-  if ('cliente_id' in projetoRow) payload.cliente_id = form.value.cliente_id || null
-  if ('contrato_id' in projetoRow) payload.contrato_id = form.value.contrato_id || null
-  if ('proposta_id' in projetoRow) payload.proposta_id = form.value.proposta_id || null
-  if ('tech_stack' in projetoRow) payload.tech_stack = techs
-  if ('status_visualizacao' in projetoRow) payload.status_visualizacao = form.value.status_visualizacao
 
   const { error } = await client
     .from('projetos_admin')
@@ -222,5 +253,13 @@ async function excluirProjeto() {
   }
 
   navigateTo('/admin/projetos')
+}
+
+function formatMoeda(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 2
+  }).format(Number(value || 0))
 }
 </script>

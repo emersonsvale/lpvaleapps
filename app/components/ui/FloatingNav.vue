@@ -32,15 +32,14 @@
       <span class="hidden sm:block text-sm font-medium">{{ navItem.name }}</span>
     </NuxtLink>
     
-    <a 
-      href="https://wa.me/5511969210065?text=Olá! Gostaria de saber mais sobre os serviços da Vale Apps."
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
       class="relative text-sm font-semibold bg-brand text-black px-4 py-2 rounded-full hover:bg-brand/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,192,0,0.25)] flex items-center gap-1.5"
+      @click="openTypebot({ source: 'floating-nav', message: 'Gostaria de saber mais sobre os serviços' })"
     >
       <PhWhatsappLogo :size="16" weight="bold" />
       <span class="hidden sm:inline">Fale Conosco</span>
-    </a>
+    </button>
   </div>
 </template>
 
@@ -77,6 +76,7 @@ const scrollToTop = () => {
 
 const router = useRouter()
 const route = useRoute()
+const { openTypebot } = useTypebot()
 
 const isHashLink = (link: string) => link.startsWith('#')
 const getHashFromLink = (link: string) => {

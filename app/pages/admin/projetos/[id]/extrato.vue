@@ -49,8 +49,8 @@
       </article>
 
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        <p class="text-xs uppercase tracking-wider text-zinc-500">Custo Medio por Hora</p>
-        <p class="mt-2 text-xl font-semibold text-zinc-100">{{ formatMoeda(custoMedioHora) }}</p>
+        <p class="text-xs uppercase tracking-wider text-zinc-500">Valor Hora Vendida</p>
+        <p class="mt-2 text-xl font-semibold text-zinc-100">{{ formatMoeda(valorHoraVendida) }}</p>
       </article>
     </section>
 
@@ -150,12 +150,23 @@ const percentualHorasConsumidas = computed(() => {
 })
 
 const orcamentoTotal = computed(() => Number(props.projeto.orcamento_total || 0))
-const orcamentoConsumido = computed(() => Number(props.projeto.orcamento_consumido || 0))
+const valorHoraVendida = computed(() => {
+  const valorHoraProjeto = Number(props.projeto.valor_hora_vendida || 0)
+  if (valorHoraProjeto > 0) return valorHoraProjeto
+
+  const horasVendidasFinanceiras = Number(props.projeto.horas_previstas || 0)
+  if (horasVendidasFinanceiras <= 0) return 0
+
+  return orcamentoTotal.value / horasVendidasFinanceiras
+})
+
+const orcamentoConsumido = computed(() => {
+  return Number((totalHorasExecutadas.value * valorHoraVendida.value).toFixed(2))
+})
 const saldoFinanceiro = computed(() => orcamentoTotal.value - orcamentoConsumido.value)
 
 const custoMedioHora = computed(() => {
-  if (totalHorasExecutadas.value <= 0) return 0
-  return orcamentoConsumido.value / totalHorasExecutadas.value
+  return valorHoraVendida.value
 })
 
 const lancamentos = computed(() => {

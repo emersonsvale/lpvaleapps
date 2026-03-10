@@ -1,3 +1,5 @@
+import { useSupabase } from '~/composables/useSupabase'
+
 export interface ProjetoAdminWorkspace {
     id: number
     nome: string
@@ -11,6 +13,7 @@ export interface ProjetoAdminWorkspace {
     data_fim_real: string | null
     horas_previstas: number
     horas_executadas: number
+    valor_hora_vendida: number
     orcamento_total: number
     orcamento_consumido: number
     prioridade: 'baixa' | 'media' | 'alta' | 'urgente'
@@ -18,6 +21,9 @@ export interface ProjetoAdminWorkspace {
     cliente_id?: number | null
     contrato_id?: number | null
     proposta_id?: number | null
+    descricao_comercial?: string | null
+    tech_stack?: string[] | null
+    status_visualizacao?: 'interno' | 'cliente' | 'portfolio' | null
     tags: any
     created_at?: string
     updated_at?: string

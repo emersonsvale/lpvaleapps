@@ -1,105 +1,275 @@
 ﻿<template>
-  <div class="flex gap-6 h-[70vh]">
-    <!-- Sidebar de Documentos -->
-    <div class="w-64 flex flex-col border-r border-zinc-800 pr-4">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-semibold text-zinc-300">SumÃ¡rio</h3>
-        <button
-          @click="novoDocumento"
-          class="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-brand transition-colors"
-          title="Novo Documento"
-        >
-          <Icon name="ph:plus-bold" class="w-4 h-4" />
-        </button>
-      </div>
+  <section class="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/70 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+    <div class="grid min-h-[70vh] grid-cols-1 lg:grid-cols-[280px,1fr]">
+      <aside class="border-b border-zinc-800 bg-zinc-950/90 lg:border-b-0 lg:border-r">
+        <div class="border-b border-zinc-800 px-4 py-4">
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Páginas</p>
+              <p class="mt-1 text-sm text-zinc-300">{{ documentosOrdenados.length }} itens</p>
+            </div>
 
-      <div class="flex-1 overflow-y-auto space-y-1">
-        <button
-          v-for="doc in documentos"
-          :key="doc.id"
-          class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors truncate"
-          :class="[
-            documentoSelecionado?.id === doc.id
-              ? 'bg-brand/10 text-brand font-medium'
-              : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
-          ]"
-          @click="selecionarDocumento(doc)"
-        >
-          {{ doc.titulo || 'Sem tÃ­tulo' }}
-        </button>
-        <div v-if="!documentos?.length" class="text-xs text-zinc-500 py-4 text-center">
-          Nenhum documento criado
-        </div>
-      </div>
-    </div>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700 text-zinc-300 transition hover:border-zinc-500 hover:bg-zinc-900"
+                title="Nova pasta"
+                @click="criarRegistro('folder')"
+              >
+                <PhFolderSimplePlus :size="16" />
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700 text-zinc-300 transition hover:border-zinc-500 hover:bg-zinc-900"
+                title="Nova página"
+                @click="criarRegistro('page')"
+              >
+                <PhFilePlus :size="16" />
+              </button>
+            </div>
+          </div>
 
-    <!-- Editor -->
-    <div class="flex-1 flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-      <template v-if="documentoSelecionado">
-        <!-- Header do Editor -->
-        <div class="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-950/50">
-          <input
-            v-model="documentoSelecionado.titulo"
-            class="bg-transparent text-lg font-semibold text-zinc-100 placeholder-zinc-600 focus:outline-none flex-1"
-            placeholder="TÃ­tulo do Documento..."
-            @blur="salvarAutomatico"
-          />
-          <div class="flex flex-col items-end">
-             <span class="text-xs text-zinc-500 mb-1">
-              {{ salvando ? 'Salvando...' : 'Salvo automÃ¡tico ativado' }}
-            </span>
-            <button
-              @click="excluirDocumentoSelecionado"
-              class="text-xs text-red-500 hover:text-red-400 hover:bg-red-500/10 px-2 py-1 rounded transition-colors"
+          <label class="relative block">
+            <PhMagnifyingGlass :size="16" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input
+              v-model="busca"
+              type="text"
+              placeholder="Buscar páginas..."
+              class="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-9 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none"
             >
-              Excluir Documento
+          </label>
+        </div>
+
+        <div class="max-h-[65vh] overflow-y-auto p-3 custom-scrollbar">
+          <div v-if="pending" class="px-3 py-8 text-center text-sm text-zinc-500">
+            Carregando documentação...
+          </div>
+
+          <div v-else-if="documentosFiltrados.length" class="space-y-1.5">
+            <button
+              v-for="doc in documentosFiltrados"
+              :key="doc.id"
+              type="button"
+              class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-colors"
+              :class="doc.id === documentoSelecionadoId
+                ? 'bg-zinc-100 text-zinc-950'
+                : 'text-zinc-300 hover:bg-zinc-900 hover:text-zinc-100'"
+              @click="selecionarDocumento(doc.id)"
+            >
+              <component :is="getKind(doc) === 'folder' ? PhFolder : PhFileText" :size="16" class="shrink-0" />
+              <span class="truncate">{{ doc.titulo || (getKind(doc) === 'folder' ? 'Nova pasta' : 'Nova página') }}</span>
             </button>
           </div>
+
+          <div v-else class="flex flex-col items-center justify-center px-4 py-10 text-center text-sm text-zinc-500">
+            <PhFiles :size="40" class="mb-3 opacity-50" />
+            <p v-if="busca">Nenhum resultado encontrado.</p>
+            <template v-else>
+              <p>Nenhum documento criado.</p>
+              <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  class="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 hover:border-zinc-500 hover:bg-zinc-900"
+                  @click="criarRegistro('folder')"
+                >
+                  Nova pasta
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-950 hover:bg-white"
+                  @click="criarRegistro('page')"
+                >
+                  Criar primeira página
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+      </aside>
+
+      <div class="flex min-h-[70vh] flex-col">
+        <div v-if="erroOperacao" class="border-b border-red-500/20 bg-red-500/10 px-6 py-4 text-sm text-red-300">
+          {{ erroOperacao }}
         </div>
 
-        <!-- Ãrea de Texto do Editor -->
-        <div class="flex-1 p-4 overflow-y-auto custom-scrollbar">
-          <textarea
-            v-model="documentoSelecionado.conteudo"
-            class="w-full h-full min-h-full bg-transparent text-zinc-300 placeholder-zinc-600 focus:outline-none resize-none"
-            placeholder="Comece a digitar o conteÃºdo do documento com Markdown..."
-            @input="debouncedSalvar"
-          ></textarea>
+        <template v-if="documentoSelecionado">
+          <header class="border-b border-zinc-800 px-6 py-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <div class="mb-2 flex items-center gap-2 text-xs text-zinc-500">
+                  <span>{{ getKind(documentoSelecionado) === 'folder' ? 'Pasta do projeto' : 'Página do projeto' }}</span>
+                  <span>•</span>
+                  <span>{{ salvando ? 'Salvando...' : dirty ? 'Alterações pendentes' : 'Sem alterações pendentes' }}</span>
+                </div>
+
+                <input
+                  v-model="draftTitulo"
+                  type="text"
+                  class="w-full bg-transparent text-3xl font-semibold tracking-[-0.03em] text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
+                  :placeholder="getKind(documentoSelecionado) === 'folder' ? 'Nova pasta' : 'Nova página'"
+                  @input="dirty = true"
+                >
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="rounded-xl border border-red-500/30 px-4 py-2 text-sm font-medium text-red-300 hover:border-red-400/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="salvando"
+                  @click="excluirDocumentoSelecionado"
+                >
+                  Excluir
+                </button>
+                <button
+                  type="button"
+                  class="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 hover:border-zinc-500 hover:bg-zinc-900"
+                  @click="criarRegistro('page')"
+                >
+                  Nova página
+                </button>
+                <button
+                  type="button"
+                  class="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="salvando || !dirty"
+                  @click="salvarDocumentoSelecionado"
+                >
+                  {{ salvando ? 'Salvando...' : 'Salvar' }}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div v-if="getKind(documentoSelecionado) === 'folder'" class="flex h-full min-h-[420px] flex-col items-center justify-center rounded-3xl border border-zinc-800 bg-zinc-900/30 px-8 text-center">
+              <PhFolderOpen :size="56" class="mb-4 text-zinc-700" />
+              <h2 class="text-2xl font-semibold text-zinc-100">Esta pasta está pronta para organizar documentos</h2>
+              <p class="mt-2 max-w-lg text-sm leading-6 text-zinc-500">
+                Crie páginas dentro desta pasta para documentar processos, requisitos, decisões técnicas e entregas do projeto.
+              </p>
+              <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  class="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 hover:border-zinc-500 hover:bg-zinc-900"
+                  @click="criarRegistro('folder')"
+                >
+                  Nova pasta
+                </button>
+                <button
+                  type="button"
+                  class="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-white"
+                  @click="criarRegistro('page')"
+                >
+                  Nova página
+                </button>
+              </div>
+            </div>
+
+            <div v-else class="rounded-3xl border border-zinc-800 bg-zinc-900/30 p-4">
+              <ClientOnly>
+                <AdminRichTextEditor v-model="draftConteudo" />
+                <template #fallback>
+                  <div class="min-h-[320px] rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-sm text-zinc-500">
+                    Inicializando editor...
+                  </div>
+                </template>
+              </ClientOnly>
+            </div>
+          </div>
+        </template>
+
+        <div v-else class="flex h-full min-h-[70vh] flex-col items-center justify-center px-8 text-center text-zinc-500">
+          <div class="max-w-2xl rounded-[28px] border border-zinc-800 bg-zinc-900/40 px-8 py-10 shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
+            <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[24px] bg-zinc-800/80 text-zinc-300">
+              <PhBookOpenText :size="36" />
+            </div>
+            <h2 class="text-3xl font-semibold tracking-[-0.04em] text-zinc-100">Documentação do Projeto</h2>
+            <p class="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-500">
+              Crie páginas para organizar documentação comercial, técnica e operacional deste projeto.
+            </p>
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                class="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 hover:border-zinc-500 hover:bg-zinc-900"
+                @click="criarRegistro('folder')"
+              >
+                Nova pasta
+              </button>
+              <button
+                type="button"
+                class="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-white"
+                @click="criarRegistro('page')"
+              >
+                Nova página
+              </button>
+            </div>
+          </div>
         </div>
-      </template>
-      <div v-else class="flex flex-col items-center justify-center flex-1 text-zinc-500 space-y-4 text-center">
-        <Icon name="ph:files-duotone" class="w-16 h-16 opacity-50" />
-        <p>Selecione um documento na barra lateral ou <br><button @click="novoDocumento" class="text-brand hover:underline">crie um novo</button>.</p>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
+import {
+  PhBookOpenText,
+  PhFilePlus,
+  PhFiles,
+  PhFileText,
+  PhFolder,
+  PhFolderOpen,
+  PhFolderSimplePlus,
+  PhMagnifyingGlass
+} from '@phosphor-icons/vue'
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 const client = useSupabase()
 
-type ProjetoDoc = {
+type ProjetoDocKind = 'page' | 'folder'
+
+type ProjetoDocRecord = {
   id: number
   projeto_id: number
+  parent_id: number | null
   titulo: string
-  conteudo: string
-  criado_em: string
-  atualizado_em: string
+  slug: string | null
+  conteudo_json: Record<string, any> | null
+  conteudo_markdown: string | null
+  ordem: number | null
+  created_at: string
+  updated_at: string
 }
 
-const { data: documentos, pending, refresh } = await useAsyncData(
-  `docs-proj-${props.projeto.id}`,
+const busca = ref('')
+const erroOperacao = ref('')
+const documentoSelecionadoId = ref<number | null>(null)
+const draftTitulo = ref('')
+const draftConteudo = ref('<p></p>')
+const dirty = ref(false)
+const salvando = ref(false)
+
+const { data: documentosData, pending } = await useAsyncData(
+  `docs-projeto-${props.projeto.id}`,
   async () => {
-    if (!client) return null
-    const { data } = await client
+    if (!client) {
+      erroOperacao.value = 'Supabase não está configurado neste ambiente.'
+      return []
+    }
+
+    const { data, error } = await client
       .from('projetos_docs')
       .select('*')
       .eq('projeto_id', props.projeto.id)
-      .order('criado_em', { ascending: true })
-    return data as ProjetoDoc[] | null
+      .order('ordem', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      erroOperacao.value = `Não foi possível carregar a documentação: ${error.message}`
+      return []
+    }
+
+    erroOperacao.value = ''
+    return (data || []) as ProjetoDocRecord[]
   },
   {
     server: false,
@@ -107,97 +277,228 @@ const { data: documentos, pending, refresh } = await useAsyncData(
   }
 )
 
-const documentoSelecionado = ref<ProjetoDoc | null>(null)
-const salvando = ref(false)
+const documentos = computed(() => documentosData.value || [])
 
-let salvarTimeout: any = null
+const documentosOrdenados = computed(() => {
+  return [...documentos.value].sort((left, right) => {
+    const kindDiff = Number(getKind(left) === 'page') - Number(getKind(right) === 'page')
+    if (kindDiff !== 0) return kindDiff
+    const ordemDiff = (left.ordem ?? 0) - (right.ordem ?? 0)
+    if (ordemDiff !== 0) return ordemDiff
+    return left.titulo.localeCompare(right.titulo, 'pt-BR')
+  })
+})
 
-function debouncedSalvar() {
-  clearTimeout(salvarTimeout)
-  salvarTimeout = setTimeout(() => {
-    salvarAutomatico()
-  }, 1000)
+const documentosFiltrados = computed(() => {
+  const termo = busca.value.trim().toLocaleLowerCase('pt-BR')
+  if (!termo) return documentosOrdenados.value
+  return documentosOrdenados.value.filter(doc => doc.titulo.toLocaleLowerCase('pt-BR').includes(termo))
+})
+
+const documentoSelecionado = computed(() => {
+  if (documentoSelecionadoId.value == null) return null
+  return documentos.value.find(doc => doc.id === documentoSelecionadoId.value) || null
+})
+
+watch(documentos, (docs) => {
+  if (!docs.length) {
+    documentoSelecionadoId.value = null
+    draftTitulo.value = ''
+    draftConteudo.value = '<p></p>'
+    dirty.value = false
+    return
+  }
+
+  if (documentoSelecionadoId.value && docs.some(doc => doc.id === documentoSelecionadoId.value)) {
+    return
+  }
+
+  selecionarDocumento(docs[0].id)
+}, { immediate: true })
+
+function getKind(doc: ProjetoDocRecord): ProjetoDocKind {
+  return doc.conteudo_json?.kind === 'folder' ? 'folder' : 'page'
 }
 
-async function salvarAutomatico() {
-  if (!client) return
-  if (!documentoSelecionado.value?.id) return
-  salvando.value = true
-  
-  const { error } = await client
-    .from('projetos_docs')
-    .update({ 
-      titulo: documentoSelecionado.value.titulo,
-      conteudo: documentoSelecionado.value.conteudo 
-    })
-    .eq('id', documentoSelecionado.value.id)
-
-  salvando.value = false
-  if (error) console.error('Erro ao salvar:', error)
+function slugify(value: string) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
-async function novoDocumento() {
-  if (!client) return
+function selecionarDocumento(id: number) {
+  const doc = documentos.value.find(item => item.id === id)
+  if (!doc) return
+
+  documentoSelecionadoId.value = doc.id
+  draftTitulo.value = doc.titulo
+  draftConteudo.value = doc.conteudo_markdown || '<p></p>'
+  dirty.value = false
+  erroOperacao.value = ''
+}
+
+function getParentIdParaCriacao() {
+  if (!documentoSelecionado.value) return null
+  return getKind(documentoSelecionado.value) === 'folder'
+    ? documentoSelecionado.value.id
+    : (documentoSelecionado.value.parent_id ?? null)
+}
+
+function getProximaOrdem(parentId: number | null) {
+  const siblings = documentos.value.filter(doc => (doc.parent_id ?? null) === parentId)
+  return siblings.length ? Math.max(...siblings.map(doc => doc.ordem ?? 0)) + 1 : 0
+}
+
+async function criarRegistro(kind: ProjetoDocKind) {
+  if (!client) {
+    erroOperacao.value = 'Supabase não está configurado neste ambiente.'
+    return
+  }
+
+  erroOperacao.value = ''
+
+  const parentId = getParentIdParaCriacao()
+  const titulo = kind === 'folder' ? 'Nova pasta' : 'Nova página'
+  const payload = {
+    projeto_id: props.projeto.id,
+    parent_id: parentId,
+    titulo,
+    slug: slugify(titulo),
+    ordem: getProximaOrdem(parentId),
+    conteudo_markdown: kind === 'page' ? '<p></p>' : null,
+    conteudo_json: {
+      kind,
+      content: kind === 'page' ? { type: 'doc', content: [{ type: 'paragraph' }] } : null
+    }
+  }
+
   const { data, error } = await client
     .from('projetos_docs')
-    .insert({
-      projeto_id: props.projeto.id,
-      titulo: 'Novo Documento',
-      conteudo: ''
-    })
-    .select()
+    .insert(payload)
+    .select('*')
     .single()
 
   if (error || !data) {
-    alert('Erro ao criar: ' + error?.message)
+    erroOperacao.value = `Não foi possível criar ${kind === 'folder' ? 'a pasta' : 'a página'}: ${error?.message || 'erro desconhecido'}`
     return
   }
-  
-  await refresh()
-  documentoSelecionado.value = documentos.value?.find(d => d.id === data.id) || null
+
+  documentosData.value = [...documentos.value, data as ProjetoDocRecord]
+  selecionarDocumento(data.id)
 }
 
-function selecionarDocumento(doc: ProjetoDoc) {
-  documentoSelecionado.value = doc
+async function salvarDocumentoSelecionado() {
+  if (!client || !documentoSelecionado.value) return
+  if (!dirty.value) return
+
+  salvando.value = true
+  erroOperacao.value = ''
+
+  const titulo = draftTitulo.value.trim() || (getKind(documentoSelecionado.value) === 'folder' ? 'Nova pasta' : 'Nova página')
+  const kind = getKind(documentoSelecionado.value)
+
+  const { data, error } = await client
+    .from('projetos_docs')
+    .update({
+      titulo,
+      slug: slugify(titulo),
+      conteudo_markdown: kind === 'page' ? draftConteudo.value : null,
+      conteudo_json: {
+        ...(documentoSelecionado.value.conteudo_json || {}),
+        kind,
+        content: kind === 'page' ? documentoSelecionado.value.conteudo_json?.content ?? null : null
+      }
+    })
+    .eq('id', documentoSelecionado.value.id)
+    .select('*')
+    .single()
+
+  salvando.value = false
+
+  if (error || !data) {
+    erroOperacao.value = `Não foi possível salvar este documento: ${error?.message || 'erro desconhecido'}`
+    return
+  }
+
+  documentosData.value = documentos.value.map(doc => doc.id === data.id ? data as ProjetoDocRecord : doc)
+  selecionarDocumento(data.id)
+}
+
+function collectDescendantIds(parentId: number): number[] {
+  const children = documentos.value.filter(doc => doc.parent_id === parentId)
+  const descendantIds = children.flatMap(child => collectDescendantIds(child.id))
+  return [parentId, ...descendantIds]
 }
 
 async function excluirDocumentoSelecionado() {
-  if (!client) return
-  if (!documentoSelecionado.value) return
-  if (!confirm('Excluir este documento permamentemente?')) return
+  if (!client || !documentoSelecionado.value || salvando.value) return
+
+  const selecionado = documentoSelecionado.value
+  const idsParaExcluir = collectDescendantIds(selecionado.id)
+  const totalRelacionados = idsParaExcluir.length - 1
+  const ehPasta = getKind(selecionado) === 'folder'
+
+  const mensagem = ehPasta && totalRelacionados > 0
+    ? `Excluir esta pasta e ${totalRelacionados} item(ns) interno(s)?`
+    : `Excluir ${ehPasta ? 'esta pasta' : 'esta página'}?`
+
+  if (import.meta.client && !window.confirm(mensagem)) {
+    return
+  }
+
+  salvando.value = true
+  erroOperacao.value = ''
 
   const { error } = await client
     .from('projetos_docs')
     .delete()
-    .eq('id', documentoSelecionado.value.id)
+    .in('id', idsParaExcluir)
+
+  salvando.value = false
 
   if (error) {
-    alert('Erro: ' + error.message)
+    erroOperacao.value = `Não foi possível excluir este documento: ${error.message}`
     return
   }
 
-  documentoSelecionado.value = null
-  refresh()
+  const restantes = documentos.value.filter(doc => !idsParaExcluir.includes(doc.id))
+  documentosData.value = restantes
+
+  if (!restantes.length) {
+    documentoSelecionadoId.value = null
+    draftTitulo.value = ''
+    draftConteudo.value = '<p></p>'
+    dirty.value = false
+    return
+  }
+
+  const proximo = restantes.find(doc => doc.parent_id === selecionado.parent_id) || restantes[0]
+  selecionarDocumento(proximo.id)
 }
 
-// Iniciar com o primeiro documento selecionado caso exista e nada esteja selecionado
-watch(documentos, (docs) => {
-  if (docs && docs.length > 0 && !documentoSelecionado.value) {
-    documentoSelecionado.value = docs[0]
-  }
-}, { immediate: true })
+watch([draftTitulo, draftConteudo], () => {
+  if (!documentoSelecionado.value) return
 
+  const tituloMudou = draftTitulo.value !== documentoSelecionado.value.titulo
+  const conteudoMudou = draftConteudo.value !== (documentoSelecionado.value.conteudo_markdown || '<p></p>')
+  dirty.value = tituloMudou || (getKind(documentoSelecionado.value) === 'page' && conteudoMudou)
+})
 </script>
 
 <style scoped>
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #3f3f46;
-  border-radius: 10px;
+  border-radius: 999px;
+  background: rgb(39 39 42);
 }
 </style>

@@ -121,23 +121,21 @@
                 :enter="{ opacity: 1, y: 0, transition: { duration: 600, delay: 2100 } }"
                 class="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full"
               >
-                <a
-                  :href="whatsAppAprovacaoLink"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
                   class="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 bg-brand text-black font-semibold text-sm sm:text-base rounded-lg hover:bg-brand-300 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,192,0,0.3)] hover:-translate-y-0.5"
+                  @click="openTypebot({ source: 'proposal-hero-approve', message: approvalMessage })"
                 >
                   Aprovar proposta
                   <span class="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                </a>
-                <a
-                  :href="whatsAppDuvidasLink"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </button>
+                <button
+                  type="button"
                   class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 border border-brand/20 bg-card/40 backdrop-blur-sm text-foreground font-semibold text-sm sm:text-base rounded-lg hover:border-brand hover:text-brand transition-all duration-300"
+                  @click="openTypebot({ source: 'proposal-hero-question', message: questionMessage })"
                 >
                   Dúvidas?
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -455,23 +453,21 @@
               Se a proposta faz sentido, iniciamos seu projeto imediatamente com onboarding, cronograma detalhado e kickoff de execução.
             </p>
             <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <a
-                :href="whatsAppAprovacaoLink"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
                 class="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 bg-brand text-black font-semibold text-sm sm:text-base rounded-lg hover:bg-brand-300 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,192,0,0.3)] hover:-translate-y-0.5"
+                @click="openTypebot({ source: 'proposal-footer-approve', message: approvalMessage })"
               >
                 Aprovar agora
                 <span class="transition-transform duration-300 group-hover:translate-x-1">→</span>
-              </a>
-              <a
-                :href="whatsAppDuvidasLink"
-                target="_blank"
-                rel="noopener noreferrer"
+              </button>
+              <button
+                type="button"
                 class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 border border-brand/20 bg-card/40 backdrop-blur-sm text-foreground font-semibold text-sm sm:text-base rounded-lg hover:border-brand hover:text-brand transition-all duration-300"
+                @click="openTypebot({ source: 'proposal-footer-question', message: questionMessage })"
               >
                 Falar com especialista
-              </a>
+              </button>
             </div>
           </div>
         </section>
@@ -503,8 +499,8 @@ const FloatingNav = defineAsyncComponent(() => import('~/components/ui/FloatingN
 const BlurText = defineAsyncComponent(() => import('~/components/ui/BlurText.vue'))
 
 const route = useRoute()
+const { openTypebot } = useTypebot()
 const slug = String(route.params.slug || '').trim()
-const whatsappNumber = '5511969210065'
 
 // Debug log
 if (process.client) {
@@ -688,15 +684,9 @@ const etapasProjeto = computed(() => {
   ]
 })
 
-const whatsAppAprovacaoLink = computed(() => {
-  const msg = `Olá, equipe Vale Apps. Quero aprovar a proposta "${nomeProjeto.value}".`
-  return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`
-})
+const approvalMessage = computed(() => `Olá, equipe Vale Apps. Quero aprovar a proposta "${nomeProjeto.value}".`)
 
-const whatsAppDuvidasLink = computed(() => {
-  const msg = `Olá, equipe Vale Apps. Tenho dúvidas sobre a proposta "${nomeProjeto.value}".`
-  return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`
-})
+const questionMessage = computed(() => `Olá, equipe Vale Apps. Tenho dúvidas sobre a proposta "${nomeProjeto.value}".`)
 
 const emailAprovacaoLink = computed(() => {
   const subject = `Aprovação da proposta - ${nomeProjeto.value}`

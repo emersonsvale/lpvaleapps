@@ -85,7 +85,8 @@
               :key="t.id"
               draggable="true"
               @dragstart="onDragStart(t.id)"
-              class="rounded-lg border border-zinc-800 bg-zinc-950 p-3 cursor-grab active:cursor-grabbing hover:border-zinc-700 transition-colors group"
+              @click="editarTarefa(t.id)"
+              class="rounded-lg border border-zinc-800 bg-zinc-950 p-3 cursor-pointer hover:border-zinc-700 transition-colors group"
             >
               <div class="flex justify-between items-start gap-2 mb-2">
                 <span class="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">{{ t.codigo || 'T-' + t.id }}</span>
@@ -122,15 +123,15 @@
                 </div>
                 <div class="flex items-center gap-2">
                   <button
-                    @click="toggleTimerTarefa(t)"
+                    @click.stop="toggleTimerTarefa(t)"
                     class="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-900 hover:opacity-90"
                     :title="tarefaRodandoId === t.id ? 'Pausar' : 'Iniciar'"
                   >
                     {{ tarefaRodandoId === t.id ? '||' : '>' }}
                   </button>
                   <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button @click="editarTarefa(t.id)" class="text-brand hover:underline">Editar</button>
-                    <button @click="excluirTarefa(t.id)" class="text-red-400 hover:underline">Excluir</button>
+                    <button @click.stop="editarTarefa(t.id)" class="text-brand hover:underline">Editar</button>
+                    <button @click.stop="excluirTarefa(t.id)" class="text-red-400 hover:underline">Excluir</button>
                   </div>
                 </div>
               </div>
@@ -145,18 +146,27 @@
     </div>
 
     <!-- Lista por Status -->
-    <div v-else class="space-y-4">
+    <div v-else class="space-y-3">
       <section
         v-for="coluna in colunas"
         :key="`lista-${coluna.status}`"
         class="overflow-visible rounded-xl border border-zinc-800 bg-zinc-900/40"
         :class="statusBorderLeftClass[coluna.status]"
       >
-        <header class="border-b border-zinc-800 bg-zinc-900/80 px-3 py-3">
-          <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div class="flex items-center gap-2">
+        <header>
+          <button
+            type="button"
+            class="flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors hover:bg-zinc-900/70"
+            :aria-expanded="String(!isStatusReduzido(coluna.status))"
+            @click="toggleStatusReducao(coluna.status)"
+          >
+            <div class="flex min-w-0 items-center gap-3">
+              <Icon
+                :name="isStatusReduzido(coluna.status) ? 'ph:caret-right-bold' : 'ph:caret-down-bold'"
+                class="h-3.5 w-3.5 shrink-0 text-zinc-500"
+              />
               <span
-                class="h-2 w-2 rounded-full"
+                class="h-2.5 w-2.5 shrink-0 rounded-full"
                 :class="{
                   'bg-purple-500': coluna.status === 'refinar',
                   'bg-orange-400': coluna.status === 'fazer',
@@ -165,203 +175,216 @@
                   'bg-emerald-500': coluna.status === 'concluido',
                 }"
               />
-              <h3 class="text-sm font-semibold text-zinc-100">{{ coluna.titulo }}</h3>
-              <span class="text-xs text-zinc-400">{{ tarefasPorStatus[coluna.status]?.length || 0 }}</span>
+              <h3 class="truncate text-base font-semibold text-zinc-100">{{ coluna.titulo }}</h3>
+              <span class="inline-flex min-w-6 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 px-2 py-0.5 text-xs font-medium text-zinc-400">
+                {{ tarefasPorStatus[coluna.status]?.length || 0 }}
+              </span>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:min-w-[640px]">
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
-                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Data inicio</span>
-                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].inicio }}</span>
-              </div>
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
-                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Data fim</span>
-                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].fim }}</span>
-              </div>
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
-                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Horas totais</span>
-                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].horas }}</span>
-              </div>
-              <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
-                <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Progresso</span>
-                <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].progresso }}</span>
-              </div>
-            </div>
-          </div>
+            <span class="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+              {{ isStatusReduzido(coluna.status) ? 'Expandir' : 'Reduzir' }}
+            </span>
+          </button>
         </header>
 
-        <div class="overflow-x-auto overflow-y-visible">
-          <table class="min-w-full">
-            <thead>
-              <tr class="border-b border-zinc-800 bg-zinc-950/50">
-                <th class="w-[4%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                  <input
-                    type="checkbox"
-                    class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand"
-                    :checked="isStatusSelecionado(coluna.status)"
-                    @change="toggleSelecaoStatus(coluna.status, ($event.target as HTMLInputElement).checked)"
-                  >
-                </th>
-                <th class="w-[36%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tarefa</th>
-                <th class="w-[8%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Resp.</th>
-                <th class="w-[14%] px-0 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Status</th>
-                <th class="w-[14%] px-0 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tipo</th>
-                <th class="w-[14%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prazo</th>
-                <th class="w-[10%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas</th>
-                <th class="w-[8%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Progresso</th>
-                <th class="w-[6%] px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Acoes</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="t in tarefasPorStatus[coluna.status]"
-                :key="`lista-row-${t.id}`"
-                class="border-b border-zinc-900 transition-colors"
-                :class="isTarefaSelecionada(t.id) ? 'bg-zinc-900/70' : 'hover:bg-zinc-900/50'"
-              >
-                <td class="px-3 py-3 align-middle">
-                  <input
-                    type="checkbox"
-                    class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand"
-                    :checked="isTarefaSelecionada(t.id)"
-                    @change="toggleSelecaoTarefa(t.id, ($event.target as HTMLInputElement).checked)"
-                  >
-                </td>
-                <td class="px-4 py-3 align-middle">
-                  <div>
-                    <div class="flex items-center gap-2">
-                      <span class="text-[10px] rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-400">{{ t.codigo || `T-${t.id}` }}</span>
-                      <span class="text-sm font-medium text-zinc-100">{{ t.titulo }}</span>
-                    </div>
-                    <div v-if="t.tags?.length" class="mt-2 flex flex-wrap gap-1.5">
-                      <span
-                        v-for="tag in t.tags"
-                        :key="`lista-tag-${t.id}-${tag}`"
-                        class="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-1 text-[10px] font-medium text-zinc-300"
-                      >
-                        #{{ tag }}
-                      </span>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-3 py-3 align-middle">
-                  <div class="relative inline-flex" @click.stop>
-                    <button
-                      type="button"
-                      class="flex h-8 min-w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-700 px-2 text-[11px] font-semibold text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-600"
-                      :title="t.responsavel_texto || 'Selecionar responsavel'"
-                      @click.stop="toggleResponsavelInline(t.id)"
-                    >
-                      <span v-if="salvandoResponsavelId === t.id" class="text-[10px] text-zinc-300">...</span>
-                      <span v-else>{{ getResponsavelInitials(t.responsavel_texto) }}</span>
-                    </button>
+        <div v-if="!isStatusReduzido(coluna.status)" class="border-t border-zinc-800">
+          <div class="grid grid-cols-2 gap-2 px-3 py-3 md:grid-cols-4">
+            <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+              <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Data inicio</span>
+              <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].inicio }}</span>
+            </div>
+            <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+              <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Data fim</span>
+              <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].fim }}</span>
+            </div>
+            <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+              <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Horas totais</span>
+              <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].horas }}</span>
+            </div>
+            <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+              <span class="block text-[10px] uppercase tracking-wider text-zinc-500">Progresso</span>
+              <span class="mt-1 block text-sm font-medium text-zinc-100">{{ resumoStatus[coluna.status].progresso }}</span>
+            </div>
+          </div>
 
-                    <div
-                      v-if="responsavelAbertoId === t.id"
-                      class="absolute left-0 top-full z-20 mt-2 min-w-[220px] rounded-lg border border-zinc-800 bg-zinc-950 p-2 shadow-2xl"
+          <div class="overflow-x-auto overflow-y-visible">
+            <table class="min-w-full">
+              <thead>
+                <tr class="border-b border-zinc-800 bg-zinc-950/50">
+                  <th class="w-[4%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand"
+                      :checked="isStatusSelecionado(coluna.status)"
+                      @change="toggleSelecaoStatus(coluna.status, ($event.target as HTMLInputElement).checked)"
                     >
-                      <label class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-zinc-500">Responsavel</label>
-                      <select
-                        class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
-                        :value="t.responsavel_texto || ''"
-                        @change="alterarResponsavelInline(t, ($event.target as HTMLSelectElement).value)"
-                      >
-                        <option value="">Sem responsavel</option>
-                        <option
-                          v-for="membro in equipeOptions"
-                          :key="`responsavel-inline-${t.id}-${membro.id}`"
-                          :value="membro.nome"
+                  </th>
+                  <th class="w-[36%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tarefa</th>
+                  <th class="w-[8%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Resp.</th>
+                  <th class="w-[14%] px-0 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Status</th>
+                  <th class="w-[14%] px-0 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tipo</th>
+                  <th class="w-[14%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prazo</th>
+                  <th class="w-[10%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas</th>
+                  <th class="w-[8%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Progresso</th>
+                  <th class="w-[6%] px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Acoes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="t in tarefasPorStatus[coluna.status]"
+                  :key="`lista-row-${t.id}`"
+                  @click="editarTarefa(t.id)"
+                  class="border-b border-zinc-900 transition-colors"
+                  :class="isTarefaSelecionada(t.id) ? 'bg-zinc-900/70' : 'hover:bg-zinc-900/50'"
+                >
+                  <td class="px-3 py-3 align-middle" @click.stop>
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-brand focus:ring-brand"
+                      :checked="isTarefaSelecionada(t.id)"
+                      @click.stop
+                      @change="toggleSelecaoTarefa(t.id, ($event.target as HTMLInputElement).checked)"
+                    >
+                  </td>
+                  <td class="px-4 py-3 align-middle">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-[10px] rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-400">{{ t.codigo || `T-${t.id}` }}</span>
+                        <span class="text-sm font-medium text-zinc-100">{{ t.titulo }}</span>
+                      </div>
+                      <div v-if="t.tags?.length" class="mt-2 flex flex-wrap gap-1.5">
+                        <span
+                          v-for="tag in t.tags"
+                          :key="`lista-tag-${t.id}-${tag}`"
+                          class="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-1 text-[10px] font-medium text-zinc-300"
                         >
-                          {{ membro.label }}
-                        </option>
-                      </select>
-
-                      <p class="mt-2 text-[11px] text-zinc-500">
-                        {{ t.responsavel_texto || 'Nenhum responsavel definido' }}
-                      </p>
+                          #{{ tag }}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td class="px-0 py-0 align-middle">
-                  <select
-                    :value="t.status"
-                    class="h-12 w-full appearance-none border-x border-zinc-800 text-center text-sm font-semibold text-white focus:outline-none"
-                    :class="statusCellClass[t.status]"
-                    @change="alterarStatusInline(t, ($event.target as HTMLSelectElement).value as ProjetoTarefa['status'])"
-                  >
-                    <option v-for="opcao in statusOptions" :key="`status-${t.id}-${opcao.value}`" :value="opcao.value">
-                      {{ opcao.label }}
-                    </option>
-                  </select>
-                </td>
-                <td class="px-0 py-0 align-middle">
-                  <select
-                    :value="t.tipo"
-                    class="h-12 w-full appearance-none border-r border-zinc-800 text-center text-sm font-semibold text-white focus:outline-none"
-                    :class="tipoCellClass[t.tipo]"
-                    @change="alterarTipoInline(t, ($event.target as HTMLSelectElement).value as ProjetoTarefa['tipo'])"
-                  >
-                    <option v-for="opcao in tipoOptions" :key="`tipo-${t.id}-${opcao.value}`" :value="opcao.value">
-                      {{ opcao.label }}
-                    </option>
-                  </select>
-                </td>
-                <td class="px-4 py-3 align-middle text-sm text-zinc-300">{{ formatPrazoRange(t) }}</td>
-                <td class="px-4 py-3 align-middle text-sm text-zinc-200">
-                  <div class="flex items-center justify-between gap-2">
-                    <span>
-                      <span class="font-semibold text-brand">{{ getHorasExecutadasDisplay(t) }}</span>
-                      <span class="text-zinc-400"> / {{ formatHoras(t.horas_estimadas || 0) }}h</span>
-                    </span>
-                    <button
-                      type="button"
-                      class="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-900 hover:opacity-90"
-                      @click="toggleTimerTarefa(t)"
-                    >
-                      {{ tarefaRodandoId === t.id ? '||' : '>' }}
-                    </button>
-                  </div>
-                </td>
-                <td class="px-3 py-3 align-middle text-xs text-zinc-400">{{ formatProgresso(t.progresso) }}</td>
-                <td class="px-3 py-3 align-middle text-right">
-                  <div class="relative inline-flex" @click.stop>
-                    <button
-                      type="button"
-                      class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100"
-                      title="Mais acoes"
-                      @click.stop="toggleMenuAcoes(t.id)"
-                    >
-                      ...
-                    </button>
-
-                    <div
-                      v-if="menuAcoesAbertoId === t.id"
-                      class="absolute right-0 top-full z-20 mt-2 min-w-[140px] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-2xl"
-                    >
+                  </td>
+                  <td class="px-3 py-3 align-middle" @click.stop>
+                    <div class="relative inline-flex" @click.stop>
                       <button
                         type="button"
-                        class="block w-full px-3 py-2 text-left text-xs text-zinc-200 transition-colors hover:bg-zinc-900"
-                        @click="abrirEdicaoPeloMenu(t.id)"
+                        class="flex h-8 min-w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-700 px-2 text-[11px] font-semibold text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-600"
+                        :title="t.responsavel_texto || 'Selecionar responsavel'"
+                        @click.stop="toggleResponsavelInline(t.id)"
                       >
-                        Editar tarefa
+                        <span v-if="salvandoResponsavelId === t.id" class="text-[10px] text-zinc-300">...</span>
+                        <span v-else>{{ getResponsavelInitials(t.responsavel_texto) }}</span>
                       </button>
+
+                      <div
+                        v-if="responsavelAbertoId === t.id"
+                        class="absolute left-0 top-full z-20 mt-2 min-w-[220px] rounded-lg border border-zinc-800 bg-zinc-950 p-2 shadow-2xl"
+                      >
+                        <label class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-zinc-500">Responsavel</label>
+                        <select
+                          class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+                          :value="t.responsavel_texto || ''"
+                          @change="alterarResponsavelInline(t, ($event.target as HTMLSelectElement).value)"
+                        >
+                          <option value="">Sem responsavel</option>
+                          <option
+                            v-for="membro in equipeOptions"
+                            :key="`responsavel-inline-${t.id}-${membro.id}`"
+                            :value="membro.nome"
+                          >
+                            {{ membro.label }}
+                          </option>
+                        </select>
+
+                        <p class="mt-2 text-[11px] text-zinc-500">
+                          {{ t.responsavel_texto || 'Nenhum responsavel definido' }}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-0 py-0 align-middle" @click.stop>
+                    <select
+                      :value="t.status"
+                      class="h-12 w-full appearance-none border-x border-zinc-800 text-center text-sm font-semibold text-white focus:outline-none"
+                      :class="statusCellClass[t.status]"
+                      @click.stop
+                      @change="alterarStatusInline(t, ($event.target as HTMLSelectElement).value as ProjetoTarefa['status'])"
+                    >
+                      <option v-for="opcao in statusOptions" :key="`status-${t.id}-${opcao.value}`" :value="opcao.value">
+                        {{ opcao.label }}
+                      </option>
+                    </select>
+                  </td>
+                  <td class="px-0 py-0 align-middle" @click.stop>
+                    <select
+                      :value="t.tipo"
+                      class="h-12 w-full appearance-none border-r border-zinc-800 text-center text-sm font-semibold text-white focus:outline-none"
+                      :class="tipoCellClass[t.tipo]"
+                      @click.stop
+                      @change="alterarTipoInline(t, ($event.target as HTMLSelectElement).value as ProjetoTarefa['tipo'])"
+                    >
+                      <option v-for="opcao in tipoOptions" :key="`tipo-${t.id}-${opcao.value}`" :value="opcao.value">
+                        {{ opcao.label }}
+                      </option>
+                    </select>
+                  </td>
+                  <td class="px-4 py-3 align-middle text-sm text-zinc-300">{{ formatPrazoRange(t) }}</td>
+                  <td class="px-4 py-3 align-middle text-sm text-zinc-200" @click.stop>
+                    <div class="flex items-center justify-between gap-2">
+                      <span>
+                        <span class="font-semibold text-brand">{{ getHorasExecutadasDisplay(t) }}</span>
+                        <span class="text-zinc-400"> / {{ formatHoras(t.horas_estimadas || 0) }}h</span>
+                      </span>
                       <button
                         type="button"
-                        class="block w-full px-3 py-2 text-left text-xs text-red-300 transition-colors hover:bg-zinc-900"
-                        @click="excluirPeloMenu(t.id)"
+                        class="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-900 hover:opacity-90"
+                        @click.stop
+                        @click="toggleTimerTarefa(t)"
                       >
-                        Excluir tarefa
+                        {{ tarefaRodandoId === t.id ? '||' : '>' }}
                       </button>
                     </div>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                  <td class="px-3 py-3 align-middle text-xs text-zinc-400">{{ formatProgresso(t.progresso) }}</td>
+                  <td class="px-3 py-3 align-middle text-right" @click.stop>
+                    <div class="relative inline-flex" @click.stop>
+                      <button
+                        type="button"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100"
+                        title="Mais acoes"
+                        @click.stop="toggleMenuAcoes(t.id)"
+                      >
+                        ...
+                      </button>
 
-              <tr v-if="!tarefasPorStatus[coluna.status]?.length">
-                <td colspan="9" class="px-4 py-3 text-xs text-zinc-600">Nenhuma tarefa nesta etapa.</td>
-              </tr>
-            </tbody>
-          </table>
+                      <div
+                        v-if="menuAcoesAbertoId === t.id"
+                        class="absolute right-0 top-full z-20 mt-2 min-w-[140px] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-2xl"
+                      >
+                        <button
+                          type="button"
+                          class="block w-full px-3 py-2 text-left text-xs text-zinc-200 transition-colors hover:bg-zinc-900"
+                          @click="abrirEdicaoPeloMenu(t.id)"
+                        >
+                          Editar tarefa
+                        </button>
+                        <button
+                          type="button"
+                          class="block w-full px-3 py-2 text-left text-xs text-red-300 transition-colors hover:bg-zinc-900"
+                          @click="excluirPeloMenu(t.id)"
+                        >
+                          Excluir tarefa
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr v-if="!tarefasPorStatus[coluna.status]?.length">
+                  <td colspan="9" class="px-4 py-3 text-xs text-zinc-600">Nenhuma tarefa nesta etapa.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -372,189 +395,319 @@
 
     <div
       v-if="modalEdicaoAberto"
-      class="fixed inset-0 z-[10020] flex items-center justify-center bg-black/70 p-4"
-      @click.self="fecharModalEdicao"
+      class="fixed inset-0 z-[10020] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
     >
-      <div class="flex max-h-[calc(100vh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
-        <div class="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
-          <h3 class="text-lg font-semibold text-zinc-100">Editar Tarefa</h3>
-          <button
-            type="button"
-            class="rounded-md p-1 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-            @click="fecharModalEdicao"
-          >
-            x
-          </button>
+      <button type="button" class="absolute inset-0" aria-label="Fechar modal" @click="fecharModalEdicao" />
+
+      <form class="relative flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-[#111111] shadow-[0_30px_120px_rgba(0,0,0,0.6)]" @submit.prevent="salvarEdicaoTarefa">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 px-5 py-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full border border-zinc-700 bg-zinc-800/80 px-3 py-1 text-xs font-semibold text-zinc-200">
+              {{ tarefaEmEdicao?.codigo || `T-${tarefaEditandoId}` }}
+            </span>
+            <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="statusClasses[formEdicao.status]">
+              {{ statusLabels[formEdicao.status] }}
+            </span>
+            <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="prioridadeBadgeClass[formEdicao.prioridade]">
+              {{ prioridadeLabels[formEdicao.prioridade] }}
+            </span>
+            <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="tipoBadgeClass[formEdicao.tipo]">
+              {{ tipoLabels[formEdicao.tipo] }}
+            </span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
+            <span class="inline-flex items-center gap-1.5">
+              <Icon name="ph:calendar-blank" class="h-3.5 w-3.5" />
+              {{ formatMetaDate(tarefaEmEdicao?.prazo_fim) }}
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <Icon name="ph:user" class="h-3.5 w-3.5" />
+              {{ tarefaEmEdicao?.responsavel_texto || 'Sem responsavel' }}
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <Icon name="ph:clock-countdown" class="h-3.5 w-3.5" />
+              {{ formatMetaDateTime(tarefaEmEdicao?.updated_at) }}
+            </span>
+            <button
+              type="button"
+              class="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
+              @click="fecharModalEdicao"
+            >
+              <Icon name="ph:x-bold" class="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        <form class="min-h-0 overflow-y-auto space-y-4 p-5" @submit.prevent="salvarEdicaoTarefa">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-zinc-300">Titulo</label>
-            <input
-              v-model="formEdicao.titulo"
-              type="text"
-              required
-              class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
-            >
-          </div>
-
-          <div>
-            <label class="mb-1 block text-sm font-medium text-zinc-300">Descricao</label>
-            <textarea
-              v-model="formEdicao.descricao"
-              rows="4"
-              class="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <div class="mb-1 flex items-center justify-between gap-3">
-              <label class="block text-sm font-medium text-zinc-300">Tags</label>
-              <span class="text-[11px] text-zinc-500">Reaproveite tags deste projeto</span>
-            </div>
-
-            <div class="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-3">
-              <div v-if="formEdicao.tags.length" class="mb-3 flex flex-wrap gap-2">
-                <span
-                  v-for="tag in formEdicao.tags"
-                  :key="`edicao-tag-${tag}`"
-                  class="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-200"
+        <div class="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div class="min-h-0 overflow-y-auto border-b border-zinc-800 p-6 xl:border-b-0 xl:border-r">
+            <div class="space-y-6">
+              <div>
+                <label class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Titulo</label>
+                <input
+                  v-model="formEdicao.titulo"
+                  type="text"
+                  required
+                  class="w-full border-0 bg-transparent px-0 text-3xl font-semibold text-zinc-100 placeholder-zinc-600 focus:outline-none"
+                  placeholder="Nome da tarefa"
                 >
-                  <span>#{{ tag }}</span>
-                  <button
-                    type="button"
-                    class="text-zinc-400 transition-colors hover:text-zinc-100"
-                    @click="removerTagEdicao(tag)"
-                  >
-                    x
-                  </button>
-                </span>
               </div>
 
-              <div class="flex flex-col gap-2 sm:flex-row">
-                <input
-                  v-model="edicaoTagInput"
-                  type="text"
-                  placeholder="Digite e pressione Enter ou use virgula"
-                  class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
-                  @keydown="onEdicaoTagKeydown"
-                >
+              <div>
+                <div class="mb-2 flex items-center gap-2 text-sm font-medium text-zinc-300">
+                  <Icon name="ph:file-text" class="h-4 w-4 text-zinc-500" />
+                  <span>Descricao</span>
+                </div>
+                <textarea
+                  v-model="formEdicao.descricao"
+                  rows="7"
+                  placeholder="Adicione uma descricao detalhada para esta tarefa..."
+                  class="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900/70 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                />
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+                  <div class="mb-3 flex items-center gap-2 text-sm font-medium text-zinc-300">
+                    <Icon name="ph:git-branch" class="h-4 w-4 text-zinc-500" />
+                    <span>Estrutura</span>
+                  </div>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="mb-1 block text-[11px] uppercase tracking-wider text-zinc-500">Arvore</label>
+                      <input
+                        v-model="formEdicao.arvore"
+                        type="text"
+                        placeholder="Ex: Admin Web > Parceiro"
+                        class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                      >
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-[11px] uppercase tracking-wider text-zinc-500">Area</label>
+                      <select
+                        v-model="formEdicao.tipo"
+                        class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                      >
+                        <option v-for="opcao in tipoOptions" :key="`modal-tipo-${opcao.value}`" :value="opcao.value">
+                          {{ opcao.label }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+                  <div class="mb-3 flex items-center gap-2 text-sm font-medium text-zinc-300">
+                    <Icon name="ph:chart-line-up" class="h-4 w-4 text-zinc-500" />
+                    <span>Progresso</span>
+                  </div>
+                  <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                      <input
+                        v-model.number="formEdicao.progresso"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        class="h-2 w-full cursor-pointer accent-brand"
+                      >
+                      <span class="w-12 text-right text-sm font-semibold text-zinc-100">{{ formEdicao.progresso }}%</span>
+                    </div>
+                    <div class="h-2 overflow-hidden rounded-full bg-zinc-800">
+                      <div class="h-full rounded-full bg-brand transition-all" :style="{ width: `${formEdicao.progresso}%` }" />
+                    </div>
+                    <p class="text-xs text-zinc-500">Atualize o percentual para refletir o andamento real da entrega.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="mb-2 flex items-center justify-between gap-3">
+                  <label class="block text-sm font-medium text-zinc-300">Tags</label>
+                  <span class="text-[11px] text-zinc-500">Reaproveite tags deste projeto</span>
+                </div>
+
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-4">
+                  <div v-if="formEdicao.tags.length" class="mb-3 flex flex-wrap gap-2">
+                    <span
+                      v-for="tag in formEdicao.tags"
+                      :key="`edicao-tag-${tag}`"
+                      class="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-200"
+                    >
+                      <span>#{{ tag }}</span>
+                      <button
+                        type="button"
+                        class="text-zinc-400 transition-colors hover:text-zinc-100"
+                        @click="removerTagEdicao(tag)"
+                      >
+                        x
+                      </button>
+                    </span>
+                  </div>
+
+                  <div class="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      v-model="edicaoTagInput"
+                      type="text"
+                      placeholder="Digite e pressione Enter ou use virgula"
+                      class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                      @keydown="onEdicaoTagKeydown"
+                    >
+                    <button
+                      type="button"
+                      class="rounded-lg border border-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
+                      @click="adicionarTagEdicao()"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
+
+                  <div v-if="tagsSugestoesEdicao.length" class="mt-3 flex flex-wrap gap-2">
+                    <button
+                      v-for="tag in tagsSugestoesEdicao"
+                      :key="`edicao-sugestao-${tag}`"
+                      type="button"
+                      class="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
+                      @click="adicionarTagEdicao(tag)"
+                    >
+                      #{{ tag }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="min-h-0 overflow-y-auto bg-zinc-950/70 p-5">
+            <div class="space-y-5">
+              <section class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+                <h4 class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Propriedades</h4>
+                <div class="space-y-3">
+                  <label class="block">
+                    <span class="mb-1 block text-xs text-zinc-500">Status</span>
+                    <select
+                      v-model="formEdicao.status"
+                      class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                    >
+                      <option v-for="opcao in statusOptions" :key="`modal-status-${opcao.value}`" :value="opcao.value">
+                        {{ opcao.label }}
+                      </option>
+                    </select>
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1 block text-xs text-zinc-500">Prioridade</span>
+                    <select
+                      v-model="formEdicao.prioridade"
+                      class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                    >
+                      <option v-for="opcao in prioridadeOptions" :key="`modal-prioridade-${opcao.value}`" :value="opcao.value">
+                        {{ opcao.label }}
+                      </option>
+                    </select>
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1 block text-xs text-zinc-500">Responsavel</span>
+                    <select
+                      v-model="formEdicao.responsavel_texto"
+                      class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                    >
+                      <option value="">Sem responsavel</option>
+                      <option
+                        v-for="membro in equipeOptions"
+                        :key="`modal-membro-${membro.id}`"
+                        :value="membro.nome"
+                      >
+                        {{ membro.label }}
+                      </option>
+                    </select>
+                  </label>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <label class="block">
+                      <span class="mb-1 block text-xs text-zinc-500">Inicio</span>
+                      <input
+                        v-model="formEdicao.prazo_inicio"
+                        type="date"
+                        class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                      >
+                    </label>
+
+                    <label class="block">
+                      <span class="mb-1 block text-xs text-zinc-500">Prazo</span>
+                      <input
+                        v-model="formEdicao.prazo_fim"
+                        type="date"
+                        class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                      >
+                    </label>
+                  </div>
+                </div>
+              </section>
+
+              <section class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+                <h4 class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Tempo</h4>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-500">Estimado</span>
+                    <p class="mt-1 text-2xl font-semibold text-zinc-100">{{ formatHoras(formEdicao.horas_estimadas) }}h</p>
+                  </div>
+                  <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-500">Realizado</span>
+                    <p class="mt-1 text-2xl font-semibold text-zinc-100">{{ tarefaEmEdicao ? `${getHorasExecutadasDisplay(tarefaEmEdicao)}h` : '0h' }}</p>
+                  </div>
+                </div>
+
+                <div class="mt-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
+                  <div class="flex items-center justify-between text-xs text-zinc-500">
+                    <span>Uso da estimativa</span>
+                    <span>{{ percentualUsoHoras }}%</span>
+                  </div>
+                  <div class="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800">
+                    <div class="h-full rounded-full bg-emerald-500 transition-all" :style="{ width: `${percentualUsoHoras}%` }" />
+                  </div>
+                </div>
+              </section>
+
+              <section class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+                <h4 class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Resumo</h4>
+                <div class="space-y-2 text-sm text-zinc-300">
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="text-zinc-500">Criada em</span>
+                    <span>{{ formatMetaDateTime(tarefaEmEdicao?.created_at) }}</span>
+                  </div>
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="text-zinc-500">Atualizada</span>
+                    <span>{{ formatMetaDateTime(tarefaEmEdicao?.updated_at) }}</span>
+                  </div>
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="text-zinc-500">Janela</span>
+                    <span>{{ formatPrazoRangeFromForm }}</span>
+                  </div>
+                </div>
+              </section>
+
+              <div class="flex items-center justify-end gap-3 border-t border-zinc-800 pt-4">
                 <button
                   type="button"
-                  class="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
-                  @click="adicionarTagEdicao()"
+                  class="rounded-lg border border-zinc-800 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-900"
+                  @click="fecharModalEdicao"
                 >
-                  Adicionar
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  :disabled="salvandoEdicao"
+                  class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-black hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {{ salvandoEdicao ? 'Salvando...' : 'Salvar alteracoes' }}
                 </button>
               </div>
             </div>
-
-            <div v-if="tagsSugestoesEdicao.length" class="mt-2 flex flex-wrap gap-2">
-              <button
-                v-for="tag in tagsSugestoesEdicao"
-                :key="`edicao-sugestao-${tag}`"
-                type="button"
-                class="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
-                @click="adicionarTagEdicao(tag)"
-              >
-                #{{ tag }}
-              </button>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label class="mb-1 block text-sm font-medium text-zinc-300">Status</label>
-              <select
-                v-model="formEdicao.status"
-                class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
-              >
-                <option value="refinar">A Refinar</option>
-                <option value="fazer">A Fazer</option>
-                <option value="em_progresso">Em Progresso</option>
-                <option value="sob_revisao">Sob Revisao</option>
-                <option value="concluido">Concluido</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-zinc-300">Prioridade</label>
-              <select
-                v-model="formEdicao.prioridade"
-                class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
-              >
-                <option value="baixa">Baixa</option>
-                <option value="media">Media</option>
-                <option value="alta">Alta</option>
-                <option value="urgente">Urgente</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-zinc-300">Horas estimadas</label>
-              <input
-                v-model.number="formEdicao.horas_estimadas"
-                type="number"
-                min="0"
-                step="0.5"
-                class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
-              >
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-zinc-300">Data de inicio</label>
-              <input
-                v-model="formEdicao.prazo_inicio"
-                type="date"
-                class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
-              >
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-zinc-300">Prazo</label>
-              <input
-                v-model="formEdicao.prazo_fim"
-                type="date"
-                class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
-              >
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-zinc-300">Responsavel</label>
-              <select
-                v-model="formEdicao.responsavel_texto"
-                class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
-              >
-                <option value="">Sem responsavel</option>
-                <option
-                  v-for="membro in equipeOptions"
-                  :key="membro.id"
-                  :value="membro.nome"
-                >
-                  {{ membro.label }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end gap-3 border-t border-zinc-800 pt-4">
-            <button
-              type="button"
-              class="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-900"
-              @click="fecharModalEdicao"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              :disabled="salvandoEdicao"
-              class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-black hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {{ salvandoEdicao ? 'Salvando...' : 'Salvar alteracoes' }}
-            </button>
-          </div>
-        </form>
-      </div>
+          </aside>
+        </div>
+      </form>
     </div>
   </div>
 </template>
@@ -595,6 +748,7 @@ const colunas = [
 
 const filtroBusca = ref('')
 const modoVisualizacao = ref<'kanban' | 'lista'>('lista')
+const statusReduzidos = ref<ProjetoTarefa['status'][]>([])
 const tarefasSelecionadasIds = ref<number[]>([])
 const dragId = ref<number | null>(null)
 const menuAcoesAbertoId = ref<number | null>(null)
@@ -619,8 +773,11 @@ const formEdicao = reactive({
   descricao: '',
   tags: [] as string[],
   status: 'refinar' as ProjetoTarefa['status'],
+  tipo: 'funcionalidade' as ProjetoTarefa['tipo'],
   prioridade: 'media' as ProjetoTarefa['prioridade'],
   horas_estimadas: 0,
+  progresso: 0,
+  arvore: '',
   prazo_inicio: '',
   prazo_fim: '',
   responsavel_texto: '',
@@ -666,12 +823,49 @@ const statusOptions: Array<{ value: ProjetoTarefa['status']; label: string }> = 
   { value: 'concluido', label: 'Concluido' }
 ]
 
+const prioridadeLabels: Record<ProjetoTarefa['prioridade'], string> = {
+  baixa: 'Baixa',
+  media: 'Media',
+  alta: 'Alta',
+  urgente: 'Urgente'
+}
+
+const prioridadeBadgeClass: Record<ProjetoTarefa['prioridade'], string> = {
+  baixa: 'bg-zinc-800 text-zinc-300',
+  media: 'bg-blue-500/15 text-blue-300',
+  alta: 'bg-orange-500/15 text-orange-300',
+  urgente: 'bg-red-500/15 text-red-300'
+}
+
+const prioridadeOptions: Array<{ value: ProjetoTarefa['prioridade']; label: string }> = [
+  { value: 'baixa', label: 'Baixa' },
+  { value: 'media', label: 'Media' },
+  { value: 'alta', label: 'Alta' },
+  { value: 'urgente', label: 'Urgente' }
+]
+
+const tipoLabels: Record<ProjetoTarefa['tipo'], string> = {
+  funcionalidade: 'Funcionalidade',
+  bug: 'Bug',
+  melhoria: 'Melhoria',
+  documentacao: 'Documentacao',
+  design: 'Design'
+}
+
 const tipoCellClass: Record<ProjetoTarefa['tipo'], string> = {
   funcionalidade: 'bg-emerald-600',
   bug: 'bg-red-600',
   melhoria: 'bg-fuchsia-600',
   documentacao: 'bg-sky-600',
   design: 'bg-violet-600'
+}
+
+const tipoBadgeClass: Record<ProjetoTarefa['tipo'], string> = {
+  funcionalidade: 'bg-emerald-500/15 text-emerald-300',
+  bug: 'bg-red-500/15 text-red-300',
+  melhoria: 'bg-fuchsia-500/15 text-fuchsia-300',
+  documentacao: 'bg-sky-500/15 text-sky-300',
+  design: 'bg-violet-500/15 text-violet-300'
 }
 
 const tipoOptions: Array<{ value: ProjetoTarefa['tipo']; label: string }> = [
@@ -731,6 +925,26 @@ const tagsSugestoesEdicao = computed(() => {
     .filter(tag => !selecionadas.has(tag.toLocaleLowerCase('pt-BR')))
     .filter(tag => !termo || tag.toLocaleLowerCase('pt-BR').includes(termo))
     .slice(0, 10)
+})
+
+const tarefaEmEdicao = computed(() => {
+  if (!tarefaEditandoId.value) return null
+  return (tarefas.value || []).find(tarefa => tarefa.id === tarefaEditandoId.value) || null
+})
+
+const percentualUsoHoras = computed(() => {
+  const horasEstimadas = Math.max(0, Number(formEdicao.horas_estimadas || 0))
+  const horasExecutadas = tarefaEmEdicao.value ? getHorasExecutadasValue(tarefaEmEdicao.value) : 0
+  if (horasEstimadas <= 0) return 0
+  return Math.max(0, Math.min(100, Math.round((horasExecutadas / horasEstimadas) * 100)))
+})
+
+const formatPrazoRangeFromForm = computed(() => {
+  const tarefaPreview = {
+    prazo_inicio: formEdicao.prazo_inicio || null,
+    prazo_fim: formEdicao.prazo_fim || null
+  } as ProjetoTarefa
+  return formatPrazoRange(tarefaPreview)
 })
 
 function adicionarTagsAoArray(target: string[], rawValue: string) {
@@ -837,6 +1051,27 @@ function isStatusSelecionado(status: ProjetoTarefa['status']) {
   return ids.length > 0 && ids.every(id => tarefasSelecionadasIds.value.includes(id))
 }
 
+function isStatusReduzido(status: ProjetoTarefa['status']) {
+  return statusReduzidos.value.includes(status)
+}
+
+function toggleStatusReducao(status: ProjetoTarefa['status']) {
+  if (isStatusReduzido(status)) {
+    statusReduzidos.value = statusReduzidos.value.filter(item => item !== status)
+    return
+  }
+
+  statusReduzidos.value = [...statusReduzidos.value, status]
+}
+
+function expandirTodosStatus() {
+  statusReduzidos.value = []
+}
+
+function reduzirTodosStatus() {
+  statusReduzidos.value = colunas.map(coluna => coluna.status)
+}
+
 function toggleSelecaoStatus(status: ProjetoTarefa['status'], checked: boolean) {
   const idsStatus = (tarefasPorStatus.value[status] || []).map(tarefa => tarefa.id)
   if (!idsStatus.length) return
@@ -867,6 +1102,30 @@ function toDateInputValue(value: string | null | undefined): string {
 function capitalizeLabel(value: string) {
   if (!value) return ''
   return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function formatMetaDate(value: string | null | undefined): string {
+  if (!value) return '--'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--'
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(date).replace('.', '')
+}
+
+function formatMetaDateTime(value: string | null | undefined): string {
+  if (!value) return '--'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--'
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date).replace(',', ' as')
 }
 
 function getResponsavelInitials(nome: string | null): string {
@@ -1258,13 +1517,19 @@ async function editarTarefa(id: number) {
   formEdicao.descricao = tarefa.descricao || ''
   formEdicao.tags = normalizeProjetoTarefaTags(tarefa.tags)
   formEdicao.status = tarefa.status
+  formEdicao.tipo = tarefa.tipo
   formEdicao.prioridade = tarefa.prioridade
   formEdicao.horas_estimadas = Number(tarefa.horas_estimadas) || 0
+  formEdicao.progresso = Math.max(0, Math.min(100, Math.round(Number(tarefa.progresso || 0))))
+  formEdicao.arvore = tarefa.arvore || ''
   formEdicao.prazo_inicio = toDateInputValue(tarefa.prazo_inicio)
   formEdicao.prazo_fim = toDateInputValue(tarefa.prazo_fim)
   formEdicao.responsavel_texto = tarefa.responsavel_texto || ''
   edicaoTagInput.value = ''
   modalEdicaoAberto.value = true
+  if (Number(route.query.tarefa) !== tarefa.id) {
+    navigateTo({ path: route.path, query: { ...route.query, tarefa: String(tarefa.id) } }, { replace: true })
+  }
 }
 
 async function abrirTarefaPelaQuery() {
@@ -1283,6 +1548,11 @@ function fecharModalEdicao() {
   modalEdicaoAberto.value = false
   tarefaEditandoId.value = null
   edicaoTagInput.value = ''
+  if (route.query.tarefa) {
+    const nextQuery = { ...route.query }
+    delete nextQuery.tarefa
+    navigateTo({ path: route.path, query: nextQuery }, { replace: true })
+  }
 }
 
 async function salvarEdicaoTarefa() {
@@ -1304,8 +1574,11 @@ async function salvarEdicaoTarefa() {
     descricao: formEdicao.descricao.trim() || null,
     tags: formEdicao.tags,
     status: formEdicao.status,
+    tipo: formEdicao.tipo,
     prioridade: formEdicao.prioridade,
     horas_estimadas: Number(formEdicao.horas_estimadas) || 0,
+    progresso: Math.max(0, Math.min(100, Math.round(Number(formEdicao.progresso || 0)))),
+    arvore: formEdicao.arvore.trim() || null,
     prazo_inicio: formEdicao.prazo_inicio || null,
     prazo_fim: formEdicao.prazo_fim || null,
     responsavel_texto: formEdicao.responsavel_texto.trim() || null,
@@ -1324,8 +1597,7 @@ async function salvarEdicaoTarefa() {
 
   await refresh()
   salvandoEdicao.value = false
-  modalEdicaoAberto.value = false
-  tarefaEditandoId.value = null
+  fecharModalEdicao()
   showAlert('Tarefa atualizada com sucesso.', { title: 'Sucesso', type: 'success' })
 }
 
