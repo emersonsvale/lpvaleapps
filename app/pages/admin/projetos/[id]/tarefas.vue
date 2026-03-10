@@ -1,31 +1,191 @@
 <template>
   <div>
     <!-- Filtros rápidos -->
-    <div class="flex items-center gap-3 mb-6">
-      <input
-        v-model="filtroBusca"
-        type="text"
-        placeholder="Buscar tarefa..."
-        class="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand text-sm w-64"
-      >
+    <div class="mb-6 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/80 shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+      <div class="border-b border-zinc-800/80 bg-zinc-900/40 px-4 py-4 lg:px-5">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div class="space-y-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-brand">
+                Workspace
+              </span>
+              <h2 class="text-base font-semibold text-zinc-100">Filtros de tarefas</h2>
+            </div>
+            <p class="max-w-2xl text-sm text-zinc-500">
+              Refine a visualizacao por responsavel, tipo, prioridade e periodo. A ordenacao padrao ja prioriza o prazo mais proximo.
+            </p>
+          </div>
 
-      <div class="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/70 p-1">
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="modoVisualizacao === 'kanban' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800'"
-          @click="modoVisualizacao = 'kanban'"
-        >
-          Kanban
-        </button>
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="modoVisualizacao === 'lista' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800'"
-          @click="modoVisualizacao = 'lista'"
-        >
-          Lista
-        </button>
+          <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <button
+              type="button"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+              :aria-expanded="String(filtrosExpandidos)"
+              @click="filtrosExpandidos = !filtrosExpandidos"
+            >
+              <Icon
+                :name="filtrosExpandidos ? 'ph:arrows-in-line-vertical-bold' : 'ph:arrows-out-line-vertical-bold'"
+                class="h-3.5 w-3.5"
+              />
+              {{ filtrosExpandidos ? 'Minimizar' : 'Expandir' }}
+            </button>
+
+            <div class="flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/80 p-1">
+              <button
+                type="button"
+                class="rounded-lg px-3 py-2 text-xs font-semibold transition-colors"
+                :class="modoVisualizacao === 'kanban' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800'"
+                @click="modoVisualizacao = 'kanban'"
+              >
+                Kanban
+              </button>
+              <button
+                type="button"
+                class="rounded-lg px-3 py-2 text-xs font-semibold transition-colors"
+                :class="modoVisualizacao === 'lista' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800'"
+                @click="modoVisualizacao = 'lista'"
+              >
+                Lista
+              </button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <span class="rounded-full border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-zinc-300">
+                {{ tarefasFiltradas.length }} tarefa(s) visiveis
+              </span>
+              <span class="rounded-full border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-zinc-400">
+                {{ filtrosAtivosCount }} filtro(s) ativo(s)
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="filtrosExpandidos" class="grid gap-4 p-4 lg:p-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+          <label class="rounded-2xl border border-zinc-800/80 bg-zinc-900/45 p-3 md:col-span-2 2xl:col-span-1">
+            <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Busca</span>
+            <input
+              v-model="filtroBusca"
+              type="text"
+              placeholder="Buscar por tarefa, codigo ou tag"
+              class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-brand focus:outline-none"
+            >
+          </label>
+
+          <label class="rounded-2xl border border-zinc-800/80 bg-zinc-900/45 p-3">
+            <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Responsavel</span>
+            <select
+              v-model="filtroResponsavel"
+              class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+            >
+              <option value="todos">Todos</option>
+              <option value="sem_responsavel">Sem responsavel</option>
+              <option
+                v-for="responsavel in responsavelFiltroOptions"
+                :key="`filtro-responsavel-${responsavel}`"
+                :value="responsavel"
+              >
+                {{ responsavel }}
+              </option>
+            </select>
+          </label>
+
+          <label class="rounded-2xl border border-zinc-800/80 bg-zinc-900/45 p-3">
+            <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Tipo</span>
+            <select
+              v-model="filtroTipo"
+              class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+            >
+              <option value="todos">Todos</option>
+              <option v-for="opcao in tipoOptions" :key="`filtro-tipo-${opcao.value}`" :value="opcao.value">
+                {{ opcao.label }}
+              </option>
+            </select>
+          </label>
+
+          <label class="rounded-2xl border border-zinc-800/80 bg-zinc-900/45 p-3">
+            <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Prioridade</span>
+            <select
+              v-model="filtroPrioridade"
+              class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+            >
+              <option value="todos">Todas</option>
+              <option v-for="opcao in prioridadeOptions" :key="`filtro-prioridade-${opcao.value}`" :value="opcao.value">
+                {{ opcao.label }}
+              </option>
+            </select>
+          </label>
+
+          <label class="rounded-2xl border border-zinc-800/80 bg-zinc-900/45 p-3">
+            <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Data de inicio</span>
+            <input
+              v-model="filtroDataInicio"
+              type="date"
+              :max="filtroDataFim || undefined"
+              @change="onFiltroDataInicioChange"
+              class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+            >
+          </label>
+
+          <label class="rounded-2xl border border-zinc-800/80 bg-zinc-900/45 p-3">
+            <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Data de fim ate</span>
+            <input
+              v-model="filtroDataFim"
+              type="date"
+              :min="filtroDataInicio || undefined"
+              :disabled="!filtroDataInicio"
+              class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 focus:border-brand focus:outline-none disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-600"
+              @input="onFiltroDataFimInput"
+              @change="onFiltroDataFimInput"
+            >
+          </label>
+        </div>
+
+        <aside class="rounded-2xl border border-zinc-800/80 bg-zinc-900/45 p-4">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Organizacao</p>
+              <p class="mt-1 text-sm text-zinc-400">Defina como as tarefas devem ser exibidas.</p>
+            </div>
+            <span class="rounded-full border border-zinc-800 bg-zinc-950/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
+              Base
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <label class="block">
+              <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Ordenar por</span>
+              <select
+                v-model="ordenacaoCampo"
+                class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+              >
+                <option v-for="opcao in ordenacaoOptions" :key="`ordenacao-${opcao.value}`" :value="opcao.value">
+                  {{ opcao.label }}
+                </option>
+              </select>
+            </label>
+
+            <label class="block">
+              <span class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Direcao</span>
+              <select
+                v-model="ordenacaoDirecao"
+                class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+              >
+                <option value="asc">Crescente</option>
+                <option value="desc">Decrescente</option>
+              </select>
+            </label>
+
+            <button
+              type="button"
+              class="w-full rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-900"
+              @click="limparFiltros()"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        </aside>
       </div>
     </div>
 
@@ -344,7 +504,7 @@
                       </button>
                     </div>
                   </td>
-                  <td class="px-3 py-3 align-middle text-xs text-zinc-400">{{ formatProgresso(t.progresso) }}</td>
+                  <td class="px-3 py-3 align-middle text-xs text-zinc-400">{{ formatProgresso(getTarefaProgresso(t)) }}</td>
                   <td class="px-3 py-3 align-middle text-right" @click.stop>
                     <div class="relative inline-flex" @click.stop>
                       <button
@@ -502,21 +662,24 @@
                     <span>Progresso</span>
                   </div>
                   <div class="space-y-3">
-                    <div class="flex items-center gap-3">
-                      <input
-                        v-model.number="formEdicao.progresso"
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="5"
-                        class="h-2 w-full cursor-pointer accent-brand"
-                      >
-                      <span class="w-12 text-right text-sm font-semibold text-zinc-100">{{ formEdicao.progresso }}%</span>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
+                        <span class="text-[10px] uppercase tracking-wider text-zinc-500">Estimado</span>
+                        <p class="mt-1 text-lg font-semibold text-zinc-100">{{ formatHoras(formEdicao.horas_estimadas) }}h</p>
+                      </div>
+                      <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
+                        <span class="text-[10px] uppercase tracking-wider text-zinc-500">Realizado</span>
+                        <p class="mt-1 text-lg font-semibold text-zinc-100">{{ formatHoras(horasExecutadasEdicao) }}h</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="text-xs uppercase tracking-wider text-zinc-500">Tempo realizado / estimado</span>
+                      <span class="text-sm font-semibold text-zinc-100">{{ progressoEdicaoCalculado }}%</span>
                     </div>
                     <div class="h-2 overflow-hidden rounded-full bg-zinc-800">
-                      <div class="h-full rounded-full bg-brand transition-all" :style="{ width: `${formEdicao.progresso}%` }" />
+                      <div class="h-full rounded-full bg-brand transition-all" :style="{ width: `${progressoEdicaoCalculado}%` }" />
                     </div>
-                    <p class="text-xs text-zinc-500">Atualize o percentual para refletir o andamento real da entrega.</p>
+                    <p class="text-xs text-zinc-500">O progresso e calculado automaticamente a partir do tempo estimado versus o tempo realizado.</p>
                   </div>
                 </div>
               </div>
@@ -630,7 +793,9 @@
                       <input
                         v-model="formEdicao.prazo_inicio"
                         type="date"
+                        :max="formEdicao.prazo_fim || undefined"
                         class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                        @change="onModalPrazoInicioChange"
                       >
                     </label>
 
@@ -639,7 +804,10 @@
                       <input
                         v-model="formEdicao.prazo_fim"
                         type="date"
+                        :min="formEdicao.prazo_inicio || undefined"
                         class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
+                        @input="onModalPrazoFimInput"
+                        @change="onModalPrazoFimInput"
                       >
                     </label>
                   </div>
@@ -747,7 +915,18 @@ const colunas = [
 ] as const
 
 const filtroBusca = ref('')
+const filtroResponsavel = ref<'todos' | 'sem_responsavel' | string>('todos')
+const filtroTipo = ref<ProjetoTarefa['tipo'] | 'todos'>('todos')
+const filtroPrioridade = ref<ProjetoTarefa['prioridade'] | 'todos'>('todos')
+const filtroDataInicio = ref('')
+const filtroDataFim = ref('')
 const modoVisualizacao = ref<'kanban' | 'lista'>('lista')
+const filtrosExpandidos = ref(false)
+type OrdenacaoCampo = 'ordem' | 'prazo' | 'horas_estimadas' | 'horas_executadas' | 'progresso' | 'titulo' | 'updated_at'
+type OrdenacaoDirecao = 'asc' | 'desc'
+
+const ordenacaoCampo = ref<OrdenacaoCampo>('prazo')
+const ordenacaoDirecao = ref<OrdenacaoDirecao>('asc')
 const statusReduzidos = ref<ProjetoTarefa['status'][]>([])
 const tarefasSelecionadasIds = ref<number[]>([])
 const dragId = ref<number | null>(null)
@@ -797,6 +976,49 @@ const equipeOptions = computed(() => {
         label: cargo ? `${nome} (${cargo})` : nome
       }
     })
+})
+
+const responsavelFiltroOptions = computed(() => {
+  const labels = new Map<string, string>()
+
+  for (const option of equipeOptions.value) {
+    const nome = option.nome.trim()
+    if (!nome) continue
+    labels.set(nome.toLocaleLowerCase('pt-BR'), nome)
+  }
+
+  for (const tarefa of tarefas.value || []) {
+    const nome = (tarefa.responsavel_texto || '').trim()
+    if (!nome) continue
+    const key = nome.toLocaleLowerCase('pt-BR')
+    if (!labels.has(key)) {
+      labels.set(key, nome)
+    }
+  }
+
+  return Array.from(labels.values()).sort((left, right) => left.localeCompare(right, 'pt-BR'))
+})
+
+const ordenacaoOptions: Array<{ value: OrdenacaoCampo; label: string }> = [
+  { value: 'ordem', label: 'Ordem atual' },
+  { value: 'prazo', label: 'Prazo' },
+  { value: 'horas_estimadas', label: 'Horas estimadas' },
+  { value: 'horas_executadas', label: 'Horas executadas' },
+  { value: 'progresso', label: 'Progresso' },
+  { value: 'titulo', label: 'Titulo' },
+  { value: 'updated_at', label: 'Ultima atualizacao' }
+]
+
+const filtrosAtivosCount = computed(() => {
+  let total = 0
+  if (filtroBusca.value.trim()) total += 1
+  if (filtroResponsavel.value !== 'todos') total += 1
+  if (filtroTipo.value !== 'todos') total += 1
+  if (filtroPrioridade.value !== 'todos') total += 1
+  if (filtroDataInicio.value) total += 1
+  if (filtroDataFim.value) total += 1
+  if (ordenacaoCampo.value !== 'prazo' || ordenacaoDirecao.value !== 'asc') total += 1
+  return total
 })
 
 const statusLabels: Record<ProjetoTarefa['status'], string> = {
@@ -894,12 +1116,46 @@ const statusBorderLeftClass: Record<ProjetoTarefa['status'], string> = {
 
 const tarefasFiltradas = computed(() => {
   const termo = filtroBusca.value.toLowerCase().trim()
-  return (tarefas.value || []).filter((t) => {
-    if (!termo) return true
-    return t.titulo.toLowerCase().includes(termo)
-      || (t.codigo || '').toLowerCase().includes(termo)
-      || normalizeProjetoTarefaTags(t.tags).some(tag => tag.toLowerCase().includes(termo))
-  })
+  const inicioFiltroMs = getDayStartMs(filtroDataInicio.value)
+  const fimFiltroMs = getDayEndMs(filtroDataFim.value)
+  const currentTickMs = tickMs.value
+
+  return [...(tarefas.value || [])]
+    .filter((tarefa) => {
+      if (filtroTipo.value !== 'todos' && tarefa.tipo !== filtroTipo.value) return false
+      if (filtroPrioridade.value !== 'todos' && tarefa.prioridade !== filtroPrioridade.value) return false
+
+      const responsavelAtual = (tarefa.responsavel_texto || '').trim()
+      if (filtroResponsavel.value === 'sem_responsavel' && responsavelAtual) return false
+      if (filtroResponsavel.value !== 'todos' && filtroResponsavel.value !== 'sem_responsavel' && responsavelAtual !== filtroResponsavel.value) return false
+
+      if (inicioFiltroMs !== null || fimFiltroMs !== null) {
+        const inicioTarefaMs = getTaskBoundaryMs(tarefa, 'start')
+        const fimTarefaMs = getTaskBoundaryMs(tarefa, 'end')
+
+        if (inicioFiltroMs !== null && fimTarefaMs !== null && fimTarefaMs < inicioFiltroMs) return false
+        if (inicioFiltroMs !== null && fimTarefaMs === null && inicioTarefaMs !== null && inicioTarefaMs < inicioFiltroMs) return false
+        if (fimFiltroMs !== null && inicioTarefaMs !== null && inicioTarefaMs > fimFiltroMs) return false
+        if (fimFiltroMs !== null && inicioTarefaMs === null && fimTarefaMs !== null && fimTarefaMs > fimFiltroMs) return false
+        if (inicioFiltroMs !== null && fimFiltroMs !== null && inicioTarefaMs === null && fimTarefaMs === null) return false
+      }
+
+      if (!termo) return true
+
+      const values = [
+        tarefa.titulo,
+        tarefa.codigo || '',
+        tarefa.descricao || '',
+        tarefa.arvore || '',
+        tarefa.responsavel_texto || '',
+        tarefa.tipo,
+        tarefa.prioridade,
+        ...normalizeProjetoTarefaTags(tarefa.tags)
+      ].map(value => value.toLowerCase())
+
+      return values.some(value => value.includes(termo))
+    })
+    .sort((left, right) => compareTarefas(left, right, currentTickMs))
 })
 
 const tagsDisponiveisProjeto = computed(() => {
@@ -937,6 +1193,14 @@ const percentualUsoHoras = computed(() => {
   const horasExecutadas = tarefaEmEdicao.value ? getHorasExecutadasValue(tarefaEmEdicao.value) : 0
   if (horasEstimadas <= 0) return 0
   return Math.max(0, Math.min(100, Math.round((horasExecutadas / horasEstimadas) * 100)))
+})
+
+const horasExecutadasEdicao = computed(() => {
+  return tarefaEmEdicao.value ? getHorasExecutadasValue(tarefaEmEdicao.value) : 0
+})
+
+const progressoEdicaoCalculado = computed(() => {
+  return calculateProgressPercent(formEdicao.horas_estimadas, horasExecutadasEdicao.value)
 })
 
 const formatPrazoRangeFromForm = computed(() => {
@@ -1015,7 +1279,7 @@ const resumoStatus = computed(() => {
       const horasEstimadas = itens.reduce((acc, item) => acc + Number(item.horas_estimadas || 0), 0)
       const horasExecutadas = itens.reduce((acc, item) => acc + getHorasExecutadasValueAt(item, currentTickMs), 0)
       const progressoMedio = itens.length
-        ? Math.round(itens.reduce((acc, item) => acc + Number(item.progresso || 0), 0) / itens.length)
+        ? Math.round(itens.reduce((acc, item) => acc + getTarefaProgressoAt(item, currentTickMs), 0) / itens.length)
         : 0
 
       return [
@@ -1092,6 +1356,158 @@ function toggleSelecaoStatus(status: ProjetoTarefa['status'], checked: boolean) 
 function formatHoras(value: number): string {
   return Number((value || 0).toFixed(2)).toString()
 }
+
+function getDayStartMs(value: string | null | undefined): number | null {
+  if (!value) return null
+  const date = new Date(`${value}T00:00:00`)
+  return Number.isNaN(date.getTime()) ? null : date.getTime()
+}
+
+function getDayEndMs(value: string | null | undefined): number | null {
+  if (!value) return null
+  const date = new Date(`${value}T23:59:59.999`)
+  return Number.isNaN(date.getTime()) ? null : date.getTime()
+}
+
+function getTaskBoundaryMs(tarefa: ProjetoTarefa, boundary: 'start' | 'end'): number | null {
+  const primary = boundary === 'start' ? tarefa.prazo_inicio : tarefa.prazo_fim
+  const fallback = boundary === 'start' ? tarefa.prazo_fim : tarefa.prazo_inicio
+  const value = primary || fallback
+  if (!value) return null
+
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.getTime()
+}
+
+function compareNullableNumbers(left: number | null, right: number | null, direction: OrdenacaoDirecao) {
+  if (left === null && right === null) return 0
+  if (left === null) return 1
+  if (right === null) return -1
+  return direction === 'asc' ? left - right : right - left
+}
+
+function compareNullableStrings(left: string | null | undefined, right: string | null | undefined, direction: OrdenacaoDirecao) {
+  const leftValue = (left || '').trim().toLocaleLowerCase('pt-BR')
+  const rightValue = (right || '').trim().toLocaleLowerCase('pt-BR')
+
+  if (!leftValue && !rightValue) return 0
+  if (!leftValue) return 1
+  if (!rightValue) return -1
+
+  return direction === 'asc'
+    ? leftValue.localeCompare(rightValue, 'pt-BR')
+    : rightValue.localeCompare(leftValue, 'pt-BR')
+}
+
+function compareTarefas(left: ProjetoTarefa, right: ProjetoTarefa, currentTickMs: number) {
+  const direction = ordenacaoDirecao.value
+
+  switch (ordenacaoCampo.value) {
+    case 'prazo': {
+      const result = compareNullableNumbers(getTaskBoundaryMs(left, 'end'), getTaskBoundaryMs(right, 'end'), direction)
+      if (result !== 0) return result
+      break
+    }
+    case 'horas_estimadas': {
+      const result = compareNullableNumbers(Number(left.horas_estimadas || 0), Number(right.horas_estimadas || 0), direction)
+      if (result !== 0) return result
+      break
+    }
+    case 'horas_executadas': {
+      const result = compareNullableNumbers(getHorasExecutadasValueAt(left, currentTickMs), getHorasExecutadasValueAt(right, currentTickMs), direction)
+      if (result !== 0) return result
+      break
+    }
+    case 'progresso': {
+      const result = compareNullableNumbers(getTarefaProgressoAt(left, currentTickMs), getTarefaProgressoAt(right, currentTickMs), direction)
+      if (result !== 0) return result
+      break
+    }
+    case 'titulo': {
+      const result = compareNullableStrings(left.titulo, right.titulo, direction)
+      if (result !== 0) return result
+      break
+    }
+    case 'updated_at': {
+      const result = compareNullableNumbers(
+        left.updated_at ? new Date(left.updated_at).getTime() : null,
+        right.updated_at ? new Date(right.updated_at).getTime() : null,
+        direction
+      )
+      if (result !== 0) return result
+      break
+    }
+    case 'ordem':
+    default: {
+      const result = compareNullableNumbers(Number(left.ordem_coluna || 0), Number(right.ordem_coluna || 0), direction)
+      if (result !== 0) return result
+      break
+    }
+  }
+
+  const prazoFallback = compareNullableNumbers(getTaskBoundaryMs(left, 'end'), getTaskBoundaryMs(right, 'end'), 'asc')
+  if (prazoFallback !== 0) return prazoFallback
+
+  return compareNullableStrings(left.titulo, right.titulo, 'asc')
+}
+
+function limparFiltros() {
+  filtroBusca.value = ''
+  filtroResponsavel.value = 'todos'
+  filtroTipo.value = 'todos'
+  filtroPrioridade.value = 'todos'
+  filtroDataInicio.value = ''
+  filtroDataFim.value = ''
+  ordenacaoCampo.value = 'prazo'
+  ordenacaoDirecao.value = 'asc'
+}
+
+function onFiltroDataInicioChange() {
+  if (filtroDataInicio.value && filtroDataFim.value && filtroDataFim.value < filtroDataInicio.value) {
+    filtroDataFim.value = filtroDataInicio.value
+  }
+}
+
+function onFiltroDataFimInput() {
+  if (!filtroDataInicio.value) {
+    filtroDataFim.value = ''
+    showAlert('Selecione primeiro a data de inicio.', { title: 'Aviso', type: 'warning' })
+    return
+  }
+
+  if (filtroDataFim.value && filtroDataFim.value < filtroDataInicio.value) {
+    filtroDataFim.value = filtroDataInicio.value
+    showAlert('A data de fim nao pode ser menor que a data de inicio.', { title: 'Aviso', type: 'warning' })
+  }
+}
+
+function onModalPrazoInicioChange() {
+  if (formEdicao.prazo_inicio && formEdicao.prazo_fim && formEdicao.prazo_fim < formEdicao.prazo_inicio) {
+    formEdicao.prazo_fim = formEdicao.prazo_inicio
+    showAlert('A data de fim deve ser maior ou igual a data de inicio.', { title: 'Aviso', type: 'warning' })
+  }
+}
+
+function onModalPrazoFimInput() {
+  if (!formEdicao.prazo_inicio || !formEdicao.prazo_fim) return
+
+  if (formEdicao.prazo_fim < formEdicao.prazo_inicio) {
+    formEdicao.prazo_fim = formEdicao.prazo_inicio
+    showAlert('A data de fim deve ser maior ou igual a data de inicio.', { title: 'Aviso', type: 'warning' })
+  }
+}
+
+watch([filtroDataInicio, filtroDataFim], ([inicio, fim], [inicioAnterior, fimAnterior]) => {
+  if (!inicio || !fim || fim >= inicio) return
+
+  if (inicio !== inicioAnterior) {
+    filtroDataFim.value = inicio
+    return
+  }
+
+  filtroDataFim.value = fimAnterior && fimAnterior >= inicio ? fimAnterior : inicio
+  showAlert('A data de fim nao pode ser menor que a data de inicio.', { title: 'Aviso', type: 'warning' })
+})
 
 function toDateInputValue(value: string | null | undefined): string {
   if (!value) return ''
@@ -1270,6 +1686,17 @@ function formatProgresso(value: number | null | undefined): string {
   return `${Math.max(0, Math.min(100, Math.round(Number(value))))}%`
 }
 
+function calculateProgressPercent(horasEstimadas: number | null | undefined, horasExecutadas: number | null | undefined): number {
+  const estimado = Math.max(0, Number(horasEstimadas || 0))
+  const realizado = Math.max(0, Number(horasExecutadas || 0))
+
+  if (estimado <= 0) {
+    return realizado > 0 ? 100 : 0
+  }
+
+  return Math.max(0, Math.min(100, Math.round((realizado / estimado) * 100)))
+}
+
 function getHorasExecutadasValueAt(t: ProjetoTarefa, currentTickMs: number): number {
   if (tarefaRodandoId.value !== t.id || !timerInicioMs.value) {
     return Number(t.horas_executadas || 0)
@@ -1282,6 +1709,14 @@ function getHorasExecutadasValueAt(t: ProjetoTarefa, currentTickMs: number): num
 
 function getHorasExecutadasValue(t: ProjetoTarefa): number {
   return getHorasExecutadasValueAt(t, tickMs.value)
+}
+
+function getTarefaProgressoAt(t: ProjetoTarefa, currentTickMs: number): number {
+  return calculateProgressPercent(t.horas_estimadas, getHorasExecutadasValueAt(t, currentTickMs))
+}
+
+function getTarefaProgresso(t: ProjetoTarefa): number {
+  return getTarefaProgressoAt(t, tickMs.value)
 }
 
 function getHorasExecutadasDisplay(t: ProjetoTarefa): string {
@@ -1347,8 +1782,11 @@ function restaurarTimerDaWorkspace() {
 }
 
 async function persistirHorasExecutadas(id: number, horasExecutadas: number) {
+  const tarefaAtual = (tarefas.value || []).find((t) => t.id === id)
+  const progressoCalculado = calculateProgressPercent(tarefaAtual?.horas_estimadas || 0, horasExecutadas)
   const { error } = await updateTarefa(id, {
-    horas_executadas: Number(horasExecutadas.toFixed(4))
+    horas_executadas: Number(horasExecutadas.toFixed(4)),
+    progresso: progressoCalculado
   })
 
   if (error) {
@@ -1357,7 +1795,7 @@ async function persistirHorasExecutadas(id: number, horasExecutadas: number) {
   }
 
   tarefas.value = (tarefas.value || []).map((t) =>
-    t.id === id ? { ...t, horas_executadas: Number(horasExecutadas.toFixed(4)) } : t
+    t.id === id ? { ...t, horas_executadas: Number(horasExecutadas.toFixed(4)), progresso: progressoCalculado } : t
   )
 
   return true
@@ -1520,7 +1958,7 @@ async function editarTarefa(id: number) {
   formEdicao.tipo = tarefa.tipo
   formEdicao.prioridade = tarefa.prioridade
   formEdicao.horas_estimadas = Number(tarefa.horas_estimadas) || 0
-  formEdicao.progresso = Math.max(0, Math.min(100, Math.round(Number(tarefa.progresso || 0))))
+  formEdicao.progresso = calculateProgressPercent(tarefa.horas_estimadas, getHorasExecutadasValue(tarefa))
   formEdicao.arvore = tarefa.arvore || ''
   formEdicao.prazo_inicio = toDateInputValue(tarefa.prazo_inicio)
   formEdicao.prazo_fim = toDateInputValue(tarefa.prazo_fim)
@@ -1577,7 +2015,7 @@ async function salvarEdicaoTarefa() {
     tipo: formEdicao.tipo,
     prioridade: formEdicao.prioridade,
     horas_estimadas: Number(formEdicao.horas_estimadas) || 0,
-    progresso: Math.max(0, Math.min(100, Math.round(Number(formEdicao.progresso || 0)))),
+    progresso: calculateProgressPercent(Number(formEdicao.horas_estimadas) || 0, tarefaEmEdicao.value ? getHorasExecutadasValue(tarefaEmEdicao.value) : 0),
     arvore: formEdicao.arvore.trim() || null,
     prazo_inicio: formEdicao.prazo_inicio || null,
     prazo_fim: formEdicao.prazo_fim || null,

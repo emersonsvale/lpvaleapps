@@ -51,15 +51,15 @@
         <div class="space-y-3">
           <div class="flex justify-between text-sm">
             <span class="text-zinc-500">Data de Início</span>
-            <span class="text-zinc-300">{{ formatarData(projeto?.data_inicio) }}</span>
+            <span class="text-zinc-300">{{ formatarData(dataInicioTarefas) }}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-zinc-500">Previsão Atual</span>
-            <span class="text-zinc-300">{{ formatarData(projeto?.data_fim_prevista) }}</span>
+            <span class="text-zinc-300">{{ formatarData(previsaoAtualTarefas) }}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-zinc-500">Data Real de Entrega</span>
-            <span class="text-zinc-300">{{ formatarData(projeto?.data_fim_real) }}</span>
+            <span class="text-zinc-300">{{ formatarData(dataRealEntregaTarefas) }}</span>
           </div>
         </div>
       </section>
@@ -99,9 +99,55 @@ const saldoHoras = computed(() => {
   return (props.projeto?.horas_previstas || 0) - (props.projeto?.horas_executadas || 0)
 })
 
+function normalizeDateValue(value?: string | null) {
+  if (!value) return null
+  const normalized = String(value).slice(0, 10)
+  const date = new Date(`${normalized}T00:00:00`)
+  return Number.isNaN(date.getTime()) ? null : normalized
+}
+
+const dataInicioTarefas = computed(() => {
+  const datas = (tarefasProjeto.value || [])
+    .map(tarefa => normalizeDateValue(tarefa.prazo_inicio))
+    .filter((value): value is string => Boolean(value))
+    .sort()
+
+  return datas[0] || props.projeto?.data_inicio || null
+})
+
+const previsaoAtualTarefas = computed(() => {
+  const datasFim = (tarefasProjeto.value || [])
+    .map(tarefa => normalizeDateValue(tarefa.prazo_fim))
+    .filter((value): value is string => Boolean(value))
+    .sort()
+
+  if (datasFim.length) {
+    return datasFim[datasFim.length - 1]
+  }
+
+  const datasInicio = (tarefasProjeto.value || [])
+    .map(tarefa => normalizeDateValue(tarefa.prazo_inicio))
+    .filter((value): value is string => Boolean(value))
+    .sort()
+
+  return datasInicio[datasInicio.length - 1] || props.projeto?.data_fim_prevista || null
+})
+
+const dataRealEntregaTarefas = computed(() => {
+  const datasConclusao = (tarefasProjeto.value || [])
+    .filter(tarefa => tarefa.status === 'concluido')
+    .map(tarefa => normalizeDateValue(tarefa.concluida_em || tarefa.updated_at || null))
+    .filter((value): value is string => Boolean(value))
+    .sort()
+
+  return datasConclusao[datasConclusao.length - 1] || props.projeto?.data_fim_real || null
+})
+
 function formatarData(data?: string | null) {
   if (!data) return '-'
-  const d = new Date(data + 'T00:00:00')
+  const normalized = normalizeDateValue(data)
+  if (!normalized) return '-'
+  const d = new Date(`${normalized}T00:00:00`)
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(d)
 }
 </script>
