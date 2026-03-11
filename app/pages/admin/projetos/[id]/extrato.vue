@@ -54,6 +54,47 @@
       </article>
     </section>
 
+    <!-- Relatorio para Cliente -->
+    <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+      <header class="flex flex-col gap-3 border-b border-zinc-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-base font-semibold text-zinc-100">Relatorio para Cliente</h2>
+          <p class="text-xs text-zinc-500">Selecione o periodo e gere um PDF para enviar ao cliente.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <input
+            v-model="relatorioDataInicio"
+            type="date"
+            class="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 focus:border-zinc-500 focus:outline-none"
+          >
+          <span class="text-xs text-zinc-500">ate</span>
+          <input
+            v-model="relatorioDataFim"
+            type="date"
+            class="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 focus:border-zinc-500 focus:outline-none"
+          >
+          <button
+            type="button"
+            class="rounded-lg bg-zinc-100 px-4 py-1.5 text-xs font-semibold text-zinc-900 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!relatorioDataInicio || !relatorioDataFim"
+            @click="gerarRelatorioPDF"
+          >
+            Gerar PDF
+          </button>
+        </div>
+      </header>
+
+      <div v-if="lancamentosFiltrados.length" class="px-4 py-3">
+        <p class="text-xs text-zinc-400">
+          {{ lancamentosFiltrados.length }} tarefa(s) com atividade no periodo selecionado
+          — Total de <strong class="text-zinc-200">{{ formatHoras(horasExecutadasPeriodo) }}h</strong> executadas
+        </p>
+      </div>
+      <div v-else-if="relatorioDataInicio && relatorioDataFim" class="px-4 py-6 text-center text-xs text-zinc-500">
+        Nenhuma tarefa com atividade neste periodo.
+      </div>
+    </section>
+
     <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
       <header class="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
         <div>
@@ -120,6 +161,7 @@
 
 <script setup lang="ts">
 import { fetchTarefasByProjetoId, type ProjetoAdminWorkspace, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { openRelatorioHoras } from '~/composables/useRelatorioHoras'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 
@@ -131,6 +173,10 @@ const { data: tarefas, pending, refresh: refreshTarefas } = await useAsyncData(
     default: () => []
   }
 )
+
+// ==========================================
+// RESUMO GERAL
+// ==========================================
 
 const totalHorasPrevistas = computed(() => {
   const projetoPrevistas = Number(props.projeto.horas_previstas || 0)
@@ -169,6 +215,18 @@ const custoMedioHora = computed(() => {
   return valorHoraVendida.value
 })
 
+// ==========================================
+// LANCAMENTOS (TABELA GERAL)
+// ==========================================
+
+const statusLabelsMap: Record<ProjetoTarefa['status'], string> = {
+  refinar: 'Refinar',
+  fazer: 'Fazer',
+  em_progresso: 'Em Progresso',
+  sob_revisao: 'Sob Revisao',
+  concluido: 'Concluido'
+}
+
 const lancamentos = computed(() => {
   const source = (tarefas.value || []) as ProjetoTarefa[]
   return source
@@ -193,6 +251,61 @@ const lancamentos = computed(() => {
     })
     .sort((a, b) => b.horasExecutadas - a.horasExecutadas)
 })
+
+// ==========================================
+// RELATORIO PARA CLIENTE
+// ==========================================
+
+const relatorioDataInicio = ref('')
+const relatorioDataFim = ref('')
+
+const lancamentosFiltrados = computed(() => {
+  if (!relatorioDataInicio.value || !relatorioDataFim.value) return []
+
+  const inicio = relatorioDataInicio.value
+  const fim = relatorioDataFim.value
+
+  return lancamentos.value.filter((item) => {
+    if (!item.updatedAt) return false
+    const dataItem = item.updatedAt.slice(0, 10)
+    return dataItem >= inicio && dataItem <= fim
+  })
+})
+
+const horasExecutadasPeriodo = computed(() => {
+  return lancamentosFiltrados.value.reduce((acc, item) => acc + item.horasExecutadas, 0)
+})
+
+function gerarRelatorioPDF() {
+  if (!relatorioDataInicio.value || !relatorioDataFim.value) return
+
+  const itens = lancamentosFiltrados.value
+
+  openRelatorioHoras({
+    projetoNome: props.projeto.nome,
+    clienteNome: props.projeto.cliente_nome,
+    periodoInicio: relatorioDataInicio.value,
+    periodoFim: relatorioDataFim.value,
+    horasPrevistas: totalHorasPrevistas.value,
+    horasExecutadas: totalHorasExecutadas.value,
+    saldoHoras: saldoHoras.value,
+    percentualConsumo: percentualHorasConsumidas.value,
+    horasNoPeriodo: itens.reduce((acc, i) => acc + i.horasExecutadas, 0),
+    itens: itens.map((item) => ({
+      codigo: item.codigo,
+      titulo: item.titulo,
+      responsavel: item.responsavel,
+      status: statusLabelsMap[item.status] || item.status,
+      horasEstimadas: item.horasEstimadas,
+      horasExecutadas: item.horasExecutadas,
+      percentualConsumo: item.percentualConsumo,
+    })),
+  })
+}
+
+// ==========================================
+// HELPERS
+// ==========================================
 
 function formatHoras(value: number): string {
   return Number((value || 0).toFixed(2)).toString()
@@ -224,13 +337,6 @@ function formatDateTime(value: string | null): string {
 }
 
 function statusLabel(status: ProjetoTarefa['status']): string {
-  const map: Record<ProjetoTarefa['status'], string> = {
-    refinar: 'Refinar',
-    fazer: 'Fazer',
-    em_progresso: 'Em Progresso',
-    sob_revisao: 'Sob Revisao',
-    concluido: 'Concluido'
-  }
-  return map[status]
+  return statusLabelsMap[status]
 }
 </script>

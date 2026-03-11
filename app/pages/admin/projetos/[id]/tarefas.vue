@@ -508,33 +508,15 @@
                   <td class="px-3 py-3 align-middle text-right" @click.stop>
                     <div class="relative inline-flex" @click.stop>
                       <button
+                        ref="menuBtnRefs"
                         type="button"
                         class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-100"
                         title="Mais acoes"
+                        :data-tarefa-id="t.id"
                         @click.stop="toggleMenuAcoes(t.id)"
                       >
                         ...
                       </button>
-
-                      <div
-                        v-if="menuAcoesAbertoId === t.id"
-                        class="absolute right-0 top-full z-20 mt-2 min-w-[140px] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-2xl"
-                      >
-                        <button
-                          type="button"
-                          class="block w-full px-3 py-2 text-left text-xs text-zinc-200 transition-colors hover:bg-zinc-900"
-                          @click="abrirEdicaoPeloMenu(t.id)"
-                        >
-                          Editar tarefa
-                        </button>
-                        <button
-                          type="button"
-                          class="block w-full px-3 py-2 text-left text-xs text-red-300 transition-colors hover:bg-zinc-900"
-                          @click="excluirPeloMenu(t.id)"
-                        >
-                          Excluir tarefa
-                        </button>
-                      </div>
                     </div>
                   </td>
                 </tr>
@@ -552,6 +534,35 @@
         Nenhuma tarefa encontrada para o filtro atual.
       </div>
     </div>
+
+    <!-- Menu de ações flutuante (Teleport para escapar overflow) -->
+    <Teleport to="body">
+      <div
+        v-if="menuAcoesAbertoId !== null"
+        class="fixed inset-0 z-[9999]"
+        @click="menuAcoesAbertoId = null"
+      />
+      <div
+        v-if="menuAcoesAbertoId !== null"
+        class="fixed z-[10000] min-w-[160px] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-2xl"
+        :style="menuAcoesFloatingStyle"
+      >
+        <button
+          type="button"
+          class="block w-full px-3 py-2 text-left text-xs text-zinc-200 transition-colors hover:bg-zinc-900"
+          @click="abrirEdicaoPeloMenu(menuAcoesAbertoId!)"
+        >
+          Editar tarefa
+        </button>
+        <button
+          type="button"
+          class="block w-full px-3 py-2 text-left text-xs text-red-300 transition-colors hover:bg-zinc-900"
+          @click="excluirPeloMenu(menuAcoesAbertoId!)"
+        >
+          Excluir tarefa
+        </button>
+      </div>
+    </Teleport>
 
     <div
       v-if="modalEdicaoAberto"
@@ -817,10 +828,19 @@
               <section class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
                 <h4 class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Tempo</h4>
                 <div class="grid grid-cols-2 gap-3">
-                  <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
+                  <label class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3 block">
                     <span class="text-[10px] uppercase tracking-wider text-zinc-500">Estimado</span>
-                    <p class="mt-1 text-2xl font-semibold text-zinc-100">{{ formatHoras(formEdicao.horas_estimadas) }}h</p>
-                  </div>
+                    <div class="mt-1 flex items-baseline gap-0.5">
+                      <input
+                        v-model.number="formEdicao.horas_estimadas"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        class="w-full bg-transparent text-2xl font-semibold text-zinc-100 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      >
+                      <span class="text-2xl font-semibold text-zinc-100 flex-shrink-0">h</span>
+                    </div>
+                  </label>
                   <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
                     <span class="text-[10px] uppercase tracking-wider text-zinc-500">Realizado</span>
                     <p class="mt-1 text-2xl font-semibold text-zinc-100">{{ tarefaEmEdicao ? `${getHorasExecutadasDisplay(tarefaEmEdicao)}h` : '0h' }}</p>
@@ -931,6 +951,7 @@ const statusReduzidos = ref<ProjetoTarefa['status'][]>([])
 const tarefasSelecionadasIds = ref<number[]>([])
 const dragId = ref<number | null>(null)
 const menuAcoesAbertoId = ref<number | null>(null)
+const menuAcoesPos = ref({ top: 0, left: 0 })
 const responsavelAbertoId = ref<number | null>(null)
 const salvandoResponsavelId = ref<number | null>(null)
 const modalEdicaoAberto = ref(false)
@@ -1894,8 +1915,28 @@ function fecharSeletorResponsavel() {
   responsavelAbertoId.value = null
 }
 
+const menuAcoesFloatingStyle = computed(() => ({
+  top: menuAcoesPos.value.top + 'px',
+  left: menuAcoesPos.value.left + 'px'
+}))
+
 function toggleMenuAcoes(id: number) {
-  menuAcoesAbertoId.value = menuAcoesAbertoId.value === id ? null : id
+  if (menuAcoesAbertoId.value === id) {
+    menuAcoesAbertoId.value = null
+    return
+  }
+
+  // Encontrar o botão clicado e pegar sua posição
+  const btn = document.querySelector(`button[data-tarefa-id="${id}"]`) as HTMLElement | null
+  if (btn) {
+    const rect = btn.getBoundingClientRect()
+    menuAcoesPos.value = {
+      top: rect.bottom + 6,
+      left: rect.right - 160
+    }
+  }
+
+  menuAcoesAbertoId.value = id
 }
 
 async function abrirEdicaoPeloMenu(id: number) {

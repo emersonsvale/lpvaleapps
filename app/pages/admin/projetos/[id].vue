@@ -314,7 +314,7 @@ const tabs = computed(() => {
     { label: 'Tarefas', path: `${base}/tarefas`, exact: false },
     { label: 'Requisitos', path: `${base}/requisitos`, exact: false },
     { label: 'Documentação', path: `${base}/documentacao`, exact: false },
-    // Outras abas (Arvore, Extrato, Gantt, Releases, Configuracoes)
+    { label: 'Gantt', path: `${base}/gantt`, exact: false },
     { label: 'Extrato de Horas', path: `${base}/extrato`, exact: false },
     { label: 'Configurações', path: `${base}/configuracoes`, exact: false }
   ]
