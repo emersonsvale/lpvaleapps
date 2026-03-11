@@ -42,6 +42,24 @@ export default function useEmail() {
 
     const esperar = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
+    const getTemplatesDirect = async (): Promise<EmailTemplate[]> => {
+        if (!supabase) {
+            throw new Error('Supabase nao esta configurado')
+        }
+
+        const { data, error } = await supabase
+            .from('email_templates')
+            .select('*')
+            .order('tipo', { ascending: true })
+            .order('nome', { ascending: true })
+
+        if (error) {
+            throw new Error(error.message || 'Erro ao buscar templates')
+        }
+
+        return (data || []) as EmailTemplate[]
+    }
+
     /**
      * Obtem token de autenticacao do usuario.
      */
@@ -215,16 +233,29 @@ export default function useEmail() {
         erro.value = null
 
         try {
-            const token = await getAuthToken()
+            try {
+                const token = await getAuthToken()
 
-            const response = await $fetch('/api/email/templates', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
+                const response = await $fetch('/api/email/templates', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
 
-            return response.templates || []
+                return response.templates || []
+            }
+            catch (apiError: any) {
+                const statusCode = apiError?.statusCode || apiError?.response?.status
+                const statusMessage = apiError?.data?.statusMessage || apiError?.statusMessage || apiError?.message || ''
+
+                if (statusCode === 401) {
+                    console.warn('[useEmail.getTemplates] API retornou 401; usando fallback direto via Supabase.')
+                    return await getTemplatesDirect()
+                }
+
+                throw new Error(statusMessage || 'Erro ao buscar templates')
+            }
         }
         catch (e: any) {
             erro.value = e.message || 'Erro ao buscar templates'
