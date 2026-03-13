@@ -1,13 +1,23 @@
 import type { User, Session } from '@supabase/supabase-js'
 
+let authListenerInitialized = false
+
 /**
  * Autenticação do admin via Supabase Auth.
  * signIn/signOut e estado do usuário/sessão.
  */
 export function useAuth() {
   const supabase = useSupabase()
-  const user = ref<User | null>(null)
-  const session = ref<Session | null>(null)
+  const user = useState<User | null>('auth-user', () => null)
+  const session = useState<Session | null>('auth-session', () => null)
+
+  if (import.meta.client && supabase && !authListenerInitialized) {
+    supabase.auth.onAuthStateChange((_event, nextSession) => {
+      session.value = nextSession
+      user.value = nextSession?.user ?? null
+    })
+    authListenerInitialized = true
+  }
 
   async function loadSession() {
     if (!supabase) return

@@ -31,7 +31,7 @@
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-zinc-500">Horas Executadas</span>
-            <span class="text-zinc-300">{{ projeto?.horas_executadas || 0 }}h</span>
+            <span class="text-zinc-300">{{ totalHorasExecutadas }}h</span>
           </div>
           <hr class="border-zinc-800" />
           <div class="flex justify-between text-sm font-medium">
@@ -90,13 +90,19 @@ const tarefasConcluidas = computed(() => {
   return (tarefasProjeto.value || []).filter(tarefa => tarefa.status === 'concluido').length
 })
 
+const totalHorasExecutadas = computed(() => {
+  return Number(
+    (tarefasProjeto.value || []).reduce((acc, tarefa) => acc + Number(tarefa.horas_executadas || 0), 0).toFixed(4)
+  )
+})
+
 const progressoTarefasPercentual = computed(() => {
   if (!totalTarefas.value) return 0
   return Math.round((tarefasConcluidas.value / totalTarefas.value) * 100)
 })
 
 const saldoHoras = computed(() => {
-  return (props.projeto?.horas_previstas || 0) - (props.projeto?.horas_executadas || 0)
+  return Number(((props.projeto?.horas_previstas || 0) - totalHorasExecutadas.value).toFixed(4))
 })
 
 function normalizeDateValue(value?: string | null) {

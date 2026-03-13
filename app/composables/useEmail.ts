@@ -62,6 +62,7 @@ export default function useEmail() {
 
     /**
      * Obtem token de autenticacao do usuario.
+     * Sempre tenta renovar a sessao para garantir token valido.
      */
     const getAuthToken = async (): Promise<string> => {
         if (!supabase) {
@@ -71,14 +72,19 @@ export default function useEmail() {
         const { data, error } = await supabase.auth.getSession()
 
         if (error || !data.session) {
-            throw new Error('Usuario nao autenticado')
+            // Tenta refresh como ultimo recurso antes de desistir
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+            if (refreshError || !refreshData.session) {
+                throw new Error('Sessao expirada. Faca login novamente.')
+            }
+            return refreshData.session.access_token
         }
 
         let sessaoAtual = data.session
 
-        // Tenta renovar o token alguns segundos antes do vencimento.
+        // Tenta renovar o token se expirado ou perto do vencimento (60s de margem).
         const expiraEm = (sessaoAtual.expires_at || 0) * 1000
-        const tokenExpiradoOuPerto = expiraEm > 0 && expiraEm <= Date.now() + 30_000
+        const tokenExpiradoOuPerto = expiraEm > 0 && expiraEm <= Date.now() + 60_000
 
         if (tokenExpiradoOuPerto) {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
@@ -98,6 +104,38 @@ export default function useEmail() {
     }
 
     /**
+     * Envia request autenticada para a API de email.
+     * Se receber 401, renova o token e tenta uma vez mais.
+     */
+    const fetchComRetry = async (url: string, body: Record<string, any>): Promise<any> => {
+        const tentarEnvio = async (token: string) => {
+            return $fetch(url, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body,
+            })
+        }
+
+        const token = await getAuthToken()
+
+        try {
+            return await tentarEnvio(token)
+        }
+        catch (e: any) {
+            const status = e?.statusCode || e?.response?.status
+            if (status === 401 && supabase) {
+                // Token rejeitado pelo server — forcar refresh e tentar novamente
+                const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+                if (refreshError || !refreshData.session?.access_token) {
+                    throw new Error('Sessao expirada. Faca login novamente.')
+                }
+                return await tentarEnvio(refreshData.session.access_token)
+            }
+            throw e
+        }
+    }
+
+    /**
      * Envia um email.
      */
     const sendEmail = async (options: SendEmailOptions): Promise<{
@@ -110,23 +148,15 @@ export default function useEmail() {
         erro.value = null
 
         try {
-            const token = await getAuthToken()
-
-            const response: any = await $fetch('/api/email/send', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: {
-                    templateId: options.templateId,
-                    templateSlug: options.templateSlug,
-                    para: options.para,
-                    paraNome: options.paraNome,
-                    assunto: options.assunto,
-                    conteudo: options.conteudo,
-                    variaveis: options.variaveis || {},
-                    metadados: options.metadados || {},
-                },
+            const response: any = await fetchComRetry('/api/email/send', {
+                templateId: options.templateId,
+                templateSlug: options.templateSlug,
+                para: options.para,
+                paraNome: options.paraNome,
+                assunto: options.assunto,
+                conteudo: options.conteudo,
+                variaveis: options.variaveis || {},
+                metadados: options.metadados || {},
             })
 
             if (response.sucesso) {
@@ -282,20 +312,12 @@ export default function useEmail() {
         erro.value = null
 
         try {
-            const token = await getAuthToken()
-
-            const response: any = await $fetch('/api/email/preview', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: {
-                    templateId: options.templateId,
-                    templateSlug: options.templateSlug,
-                    conteudo_html: options.conteudo_html,
-                    assunto: options.assunto,
-                    variaveis: options.variaveis || {},
-                },
+            const response: any = await fetchComRetry('/api/email/preview', {
+                templateId: options.templateId,
+                templateSlug: options.templateSlug,
+                conteudo_html: options.conteudo_html,
+                assunto: options.assunto,
+                variaveis: options.variaveis || {},
             })
 
             if (response.sucesso) {
@@ -325,15 +347,7 @@ export default function useEmail() {
         erro.value = null
 
         try {
-            const token = await getAuthToken()
-
-            const response: any = await $fetch('/api/email/templates', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: template,
-            })
+            const response: any = await fetchComRetry('/api/email/templates', template)
 
             if (response.sucesso) {
                 ultimaMensagem.value = response.mensagem

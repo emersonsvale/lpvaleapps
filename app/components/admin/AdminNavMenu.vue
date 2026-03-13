@@ -121,9 +121,26 @@
     </nav>
 
     <div class="p-3 border-t border-zinc-800/80 space-y-1">
-      <p v-if="user?.email" class="text-xs text-zinc-500 truncate px-2 py-1" :title="user.email">
-        {{ user.email }}
-      </p>
+      <NuxtLink
+        to="/admin/perfil"
+        class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-800/60 transition-colors"
+        @click="open = false"
+      >
+        <div class="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
+          <img
+            v-if="profile?.avatar_url"
+            :src="profile.avatar_url"
+            alt="Avatar"
+            class="w-full h-full object-cover"
+          />
+          <PhUserCircle v-else class="w-5 h-5 text-zinc-500" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm text-zinc-200 truncate">{{ profile?.nome || user?.email || '' }}</p>
+          <p v-if="profile?.cargo" class="text-[11px] text-zinc-500 truncate">{{ profile.cargo }}</p>
+          <p v-else-if="user?.email" class="text-[11px] text-zinc-500 truncate">{{ user.email }}</p>
+        </div>
+      </NuxtLink>
       <button
         type="button"
         class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-colors"
@@ -147,10 +164,16 @@ import {
   PhEnvelopeSimple,
   PhArticle,
   PhStack,
+  PhUserCircle,
 } from '@phosphor-icons/vue'
 
 const route = useRoute()
 const { user, signOut } = useAuth()
+const { profile, loadProfile } = useProfile()
+
+onMounted(() => {
+  loadProfile()
+})
 
 const open = defineModel<boolean>({ default: false })
 

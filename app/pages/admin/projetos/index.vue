@@ -265,7 +265,7 @@
 <script setup lang="ts">
 import { PhFolderOpen, PhCalendarBlank, PhListChecks } from '@phosphor-icons/vue'
 import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProjetosWorkspace'
-import { fetchEquipeMembros, fetchProjetosWorkspace, fetchTarefasWorkspace, updateTarefa, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
+import { createLancamentoHora, fetchEquipeMembros, fetchProjetosWorkspace, fetchTarefasWorkspace, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
 import { useSupabase } from '~/composables/useSupabase'
 import { hydrateWorkspaceRunningTimerState, persistWorkspaceRunningTimerState, resetWorkspaceRunningTimerState, useWorkspaceRunningTimerState } from '~/composables/useWorkspaceRunningTimer'
 
@@ -556,6 +556,45 @@ function formatHorasResumo(value: number | null | undefined) {
   return Number((value || 0).toFixed(2)).toString()
 }
 
+function calculateProgressPercent(horasEstimadas: number | null | undefined, horasExecutadas: number | null | undefined): number {
+  const estimado = Math.max(0, Number(horasEstimadas || 0))
+  const realizado = Math.max(0, Number(horasExecutadas || 0))
+
+  if (estimado <= 0) {
+    return realizado > 0 ? 100 : 0
+  }
+
+  return Math.max(0, Math.min(100, Math.round((realizado / estimado) * 100)))
+}
+
+function getTimerAutorTexto(fallback?: string | null) {
+  const metadata = user.value?.user_metadata || {}
+  const candidates = [
+    metadata.nome,
+    metadata.name,
+    metadata.full_name,
+    metadata.display_name,
+    metadata.user_name,
+    membroEquipeLogado.value?.nome,
+    user.value?.email?.split('@')[0]?.replace(/[._-]+/g, ' '),
+    fallback
+  ]
+
+  for (const candidate of candidates) {
+    const normalized = String(candidate ?? '').trim()
+    if (normalized) return normalized
+  }
+
+  return null
+}
+
+function getTimerAutorContext() {
+  return {
+    equipeId: membroEquipeLogado.value?.id ?? null,
+    autorUid: user.value?.id ?? null,
+  }
+}
+
 function getHorasExecutadasValueAt(tarefa: ProjetoTarefa, currentTickMs: number) {
   if (tarefaRodandoId.value !== tarefa.id || !timerInicioMs.value) {
     return Number(tarefa.horas_executadas || 0)
@@ -629,20 +668,55 @@ function restaurarTimerDaWorkspace() {
   iniciarTickTimer()
 }
 
-async function persistirHorasExecutadas(id: number, horasExecutadas: number) {
-  const { error } = await updateTarefa(id, {
-    horas_executadas: Number(horasExecutadas.toFixed(4))
+function aplicarLancamentoTimerLocal(taskId: number, projetoId: number, horasSessao: number) {
+  tarefasWorkspace.value = (tarefasWorkspace.value || []).map((tarefa) => {
+    if (tarefa.id !== taskId) return tarefa
+
+    const horasExecutadas = Number((Number(tarefa.horas_executadas || 0) + horasSessao).toFixed(4))
+    return {
+      ...tarefa,
+      horas_executadas: horasExecutadas,
+      progresso: calculateProgressPercent(tarefa.horas_estimadas, horasExecutadas)
+    }
+  })
+
+  projetos.value = (projetos.value || []).map((projeto) =>
+    projeto.id === projetoId
+      ? { ...projeto, horas_executadas: Number((Number(projeto.horas_executadas || 0) + horasSessao).toFixed(4)) }
+      : projeto
+  )
+}
+
+async function registrarSessaoTimer(tarefa: ProjetoTarefa, duracaoSegundos: number, startedAtMs: number) {
+  if (duracaoSegundos <= 0) {
+    return true
+  }
+
+  const finalizadoEm = new Date()
+  const iniciadoEm = new Date(startedAtMs)
+  const horasSessao = Number((duracaoSegundos / 3600).toFixed(4))
+  const autorContext = getTimerAutorContext()
+  const { error } = await createLancamentoHora({
+    projeto_id: tarefa.projeto_id,
+    tarefa_id: tarefa.id,
+    equipe_id: autorContext.equipeId,
+    autor_uid: autorContext.autorUid,
+    data: finalizadoEm.toISOString().slice(0, 10),
+    descricao: `Cronometro: ${tarefa.codigo || `T-${tarefa.id}`} ${tarefa.titulo}`,
+    horas: horasSessao,
+    tipo: 'execucao',
+    autor_texto: getTimerAutorTexto(tarefa.responsavel_texto),
+    iniciado_em: iniciadoEm.toISOString(),
+    finalizado_em: finalizadoEm.toISOString(),
+    duracao_segundos: duracaoSegundos
   })
 
   if (error) {
-    showAlert('Erro ao salvar horas da tarefa: ' + error, { title: 'Erro', type: 'error' })
+    showAlert('Erro ao registrar sessão de tempo: ' + error, { title: 'Erro', type: 'error' })
     return false
   }
 
-  tarefasWorkspace.value = (tarefasWorkspace.value || []).map((tarefa) =>
-    tarefa.id === id ? { ...tarefa, horas_executadas: Number(horasExecutadas.toFixed(4)) } : tarefa
-  )
-
+  aplicarLancamentoTimerLocal(tarefa.id, tarefa.projeto_id, horasSessao)
   return true
 }
 
@@ -651,12 +725,11 @@ async function pararTimerAtual() {
   if (salvandoTimer.value) return false
 
   salvandoTimer.value = true
-  const elapsedSegundos = Math.floor((Date.now() - timerInicioMs.value) / 1000)
-  const totalSegundos = timerBaseSegundos.value + Math.max(elapsedSegundos, 0)
-  const totalHoras = totalSegundos / 3600
+  const elapsedSegundos = Math.max(Math.floor((Date.now() - timerInicioMs.value) / 1000), 0)
   const taskId = tarefaRodandoId.value
+  const tarefaAtual = (tarefasWorkspace.value || []).find((tarefa) => tarefa.id === taskId)
 
-  const ok = await persistirHorasExecutadas(taskId, totalHoras)
+  const ok = tarefaAtual ? await registrarSessaoTimer(tarefaAtual, elapsedSegundos, timerInicioMs.value) : false
   salvandoTimer.value = false
   if (!ok) return false
 
@@ -674,7 +747,7 @@ async function toggleTimerTarefa(tarefa: ProjetoTarefa) {
   if (tarefaRodandoId.value === tarefa.id) {
     const ok = await pararTimerAtual()
     if (ok) {
-      showAlert('Cronometro pausado.', { title: 'Tempo', type: 'info', duration: 1800 })
+      showAlert('Cronometro pausado e sessão registrada.', { title: 'Tempo', type: 'info', duration: 1800 })
     }
     return
   }

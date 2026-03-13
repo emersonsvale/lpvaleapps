@@ -49,6 +49,7 @@ const pageTitle = computed(() => {
   if (path.match(/^\/admin\/emails\/[^/]+$/)) return 'Editar Template'
   if (path.match(/^\/admin\/emails\/[^/]+\/preview$/)) return 'Preview do Template'
   if (path.match(/^\/admin\/emails\/[^/]+\/test$/)) return 'Teste de Template'
+  if (path === '/admin/perfil') return 'Meu Perfil'
   return 'Admin'
 })
 
@@ -98,6 +99,10 @@ const breadcrumbs = computed(() => {
     else if (path.match(/\/preview$/)) list.push({ label: 'Preview' })
     else if (path.match(/\/test$/)) list.push({ label: 'Teste' })
     else if (path.match(/^\/admin\/emails\/[^/]+$/)) list.push({ label: 'Editar' })
+    return list
+  }
+  if (path === '/admin/perfil') {
+    list.push({ label: 'Meu Perfil' })
     return list
   }
   return list

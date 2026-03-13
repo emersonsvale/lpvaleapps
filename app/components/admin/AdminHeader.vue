@@ -25,31 +25,54 @@
       </nav>
     </div>
 
-    <div v-if="timerState.active" class="hidden md:flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900/90 px-2 py-1.5 text-xs text-zinc-200">
-      <button
-        type="button"
-        class="flex min-w-0 items-center gap-2 text-left"
-        title="Abrir tarefa em execucao"
-        @click="abrirTarefaAtiva"
+    <div class="flex items-center gap-3">
+      <!-- Timer -->
+      <div v-if="timerState.active" class="hidden md:flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900/90 px-2 py-1.5 text-xs text-zinc-200">
+        <button
+          type="button"
+          class="flex min-w-0 items-center gap-2 text-left"
+          title="Abrir tarefa em execucao"
+          @click="abrirTarefaAtiva"
+        >
+          <span class="max-w-[220px] truncate text-zinc-300">#{{ timerState.tarefaCodigo || timerState.tarefaId }} {{ timerState.tarefaTitulo }}</span>
+          <span class="font-semibold text-zinc-100">{{ timerClock }}</span>
+          <span class="text-emerald-400">></span>
+        </button>
+        <button
+          type="button"
+          class="rounded-sm bg-red-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-red-500"
+          title="Parar cronometro"
+          @click.stop="solicitarParadaTimer"
+        >
+          []
+        </button>
+      </div>
+
+      <!-- User info -->
+      <NuxtLink
+        to="/admin/perfil"
+        class="hidden sm:flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-zinc-800/60 transition-colors"
       >
-        <span class="max-w-[220px] truncate text-zinc-300">#{{ timerState.tarefaCodigo || timerState.tarefaId }} {{ timerState.tarefaTitulo }}</span>
-        <span class="font-semibold text-zinc-100">{{ timerClock }}</span>
-        <span class="text-emerald-400">></span>
-      </button>
-      <button
-        type="button"
-        class="rounded-sm bg-red-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-red-500"
-        title="Parar cronometro"
-        @click.stop="solicitarParadaTimer"
-      >
-        []
-      </button>
+        <div class="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
+          <img
+            v-if="profile?.avatar_url"
+            :src="profile.avatar_url"
+            alt="Avatar"
+            class="w-full h-full object-cover"
+          />
+          <PhUserCircle v-else class="w-5 h-5 text-zinc-500" />
+        </div>
+        <div class="hidden md:block min-w-0">
+          <p class="text-sm font-medium text-zinc-200 truncate max-w-[140px]">{{ profile?.nome || user?.email || '' }}</p>
+          <p v-if="profile?.cargo" class="text-[11px] text-zinc-500 truncate max-w-[140px]">{{ profile.cargo }}</p>
+        </div>
+      </NuxtLink>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { PhList } from '@phosphor-icons/vue'
+import { PhList, PhUserCircle } from '@phosphor-icons/vue'
 
 interface Breadcrumb {
   label: string
@@ -66,6 +89,13 @@ interface Breadcrumb {
 defineEmits<{
   'toggle-menu': []
 }>()
+
+const { user } = useAuth()
+const { profile, loadProfile } = useProfile()
+
+onMounted(() => {
+  loadProfile()
+})
 
 const timerState = useWorkspaceRunningTimerState()
 const nowMs = ref(Date.now())

@@ -427,38 +427,20 @@
                     <div class="relative inline-flex" @click.stop>
                       <button
                         type="button"
-                        class="flex h-8 min-w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-700 px-2 text-[11px] font-semibold text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-600"
+                        :data-responsavel-id="t.id"
+                        class="flex h-8 w-8 min-w-8 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-zinc-700 text-[11px] font-semibold text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-600"
                         :title="t.responsavel_texto || 'Selecionar responsavel'"
                         @click.stop="toggleResponsavelInline(t.id)"
                       >
                         <span v-if="salvandoResponsavelId === t.id" class="text-[10px] text-zinc-300">...</span>
+                        <img
+                          v-else-if="getResponsavelFotoUrl(t)"
+                          :src="getResponsavelFotoUrl(t) || ''"
+                          :alt="t.responsavel_texto || 'Responsavel'"
+                          class="h-full w-full rounded-full object-cover"
+                        >
                         <span v-else>{{ getResponsavelInitials(t.responsavel_texto) }}</span>
                       </button>
-
-                      <div
-                        v-if="responsavelAbertoId === t.id"
-                        class="absolute left-0 top-full z-20 mt-2 min-w-[220px] rounded-lg border border-zinc-800 bg-zinc-950 p-2 shadow-2xl"
-                      >
-                        <label class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-zinc-500">Responsavel</label>
-                        <select
-                          class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
-                          :value="t.responsavel_texto || ''"
-                          @change="alterarResponsavelInline(t, ($event.target as HTMLSelectElement).value)"
-                        >
-                          <option value="">Sem responsavel</option>
-                          <option
-                            v-for="membro in equipeOptions"
-                            :key="`responsavel-inline-${t.id}-${membro.id}`"
-                            :value="membro.nome"
-                          >
-                            {{ membro.label }}
-                          </option>
-                        </select>
-
-                        <p class="mt-2 text-[11px] text-zinc-500">
-                          {{ t.responsavel_texto || 'Nenhum responsavel definido' }}
-                        </p>
-                      </div>
                     </div>
                   </td>
                   <td class="px-0 py-0 align-middle" @click.stop>
@@ -564,6 +546,41 @@
       </div>
     </Teleport>
 
+    <!-- Seletor de responsável flutuante (Teleport para escapar overflow) -->
+    <Teleport to="body">
+      <div
+        v-if="responsavelAbertoId !== null"
+        class="fixed inset-0 z-[9999]"
+        @click="responsavelAbertoId = null"
+      />
+      <div
+        v-if="responsavelAbertoId !== null && responsavelTarefaAberta"
+        class="fixed z-[10000] min-w-[220px] rounded-lg border border-zinc-800 bg-zinc-950 p-2 shadow-2xl"
+        :style="responsavelFloatingStyle"
+        @click.stop
+      >
+        <label class="mb-1 block text-[11px] font-medium uppercase tracking-wide text-zinc-500">Responsavel</label>
+        <select
+          class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-brand focus:outline-none"
+          :value="String(responsavelTarefaAberta.responsavel_equipe_id || '')"
+          @change="alterarResponsavelInline(responsavelTarefaAberta!, ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Sem responsavel</option>
+          <option
+            v-for="membro in equipeOptions"
+            :key="`responsavel-inline-${responsavelTarefaAberta.id}-${membro.id}`"
+            :value="String(membro.id)"
+          >
+            {{ membro.label }}
+          </option>
+        </select>
+
+        <p class="mt-2 text-[11px] text-zinc-500">
+          {{ responsavelTarefaAberta.responsavel_texto || 'Nenhum responsavel definido' }}
+        </p>
+      </div>
+    </Teleport>
+
     <div
       v-if="modalEdicaoAberto"
       class="fixed inset-0 z-[10020] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
@@ -592,9 +609,23 @@
               <Icon name="ph:calendar-blank" class="h-3.5 w-3.5" />
               {{ formatMetaDate(tarefaEmEdicao?.prazo_fim) }}
             </span>
-            <span class="inline-flex items-center gap-1.5">
-              <Icon name="ph:user" class="h-3.5 w-3.5" />
-              {{ tarefaEmEdicao?.responsavel_texto || 'Sem responsavel' }}
+            <span class="inline-flex items-center gap-2">
+              <span
+                v-if="tarefaEmEdicao"
+                class="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 text-[10px] font-semibold text-zinc-100"
+              >
+                <img
+                  v-if="getResponsavelFotoUrl(tarefaEmEdicao)"
+                  :src="getResponsavelFotoUrl(tarefaEmEdicao) || ''"
+                  :alt="tarefaEmEdicao.responsavel_texto || 'Responsavel'"
+                  class="h-full w-full object-cover"
+                >
+                <span v-else>{{ getResponsavelInitials(tarefaEmEdicao.responsavel_texto) }}</span>
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <Icon name="ph:user" class="h-3.5 w-3.5" />
+                {{ tarefaEmEdicao?.responsavel_texto || 'Sem responsavel' }}
+              </span>
             </span>
             <span class="inline-flex items-center gap-1.5">
               <Icon name="ph:clock-countdown" class="h-3.5 w-3.5" />
@@ -784,14 +815,14 @@
                   <label class="block">
                     <span class="mb-1 block text-xs text-zinc-500">Responsavel</span>
                     <select
-                      v-model="formEdicao.responsavel_texto"
+                      v-model="formEdicao.responsavel_equipe_id"
                       class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
                     >
                       <option value="">Sem responsavel</option>
                       <option
                         v-for="membro in equipeOptions"
                         :key="`modal-membro-${membro.id}`"
-                        :value="membro.nome"
+                        :value="String(membro.id)"
                       >
                         {{ membro.label }}
                       </option>
@@ -902,11 +933,14 @@
 
 <script setup lang="ts">
 import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProjetosWorkspace'
-import { fetchTarefasByProjetoId, updateTarefaStatus, deleteTarefa, updateTarefa, fetchEquipeMembros, normalizeProjetoTarefaTags } from '~/composables/useProjetosWorkspace'
+import { createLancamentoHora, fetchTarefasByProjetoId, updateTarefaStatus, deleteTarefa, updateTarefa, fetchEquipeMembros, normalizeProjetoTarefaTags } from '~/composables/useProjetosWorkspace'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 const route = useRoute()
 const { showConfirm, showAlert } = useUiFeedback()
+const { user, loadSession } = useAuth()
+
+await loadSession()
 
 const { data: tarefas, pending, refresh } = await useAsyncData(
   `tarefas-proj-${props.projeto.id}`,
@@ -953,6 +987,7 @@ const dragId = ref<number | null>(null)
 const menuAcoesAbertoId = ref<number | null>(null)
 const menuAcoesPos = ref({ top: 0, left: 0 })
 const responsavelAbertoId = ref<number | null>(null)
+const responsavelPos = ref({ top: 0, left: 0 })
 const salvandoResponsavelId = ref<number | null>(null)
 const modalEdicaoAberto = ref(false)
 const salvandoEdicao = ref(false)
@@ -980,7 +1015,7 @@ const formEdicao = reactive({
   arvore: '',
   prazo_inicio: '',
   prazo_fim: '',
-  responsavel_texto: '',
+  responsavel_equipe_id: '',
 })
 
 const edicaoTagInput = ref('')
@@ -994,10 +1029,39 @@ const equipeOptions = computed(() => {
       return {
         id: membro.id,
         nome,
+        foto: membro.foto || null,
         label: cargo ? `${nome} (${cargo})` : nome
       }
     })
 })
+
+function parseEquipeSelectValue(value: string | number | null | undefined): number | null {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) return null
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+function getEquipeOptionById(value: string | number | null | undefined) {
+  const equipeId = parseEquipeSelectValue(value)
+  if (!equipeId) return null
+  return equipeOptions.value.find((membro) => membro.id === equipeId) || null
+}
+
+function getEquipeOptionByNome(nome: string | null | undefined) {
+  const normalized = String(nome || '').trim().toLocaleLowerCase('pt-BR')
+  if (!normalized) return null
+  return equipeOptions.value.find((membro) => membro.nome.toLocaleLowerCase('pt-BR') === normalized) || null
+}
+
+function getResponsavelEquipe(tarefa: ProjetoTarefa) {
+  return getEquipeOptionById(tarefa.responsavel_equipe_id) || getEquipeOptionByNome(tarefa.responsavel_texto)
+}
+
+function getResponsavelFotoUrl(tarefa: ProjetoTarefa) {
+  return getResponsavelEquipe(tarefa)?.foto || null
+}
 
 const responsavelFiltroOptions = computed(() => {
   const labels = new Map<string, string>()
@@ -1018,6 +1082,13 @@ const responsavelFiltroOptions = computed(() => {
   }
 
   return Array.from(labels.values()).sort((left, right) => left.localeCompare(right, 'pt-BR'))
+})
+
+const membroEquipeLogado = computed(() => {
+  const userId = user.value?.id || null
+  if (!userId) return null
+
+  return (equipeMembros.value || []).find((membro) => membro.uid === userId) || null
 })
 
 const ordenacaoOptions: Array<{ value: OrdenacaoCampo; label: string }> = [
@@ -1644,33 +1715,53 @@ async function alterarTipoInline(tarefa: ProjetoTarefa, novoTipo: ProjetoTarefa[
   await selecionarTipo(tarefa, novoTipo)
 }
 
+function updateResponsavelPos() {
+  if (!responsavelAbertoId.value) return
+  const btn = document.querySelector(`button[data-responsavel-id="${responsavelAbertoId.value}"]`) as HTMLElement | null
+  if (btn) {
+    const rect = btn.getBoundingClientRect()
+    responsavelPos.value = {
+      top: rect.bottom + 6,
+      left: rect.left
+    }
+  }
+}
+
 function toggleResponsavelInline(id: number) {
-  responsavelAbertoId.value = responsavelAbertoId.value === id ? null : id
+  if (responsavelAbertoId.value === id) {
+    responsavelAbertoId.value = null
+    return
+  }
+  responsavelAbertoId.value = id
+  nextTick(() => updateResponsavelPos())
 }
 
 async function alterarResponsavelInline(tarefa: ProjetoTarefa, novoResponsavel: string) {
-  const responsavelNormalizado = novoResponsavel.trim() || null
+  const equipeSelecionada = getEquipeOptionById(novoResponsavel)
+  const responsavelEquipeId = equipeSelecionada?.id ?? null
+  const responsavelNormalizado = equipeSelecionada?.nome || null
+  const responsavelEquipeAnterior = tarefa.responsavel_equipe_id ?? null
   const responsavelAnterior = tarefa.responsavel_texto || null
 
-  if (responsavelAnterior === responsavelNormalizado) {
+  if (responsavelAnterior === responsavelNormalizado && responsavelEquipeAnterior === responsavelEquipeId) {
     responsavelAbertoId.value = null
     return
   }
 
   salvandoResponsavelId.value = tarefa.id
   tarefas.value = (tarefas.value || []).map((item) =>
-    item.id === tarefa.id ? { ...item, responsavel_texto: responsavelNormalizado } : item
+    item.id === tarefa.id ? { ...item, responsavel_equipe_id: responsavelEquipeId, responsavel_texto: responsavelNormalizado } : item
   )
 
   const { error } = await updateTarefa(tarefa.id, {
-    responsavel_texto: responsavelNormalizado
+    responsavel_equipe_id: responsavelEquipeId
   })
 
   salvandoResponsavelId.value = null
 
   if (error) {
     tarefas.value = (tarefas.value || []).map((item) =>
-      item.id === tarefa.id ? { ...item, responsavel_texto: responsavelAnterior } : item
+      item.id === tarefa.id ? { ...item, responsavel_equipe_id: responsavelEquipeAnterior, responsavel_texto: responsavelAnterior } : item
     )
     showAlert('Erro ao atualizar responsavel: ' + error, { title: 'Erro', type: 'error' })
     return
@@ -1716,6 +1807,33 @@ function calculateProgressPercent(horasEstimadas: number | null | undefined, hor
   }
 
   return Math.max(0, Math.min(100, Math.round((realizado / estimado) * 100)))
+}
+
+function getTimerAutorTexto(fallback?: string | null) {
+  const metadata = user.value?.user_metadata || {}
+  const candidates = [
+    metadata.nome,
+    metadata.name,
+    metadata.full_name,
+    metadata.display_name,
+    metadata.user_name,
+    user.value?.email?.split('@')[0]?.replace(/[._-]+/g, ' '),
+    fallback
+  ]
+
+  for (const candidate of candidates) {
+    const normalized = String(candidate ?? '').trim()
+    if (normalized) return normalized
+  }
+
+  return null
+}
+
+function getTimerAutorContext() {
+  return {
+    equipeId: membroEquipeLogado.value?.id ?? null,
+    autorUid: user.value?.id ?? null,
+  }
 }
 
 function getHorasExecutadasValueAt(t: ProjetoTarefa, currentTickMs: number): number {
@@ -1802,23 +1920,49 @@ function restaurarTimerDaWorkspace() {
   iniciarTickTimer()
 }
 
-async function persistirHorasExecutadas(id: number, horasExecutadas: number) {
-  const tarefaAtual = (tarefas.value || []).find((t) => t.id === id)
-  const progressoCalculado = calculateProgressPercent(tarefaAtual?.horas_estimadas || 0, horasExecutadas)
-  const { error } = await updateTarefa(id, {
-    horas_executadas: Number(horasExecutadas.toFixed(4)),
-    progresso: progressoCalculado
+function aplicarLancamentoTimerLocal(id: number, horasSessao: number) {
+  tarefas.value = (tarefas.value || []).map((tarefa) => {
+    if (tarefa.id !== id) return tarefa
+
+    const horasExecutadas = Number((Number(tarefa.horas_executadas || 0) + horasSessao).toFixed(4))
+    return {
+      ...tarefa,
+      horas_executadas: horasExecutadas,
+      progresso: calculateProgressPercent(tarefa.horas_estimadas, horasExecutadas)
+    }
+  })
+}
+
+async function registrarSessaoTimer(tarefa: ProjetoTarefa, duracaoSegundos: number, startedAtMs: number) {
+  if (duracaoSegundos <= 0) {
+    return true
+  }
+
+  const finalizadoEm = new Date()
+  const iniciadoEm = new Date(startedAtMs)
+  const horasSessao = Number((duracaoSegundos / 3600).toFixed(4))
+  const autorContext = getTimerAutorContext()
+  const { error } = await createLancamentoHora({
+    projeto_id: tarefa.projeto_id,
+    tarefa_id: tarefa.id,
+    equipe_id: autorContext.equipeId,
+    autor_uid: autorContext.autorUid,
+    data: finalizadoEm.toISOString().slice(0, 10),
+    descricao: `Cronometro: ${tarefa.codigo || `T-${tarefa.id}`} ${tarefa.titulo}`,
+    horas: horasSessao,
+    tipo: 'execucao',
+    autor_texto: getTimerAutorTexto(tarefa.responsavel_texto),
+    iniciado_em: iniciadoEm.toISOString(),
+    finalizado_em: finalizadoEm.toISOString(),
+    duracao_segundos: duracaoSegundos
   })
 
   if (error) {
-    showAlert('Erro ao salvar horas da tarefa: ' + error, { title: 'Erro', type: 'error' })
+    showAlert('Erro ao registrar sessão de tempo: ' + error, { title: 'Erro', type: 'error' })
     return false
   }
 
-  tarefas.value = (tarefas.value || []).map((t) =>
-    t.id === id ? { ...t, horas_executadas: Number(horasExecutadas.toFixed(4)), progresso: progressoCalculado } : t
-  )
-
+  aplicarLancamentoTimerLocal(tarefa.id, horasSessao)
   return true
 }
 
@@ -1827,12 +1971,11 @@ async function pararTimerAtual() {
   if (salvandoTimer.value) return false
 
   salvandoTimer.value = true
-  const elapsedSegundos = Math.floor((Date.now() - timerInicioMs.value) / 1000)
-  const totalSegundos = timerBaseSegundos.value + Math.max(elapsedSegundos, 0)
-  const totalHoras = totalSegundos / 3600
+  const elapsedSegundos = Math.max(Math.floor((Date.now() - timerInicioMs.value) / 1000), 0)
   const taskId = tarefaRodandoId.value
+  const tarefaAtual = (tarefas.value || []).find((t) => t.id === taskId)
 
-  const ok = await persistirHorasExecutadas(taskId, totalHoras)
+  const ok = tarefaAtual ? await registrarSessaoTimer(tarefaAtual, elapsedSegundos, timerInicioMs.value) : false
   salvandoTimer.value = false
   if (!ok) return false
 
@@ -1920,14 +2063,19 @@ const menuAcoesFloatingStyle = computed(() => ({
   left: menuAcoesPos.value.left + 'px'
 }))
 
-function toggleMenuAcoes(id: number) {
-  if (menuAcoesAbertoId.value === id) {
-    menuAcoesAbertoId.value = null
-    return
-  }
+const responsavelFloatingStyle = computed(() => ({
+  top: responsavelPos.value.top + 'px',
+  left: responsavelPos.value.left + 'px'
+}))
 
-  // Encontrar o botão clicado e pegar sua posição
-  const btn = document.querySelector(`button[data-tarefa-id="${id}"]`) as HTMLElement | null
+const responsavelTarefaAberta = computed(() => {
+  if (!responsavelAbertoId.value) return null
+  return tarefas.value.find(t => t.id === responsavelAbertoId.value) ?? null
+})
+
+function updateMenuAcoesPos() {
+  if (!menuAcoesAbertoId.value) return
+  const btn = document.querySelector(`button[data-tarefa-id="${menuAcoesAbertoId.value}"]`) as HTMLElement | null
   if (btn) {
     const rect = btn.getBoundingClientRect()
     menuAcoesPos.value = {
@@ -1935,8 +2083,16 @@ function toggleMenuAcoes(id: number) {
       left: rect.right - 160
     }
   }
+}
+
+function toggleMenuAcoes(id: number) {
+  if (menuAcoesAbertoId.value === id) {
+    menuAcoesAbertoId.value = null
+    return
+  }
 
   menuAcoesAbertoId.value = id
+  nextTick(() => updateMenuAcoesPos())
 }
 
 async function abrirEdicaoPeloMenu(id: number) {
@@ -2003,7 +2159,7 @@ async function editarTarefa(id: number) {
   formEdicao.arvore = tarefa.arvore || ''
   formEdicao.prazo_inicio = toDateInputValue(tarefa.prazo_inicio)
   formEdicao.prazo_fim = toDateInputValue(tarefa.prazo_fim)
-  formEdicao.responsavel_texto = tarefa.responsavel_texto || ''
+  formEdicao.responsavel_equipe_id = tarefa.responsavel_equipe_id ? String(tarefa.responsavel_equipe_id) : ''
   edicaoTagInput.value = ''
   modalEdicaoAberto.value = true
   if (Number(route.query.tarefa) !== tarefa.id) {
@@ -2060,7 +2216,7 @@ async function salvarEdicaoTarefa() {
     arvore: formEdicao.arvore.trim() || null,
     prazo_inicio: formEdicao.prazo_inicio || null,
     prazo_fim: formEdicao.prazo_fim || null,
-    responsavel_texto: formEdicao.responsavel_texto.trim() || null,
+    responsavel_equipe_id: parseEquipeSelectValue(formEdicao.responsavel_equipe_id),
   }
 
   const { error } = await updateTarefa(id, payload)
@@ -2115,6 +2271,29 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleDocumentClick)
+})
+
+// Manter dropdowns flutuantes ancorados aos botões durante scroll
+function addScrollListeners(handler: () => void) {
+  const mainEl = document.querySelector('main')
+  mainEl?.addEventListener('scroll', handler, { passive: true })
+  window.addEventListener('scroll', handler, { passive: true })
+}
+
+function removeScrollListeners(handler: () => void) {
+  const mainEl = document.querySelector('main')
+  mainEl?.removeEventListener('scroll', handler)
+  window.removeEventListener('scroll', handler)
+}
+
+watch(responsavelAbertoId, (val) => {
+  if (val !== null) addScrollListeners(updateResponsavelPos)
+  else removeScrollListeners(updateResponsavelPos)
+})
+
+watch(menuAcoesAbertoId, (val) => {
+  if (val !== null) addScrollListeners(updateMenuAcoesPos)
+  else removeScrollListeners(updateMenuAcoesPos)
 })
 </script>
 

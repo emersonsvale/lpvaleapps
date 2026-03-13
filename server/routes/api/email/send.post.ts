@@ -59,6 +59,11 @@ export default defineEventHandler(async (event) => {
     catch (erro: any) {
         console.error('[/api/email/send] Erro:', erro)
 
+        // Preservar statusCode original (ex: 401) em vez de mascarar como 500
+        if (erro.statusCode) {
+            throw erro
+        }
+
         throw createError({
             statusCode: 500,
             statusMessage: erro.message || 'Erro ao enviar email',

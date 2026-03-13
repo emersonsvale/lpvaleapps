@@ -17,6 +17,7 @@ export interface RelatorioHorasItem {
   codigo: string
   titulo: string
   responsavel: string | null
+  responsavelFoto?: string | null
   status: string
   horasEstimadas: number
   horasExecutadas: number
@@ -44,6 +45,14 @@ function fmtDateBR(dateStr: string): string {
   const parts = dateStr.split('-')
   if (parts.length !== 3) return dateStr
   return parts[2] + '/' + parts[1] + '/' + parts[0]
+}
+
+function getInitials(value: string | null | undefined): string {
+  const nome = String(value || '').trim()
+  if (!nome) return '--'
+  const partes = nome.split(/\s+/).filter(Boolean)
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase()
+  return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase()
 }
 
 function buildCSS(): string {
@@ -89,6 +98,9 @@ function buildCSS(): string {
     '.row-even { background: #f8fafc; }',
     '.code { display: inline-block; background: #e2e8f0; border-radius: 4px; padding: 1px 6px; font-size: 7.5pt; font-weight: 600; color: #475569; margin-right: 4px; }',
     '.status-badge { display: inline-block; background: #f0f4ff; border-radius: 4px; padding: 2px 8px; font-size: 8pt; font-weight: 600; color: #3730a3; }',
+    '.responsavel-cell { display: flex; align-items: center; gap: 8px; }',
+    '.responsavel-avatar { width: 24px; height: 24px; border-radius: 999px; object-fit: cover; flex-shrink: 0; border: 1px solid #cbd5e1; background: #e2e8f0; }',
+    '.responsavel-avatar-fallback { width: 24px; height: 24px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #cbd5e1; background: #e2e8f0; color: #475569; font-size: 7.5pt; font-weight: 700; }',
 
     '.totals-row { background: #f0f4ff; font-weight: 700; }',
     '.totals-row td { border-bottom: 2px solid #1a1a2e; padding: 10px; }',
@@ -128,9 +140,12 @@ export function generateRelatorioHorasHTML(data: RelatorioHorasData): string {
   const totalEstimadas = data.itens.reduce((a, i) => a + i.horasEstimadas, 0)
   const rows = data.itens.map((item, idx) => {
     const cls = idx % 2 === 0 ? ' class="row-even"' : ''
+    const responsavelCell = item.responsavelFoto
+      ? '<span class="responsavel-cell"><img class="responsavel-avatar" src="' + esc(item.responsavelFoto) + '" alt="' + esc(item.responsavel || 'Responsavel') + '" />' + esc(item.responsavel || '-') + '</span>'
+      : '<span class="responsavel-cell"><span class="responsavel-avatar-fallback">' + esc(getInitials(item.responsavel)) + '</span>' + esc(item.responsavel || '-') + '</span>'
     return '<tr' + cls + '>'
       + '<td><span class="code">' + esc(item.codigo) + '</span> ' + esc(item.titulo) + '</td>'
-      + '<td>' + esc(item.responsavel || '-') + '</td>'
+      + '<td>' + responsavelCell + '</td>'
       + '<td><span class="status-badge">' + esc(item.status) + '</span></td>'
       + '<td class="num">' + fmtHoras(item.horasEstimadas) + 'h</td>'
       + '<td class="num bold">' + fmtHoras(item.horasExecutadas) + 'h</td>'

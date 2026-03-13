@@ -66,7 +66,7 @@
     </nav>
 
     <!-- Conteúdo da Aba -->
-    <NuxtPage :key="route.fullPath" :projeto="projeto" @refresh="refresh" />
+    <NuxtPage :key="route.fullPath" :projeto="projetoComHorasDerivadas" @refresh="handleWorkspaceRefresh" />
 
     <!-- Modal Nova Tarefa -->
     <div v-if="modalNovaTarefaAberto" class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -198,14 +198,14 @@
             <label for="nova-tarefa-responsavel" class="mb-1 block text-sm font-medium text-zinc-200">Responsavel</label>
             <select
               id="nova-tarefa-responsavel"
-              v-model="formNovaTarefa.responsavel_texto"
+              v-model="formNovaTarefa.responsavel_equipe_id"
               class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100 focus:border-zinc-500 focus:outline-none"
             >
               <option value="">Sem responsavel</option>
               <option
                 v-for="membro in equipeOptions"
                 :key="membro.id"
-                :value="membro.nome"
+                :value="String(membro.id)"
               >
                 {{ membro.label }}
               </option>
@@ -324,8 +324,25 @@ const horasContratadasLabel = computed(() => {
   return `${formatHorasResumo(projeto.value?.horas_previstas)}h`
 })
 
+const totalHorasExecutadasProjeto = computed(() => {
+  if (!(tarefasProjeto.value || []).length) {
+    return Number(projeto.value?.horas_executadas || 0)
+  }
+
+  return (tarefasProjeto.value || []).reduce((acc, tarefa) => acc + Number(tarefa.horas_executadas || 0), 0)
+})
+
 const horasExecutadasLabel = computed(() => {
-  return `${formatHorasResumo(projeto.value?.horas_executadas)}h`
+  return `${formatHorasResumo(totalHorasExecutadasProjeto.value)}h`
+})
+
+const projetoComHorasDerivadas = computed(() => {
+  if (!projeto.value) return null
+
+  return {
+    ...projeto.value,
+    horas_executadas: totalHorasExecutadasProjeto.value,
+  }
 })
 
 const modalNovaTarefaAberto = ref(false)
@@ -354,7 +371,7 @@ const formNovaTarefa = reactive<{
   tags: string[]
   tipo: '' | ProjetoTarefa['tipo']
   status: ProjetoTarefa['status']
-  responsavel_texto: string
+  responsavel_equipe_id: string
   horas_estimadas: number
   prazo_inicio: string
   prazo_fim: string
@@ -364,7 +381,7 @@ const formNovaTarefa = reactive<{
   tags: [],
   tipo: '',
   status: 'refinar',
-  responsavel_texto: '',
+  responsavel_equipe_id: '',
   horas_estimadas: 0,
   prazo_inicio: '',
   prazo_fim: ''
@@ -446,12 +463,20 @@ function resetFormNovaTarefa() {
   formNovaTarefa.tags = []
   formNovaTarefa.tipo = ''
   formNovaTarefa.status = 'refinar'
-  formNovaTarefa.responsavel_texto = ''
+  formNovaTarefa.responsavel_equipe_id = ''
   formNovaTarefa.horas_estimadas = 0
   formNovaTarefa.prazo_inicio = ''
   formNovaTarefa.prazo_fim = ''
   novaTarefaTagInput.value = ''
   erroNovaTarefa.value = null
+}
+
+function parseEquipeSelectValue(value: string | null | undefined): number | null {
+  const normalized = String(value || '').trim()
+  if (!normalized) return null
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
 async function abrirModalNovaTarefa() {
@@ -495,7 +520,7 @@ async function salvarNovaTarefa() {
     tipo: formNovaTarefa.tipo,
     status: formNovaTarefa.status,
     prioridade: 'media',
-    responsavel_texto: formNovaTarefa.responsavel_texto || null,
+    responsavel_equipe_id: parseEquipeSelectValue(formNovaTarefa.responsavel_equipe_id),
     horas_estimadas: Number(formNovaTarefa.horas_estimadas) || 0,
     prazo_inicio: formNovaTarefa.prazo_inicio || null,
     prazo_fim: formNovaTarefa.prazo_fim || null
@@ -523,6 +548,13 @@ async function salvarNovaTarefa() {
 function irParaAba(path: string) {
   if (route.path === path) return
   navigateTo(path)
+}
+
+async function handleWorkspaceRefresh() {
+  await Promise.all([
+    refresh(),
+    refreshTarefasProjeto(),
+  ])
 }
 
 function formatHorasResumo(value: unknown): string {

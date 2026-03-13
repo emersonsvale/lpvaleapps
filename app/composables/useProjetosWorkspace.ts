@@ -48,6 +48,7 @@ export interface ProjetoTarefa {
     release: string | null
     arvore: string | null
     pacote: string | null
+    responsavel_equipe_id?: number | null
     responsavel_texto: string | null
     ordem_coluna: number
     ordem_global: number
@@ -56,10 +57,28 @@ export interface ProjetoTarefa {
     updated_at?: string
 }
 
+export interface ProjetoLancamentoHora {
+    id: number
+    projeto_id: number
+    tarefa_id: number | null
+    equipe_id?: number | null
+    autor_uid?: string | null
+    data: string
+    descricao: string | null
+    horas: number
+    tipo: 'execucao' | 'ajuste'
+    autor_texto: string | null
+    iniciado_em?: string | null
+    finalizado_em?: string | null
+    duracao_segundos?: number | null
+    created_at?: string
+}
+
 export interface EquipeMembro {
     id: number
     nome: string | null
     cargo: string | null
+    foto?: string | null
     uid?: string | null
 }
 
@@ -94,6 +113,94 @@ function normalizeProjetoTarefa(item: ProjetoTarefa): ProjetoTarefa {
     }
 }
 
+function roundHoras(value: number | null | undefined): number {
+    return Number((Number(value || 0)).toFixed(4))
+}
+
+function calculateTaskProgress(horasEstimadas: number | null | undefined, horasExecutadas: number | null | undefined): number {
+    const estimado = Math.max(0, Number(horasEstimadas || 0))
+    const realizado = Math.max(0, Number(horasExecutadas || 0))
+
+    if (estimado <= 0) {
+        return realizado > 0 ? 100 : 0
+    }
+
+    return Math.max(0, Math.min(100, Math.round((realizado / estimado) * 100)))
+}
+
+function applyDerivedHorasToTarefa(item: ProjetoTarefa, horasExecutadas: number): ProjetoTarefa {
+    const horas = roundHoras(horasExecutadas)
+    return normalizeProjetoTarefa({
+        ...item,
+        horas_executadas: horas,
+        progresso: calculateTaskProgress(item.horas_estimadas, horas)
+    })
+}
+
+function applyDerivedHorasToProjeto(item: ProjetoAdminWorkspace, horasExecutadas: number): ProjetoAdminWorkspace {
+    return {
+        ...item,
+        horas_executadas: roundHoras(horasExecutadas)
+    }
+}
+
+function sumHorasByKey<T extends number | null>(rows: Array<{ key: T; horas: number | string | null | undefined }>): Map<number, number> {
+    const totals = new Map<number, number>()
+
+    for (const row of rows) {
+        if (row.key === null || row.key === undefined) continue
+        const key = Number(row.key)
+        if (!Number.isFinite(key)) continue
+        totals.set(key, roundHoras((totals.get(key) || 0) + Number(row.horas || 0)))
+    }
+
+    return totals
+}
+
+async function fetchHorasLancadasPorProjetoIds(supabase: NonNullable<ReturnType<typeof useSupabase>>, projetoIds: number[]) {
+    if (!projetoIds.length) return new Map<number, number>()
+
+    const { data, error } = await supabase
+        .from('projetos_lancamentos_horas')
+        .select('projeto_id, horas')
+        .in('projeto_id', projetoIds)
+
+    if (error) {
+        console.warn('[fetchHorasLancadasPorProjetoIds] Erro:', error.message)
+        return new Map<number, number>()
+    }
+
+    return sumHorasByKey(((data as Array<{ projeto_id: number | null; horas: number | string | null }> | null) || []).map((item) => ({
+        key: item.projeto_id,
+        horas: item.horas
+    })))
+}
+
+async function fetchHorasLancadasPorTarefaIds(supabase: NonNullable<ReturnType<typeof useSupabase>>, tarefaIds: number[], projetoId?: number) {
+    if (!tarefaIds.length) return new Map<number, number>()
+
+    let query = supabase
+        .from('projetos_lancamentos_horas')
+        .select('tarefa_id, horas')
+        .in('tarefa_id', tarefaIds)
+
+    if (typeof projetoId === 'number') {
+        query = query.eq('projeto_id', projetoId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+        console.warn('[fetchHorasLancadasPorTarefaIds] Erro:', error.message)
+        return new Map<number, number>()
+    }
+
+    return sumHorasByKey(((data as Array<{ tarefa_id: number | null; horas: number | string | null }> | null) || []).map((item) => ({
+        key: item.tarefa_id,
+        horas: item.horas
+    })))
+}
+
 function normalizeProjetoTarefaPayload<T extends Record<string, any>>(input: T): T {
     if (!Object.prototype.hasOwnProperty.call(input, 'tags')) {
         return input
@@ -121,7 +228,10 @@ export async function fetchProjetosWorkspace(): Promise<ProjetoAdminWorkspace[]>
         console.warn('[fetchProjetosWorkspace] Erro:', error.message)
         return []
     }
-    return data as ProjetoAdminWorkspace[]
+
+    const projetos = (data as ProjetoAdminWorkspace[] | null) || []
+    const horasPorProjeto = await fetchHorasLancadasPorProjetoIds(supabase, projetos.map((item) => item.id))
+    return projetos.map((item) => applyDerivedHorasToProjeto(item, horasPorProjeto.get(item.id) || 0))
 }
 
 export async function fetchProjetoWorkspaceById(id: number): Promise<ProjetoAdminWorkspace | null> {
@@ -137,7 +247,12 @@ export async function fetchProjetoWorkspaceById(id: number): Promise<ProjetoAdmi
         console.warn('[fetchProjetoWorkspaceById] Erro:', error.message)
         return null
     }
-    return data as ProjetoAdminWorkspace | null
+
+    const projeto = data as ProjetoAdminWorkspace | null
+    if (!projeto) return null
+
+    const horasPorProjeto = await fetchHorasLancadasPorProjetoIds(supabase, [id])
+    return applyDerivedHorasToProjeto(projeto, horasPorProjeto.get(id) || 0)
 }
 
 export async function createProjetoWorkspace(
@@ -178,7 +293,10 @@ export async function fetchTarefasByProjetoId(projetoId: number): Promise<Projet
         console.warn('[fetchTarefasByProjetoId] Erro:', error.message)
         return []
     }
-    return ((data as ProjetoTarefa[] | null) || []).map(normalizeProjetoTarefa)
+
+    const tarefas = (data as ProjetoTarefa[] | null) || []
+    const horasPorTarefa = await fetchHorasLancadasPorTarefaIds(supabase, tarefas.map((item) => item.id), projetoId)
+    return tarefas.map((item) => applyDerivedHorasToTarefa(item, horasPorTarefa.get(item.id) || 0))
 }
 
 export async function fetchTarefasWorkspace(): Promise<ProjetoTarefa[]> {
@@ -195,7 +313,27 @@ export async function fetchTarefasWorkspace(): Promise<ProjetoTarefa[]> {
         return []
     }
 
-    return ((data as ProjetoTarefa[] | null) || []).map(normalizeProjetoTarefa)
+    const tarefas = (data as ProjetoTarefa[] | null) || []
+    const horasPorTarefa = await fetchHorasLancadasPorTarefaIds(supabase, tarefas.map((item) => item.id))
+    return tarefas.map((item) => applyDerivedHorasToTarefa(item, horasPorTarefa.get(item.id) || 0))
+}
+
+export async function fetchLancamentosHorasByProjetoId(projetoId: number): Promise<ProjetoLancamentoHora[]> {
+    const supabase = useSupabase()
+    if (!supabase) return []
+
+    const { data, error } = await supabase
+        .from('projetos_lancamentos_horas')
+        .select('*')
+        .eq('projeto_id', projetoId)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.warn('[fetchLancamentosHorasByProjetoId] Erro:', error.message)
+        return []
+    }
+
+    return (data as ProjetoLancamentoHora[] | null) || []
 }
 
 export async function createTarefa(
@@ -224,6 +362,22 @@ export async function updateTarefaStatus(id: number, novoStatus: ProjetoTarefa['
     return updateTarefa(id, { status: novoStatus })
 }
 
+export async function createLancamentoHora(
+    input: Partial<Omit<ProjetoLancamentoHora, 'id' | 'created_at'>>
+): Promise<{ data: ProjetoLancamentoHora | null; error: string | null }> {
+    const supabase = useSupabase()
+    if (!supabase) return { data: null, error: 'Supabase não configurado' }
+
+    const { data, error } = await supabase
+        .from('projetos_lancamentos_horas')
+        .insert(input)
+        .select()
+        .single()
+
+    if (error) return { data: null, error: error.message }
+    return { data: data as ProjetoLancamentoHora, error: null }
+}
+
 export async function deleteTarefa(id: number): Promise<{ error: string | null }> {
     const supabase = useSupabase()
     if (!supabase) return { error: 'Supabase não configurado' }
@@ -238,7 +392,7 @@ export async function fetchEquipeMembros(): Promise<EquipeMembro[]> {
 
     const { data, error } = await supabase
         .from('equipe')
-        .select('id, nome, cargo, uid')
+        .select('id, nome, cargo, foto, uid')
         .not('nome', 'is', null)
         .order('nome', { ascending: true })
 

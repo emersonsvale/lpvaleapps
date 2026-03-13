@@ -59,7 +59,7 @@
       <header class="flex flex-col gap-3 border-b border-zinc-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 class="text-base font-semibold text-zinc-100">Relatorio para Cliente</h2>
-          <p class="text-xs text-zinc-500">Selecione o periodo e gere um PDF para enviar ao cliente.</p>
+          <p class="text-xs text-zinc-500">Selecione o periodo e gere um PDF a partir dos lançamentos reais de tempo.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <input
@@ -86,48 +86,49 @@
 
       <div v-if="lancamentosFiltrados.length" class="px-4 py-3">
         <p class="text-xs text-zinc-400">
-          {{ lancamentosFiltrados.length }} tarefa(s) com atividade no periodo selecionado
+          {{ lancamentosFiltrados.length }} lançamento(s) no periodo selecionado
           — Total de <strong class="text-zinc-200">{{ formatHoras(horasExecutadasPeriodo) }}h</strong> executadas
         </p>
       </div>
       <div v-else-if="relatorioDataInicio && relatorioDataFim" class="px-4 py-6 text-center text-xs text-zinc-500">
-        Nenhuma tarefa com atividade neste periodo.
+        Nenhum lançamento neste periodo.
       </div>
     </section>
 
     <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
       <header class="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
         <div>
-          <h2 class="text-base font-semibold text-zinc-100">Lancamentos por Tarefa</h2>
-          <p class="text-xs text-zinc-500">Baseado em horas executadas e atualizacoes das tarefas do projeto.</p>
+          <h2 class="text-base font-semibold text-zinc-100">Lançamentos de Tempo</h2>
+          <p class="text-xs text-zinc-500">Cada play do cronômetro gera uma linha separada neste extrato.</p>
         </div>
         <button
           type="button"
           class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
-          @click="refreshTarefas"
+          @click="Promise.all([refreshTarefas(), refreshLancamentos()])"
         >
           Atualizar
         </button>
       </header>
 
-      <div v-if="pending" class="px-4 py-10 text-center text-sm text-zinc-500">Carregando extrato...</div>
+      <div v-if="pending || pendingLancamentos" class="px-4 py-10 text-center text-sm text-zinc-500">Carregando extrato...</div>
 
       <div v-else-if="!lancamentos.length" class="px-4 py-10 text-center text-sm text-zinc-500">
-        Nenhum lancamento encontrado. As tarefas com horas executadas aparecerao aqui.
+        Nenhum lançamento encontrado. Assim que um cronômetro for encerrado, ele aparecerá aqui.
       </div>
 
       <div v-else class="overflow-x-auto">
         <table class="min-w-full">
           <thead>
             <tr class="border-b border-zinc-800 bg-zinc-950/60">
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Data</th>
               <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tarefa</th>
-              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Responsavel</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Autor</th>
               <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Status</th>
-              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Estimadas</th>
-              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Executadas</th>
-              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Consumo</th>
+              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Duração</th>
+              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas</th>
               <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Custo Aprox.</th>
-              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Ult. Atualizacao</th>
+              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Início</th>
+              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Fim</th>
             </tr>
           </thead>
           <tbody>
@@ -136,21 +137,35 @@
               :key="item.id"
               class="border-b border-zinc-900/90 hover:bg-zinc-950/50"
             >
+              <td class="px-4 py-3 text-xs text-zinc-500">{{ formatDateTime(item.updatedAt || item.data) }}</td>
               <td class="px-4 py-3 text-sm text-zinc-100">
                 <div class="flex items-center gap-2">
                   <span class="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-400">{{ item.codigo }}</span>
                   <span>{{ item.titulo }}</span>
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-zinc-300">{{ item.responsavel || '-' }}</td>
+              <td class="px-4 py-3 text-sm text-zinc-300">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                    <img
+                      v-if="item.responsavelFoto"
+                      :src="item.responsavelFoto"
+                      :alt="item.responsavel || 'Responsável'"
+                      class="h-full w-full object-cover"
+                    >
+                    <span v-else>{{ getResponsavelInitials(item.responsavel) }}</span>
+                  </div>
+                  <span>{{ item.responsavel || '-' }}</span>
+                </div>
+              </td>
               <td class="px-4 py-3 text-xs text-zinc-300">
                 <span class="rounded-md bg-zinc-800 px-2 py-1">{{ statusLabel(item.status) }}</span>
               </td>
-              <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatHoras(item.horasEstimadas) }}h</td>
+              <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatDuracao(item.duracaoSegundos) }}</td>
               <td class="px-4 py-3 text-right text-sm font-medium text-zinc-100">{{ formatHoras(item.horasExecutadas) }}h</td>
-              <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatPercent(item.percentualConsumo) }}</td>
               <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatMoeda(item.custoAproximado) }}</td>
-              <td class="px-4 py-3 text-right text-xs text-zinc-500">{{ formatDateTime(item.updatedAt) }}</td>
+              <td class="px-4 py-3 text-right text-xs text-zinc-500">{{ formatDateTime(item.iniciadoEm) }}</td>
+              <td class="px-4 py-3 text-right text-xs text-zinc-500">{{ formatDateTime(item.finalizadoEm) }}</td>
             </tr>
           </tbody>
         </table>
@@ -160,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { fetchTarefasByProjetoId, type ProjetoAdminWorkspace, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { fetchEquipeMembros, fetchLancamentosHorasByProjetoId, fetchTarefasByProjetoId, type ProjetoAdminWorkspace, type ProjetoLancamentoHora, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import { openRelatorioHoras } from '~/composables/useRelatorioHoras'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
@@ -168,6 +183,24 @@ const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 const { data: tarefas, pending, refresh: refreshTarefas } = await useAsyncData(
   `extrato-projeto-${props.projeto.id}`,
   () => fetchTarefasByProjetoId(props.projeto.id),
+  {
+    server: false,
+    default: () => []
+  }
+)
+
+const { data: lancamentosBrutos, pending: pendingLancamentos, refresh: refreshLancamentos } = await useAsyncData(
+  `extrato-projeto-lancamentos-${props.projeto.id}`,
+  () => fetchLancamentosHorasByProjetoId(props.projeto.id),
+  {
+    server: false,
+    default: () => []
+  }
+)
+
+const { data: equipeMembros } = await useAsyncData(
+  `extrato-projeto-equipe-${props.projeto.id}`,
+  () => fetchEquipeMembros(),
   {
     server: false,
     default: () => []
@@ -215,6 +248,27 @@ const custoMedioHora = computed(() => {
   return valorHoraVendida.value
 })
 
+const tarefasPorId = computed(() => {
+  return new Map((tarefas.value || []).map((tarefa) => [tarefa.id, tarefa]))
+})
+
+const equipePorId = computed(() => {
+  return new Map((equipeMembros.value || []).map((membro) => [membro.id, membro]))
+})
+
+function getResponsavelFoto(item: ProjetoLancamentoHora) {
+  const membro = item.equipe_id ? equipePorId.value.get(item.equipe_id) || null : null
+  return membro?.foto || null
+}
+
+function getResponsavelInitials(nome: string | null | undefined): string {
+  const safe = String(nome || '').trim()
+  if (!safe) return '--'
+  const partes = safe.split(/\s+/).filter(Boolean)
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase()
+  return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase()
+}
+
 // ==========================================
 // LANCAMENTOS (TABELA GERAL)
 // ==========================================
@@ -228,28 +282,34 @@ const statusLabelsMap: Record<ProjetoTarefa['status'], string> = {
 }
 
 const lancamentos = computed(() => {
-  const source = (tarefas.value || []) as ProjetoTarefa[]
+  const source = (lancamentosBrutos.value || []) as ProjetoLancamentoHora[]
   return source
-    .filter((item) => Number(item.horas_executadas || 0) > 0 || Number(item.horas_estimadas || 0) > 0)
     .map((item) => {
-      const horasExecutadas = Number(item.horas_executadas || 0)
-      const horasEstimadas = Number(item.horas_estimadas || 0)
+      const tarefa = item.tarefa_id ? tarefasPorId.value.get(item.tarefa_id) || null : null
+      const horasExecutadas = Number(item.horas || 0)
+      const horasEstimadas = Number(tarefa?.horas_estimadas || 0)
       const percentualConsumo = horasEstimadas > 0 ? (horasExecutadas / horasEstimadas) * 100 : 0
 
       return {
         id: item.id,
-        codigo: item.codigo || `T-${item.id}`,
-        titulo: item.titulo,
-        responsavel: item.responsavel_texto,
-        status: item.status,
+        tarefaId: item.tarefa_id,
+        codigo: tarefa?.codigo || (item.tarefa_id ? `T-${item.tarefa_id}` : '-'),
+        titulo: tarefa?.titulo || item.descricao || 'Lançamento sem tarefa',
+        responsavel: item.autor_texto || tarefa?.responsavel_texto || '-',
+        responsavelFoto: getResponsavelFoto(item),
+        status: tarefa?.status || null,
         horasEstimadas,
         horasExecutadas,
         percentualConsumo,
         custoAproximado: horasExecutadas * custoMedioHora.value,
-        updatedAt: item.updated_at || item.created_at || null
+        data: item.data,
+        iniciadoEm: item.iniciado_em || null,
+        finalizadoEm: item.finalizado_em || item.created_at || null,
+        duracaoSegundos: Number(item.duracao_segundos || Math.round(horasExecutadas * 3600)),
+        updatedAt: item.finalizado_em || item.created_at || null
       }
     })
-    .sort((a, b) => b.horasExecutadas - a.horasExecutadas)
+    .sort((a, b) => new Date(b.updatedAt || b.data).getTime() - new Date(a.updatedAt || a.data).getTime())
 })
 
 // ==========================================
@@ -266,8 +326,9 @@ const lancamentosFiltrados = computed(() => {
   const fim = relatorioDataFim.value
 
   return lancamentos.value.filter((item) => {
-    if (!item.updatedAt) return false
-    const dataItem = item.updatedAt.slice(0, 10)
+    const dataBase = item.finalizadoEm || item.updatedAt || item.data || null
+    if (!dataBase) return false
+    const dataItem = dataBase.slice(0, 10)
     return dataItem >= inicio && dataItem <= fim
   })
 })
@@ -279,7 +340,42 @@ const horasExecutadasPeriodo = computed(() => {
 function gerarRelatorioPDF() {
   if (!relatorioDataInicio.value || !relatorioDataFim.value) return
 
-  const itens = lancamentosFiltrados.value
+  const itensAgrupados = new Map<number | string, {
+    codigo: string
+    titulo: string
+    responsavel: string
+    responsavelFoto: string | null
+    status: string
+    horasEstimadas: number
+    horasExecutadas: number
+    percentualConsumo: number
+  }>()
+
+  for (const item of lancamentosFiltrados.value) {
+    const key = item.tarefaId || `sem-tarefa-${item.id}`
+    const existente = itensAgrupados.get(key)
+
+    if (existente) {
+      existente.horasExecutadas += item.horasExecutadas
+      existente.percentualConsumo = existente.horasEstimadas > 0
+        ? (existente.horasExecutadas / existente.horasEstimadas) * 100
+        : 0
+      continue
+    }
+
+    itensAgrupados.set(key, {
+      codigo: item.codigo,
+      titulo: item.titulo,
+      responsavel: item.responsavel,
+      responsavelFoto: item.responsavelFoto || null,
+      status: item.status ? statusLabelsMap[item.status] || item.status : 'Sem status',
+      horasEstimadas: item.horasEstimadas,
+      horasExecutadas: item.horasExecutadas,
+      percentualConsumo: item.horasEstimadas > 0 ? (item.horasExecutadas / item.horasEstimadas) * 100 : 0
+    })
+  }
+
+  const itens = Array.from(itensAgrupados.values())
 
   openRelatorioHoras({
     projetoNome: props.projeto.nome,
@@ -295,6 +391,7 @@ function gerarRelatorioPDF() {
       codigo: item.codigo,
       titulo: item.titulo,
       responsavel: item.responsavel,
+      responsavelFoto: item.responsavelFoto,
       status: statusLabelsMap[item.status] || item.status,
       horasEstimadas: item.horasEstimadas,
       horasExecutadas: item.horasExecutadas,
@@ -336,7 +433,17 @@ function formatDateTime(value: string | null): string {
   }).format(d)
 }
 
-function statusLabel(status: ProjetoTarefa['status']): string {
+function formatDuracao(segundos: number | null | undefined): string {
+  const total = Math.max(0, Math.floor(Number(segundos || 0)))
+  const horas = Math.floor(total / 3600)
+  const minutos = Math.floor((total % 3600) / 60)
+  const restanteSegundos = total % 60
+
+  return [horas, minutos, restanteSegundos].map((valor) => String(valor).padStart(2, '0')).join(':')
+}
+
+function statusLabel(status: ProjetoTarefa['status'] | null): string {
+  if (!status) return 'Sem status'
   return statusLabelsMap[status]
 }
 </script>

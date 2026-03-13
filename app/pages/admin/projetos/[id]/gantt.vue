@@ -62,7 +62,14 @@
             <span class="text-sm text-zinc-200 truncate flex-1 hover:text-white" :title="tarefa.titulo">
               {{ tarefa.titulo }}
             </span>
+            <img
+              v-if="getResponsavelFotoUrl(tarefa)"
+              :src="getResponsavelFotoUrl(tarefa) || ''"
+              :alt="tarefa.responsavel_texto || 'Responsavel'"
+              class="h-5 w-5 rounded-full object-cover flex-shrink-0 overflow-hidden opacity-0 transition-opacity group-hover:opacity-100"
+            >
             <span
+              v-else-if="tarefa.responsavel_texto"
               v-if="tarefa.responsavel_texto"
               class="text-[10px] font-medium text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
             >
@@ -218,6 +225,18 @@
             <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="statusBadgeClass[formModal.status]">
               {{ statusLabels[formModal.status] }}
             </span>
+            <span
+              class="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 text-[10px] font-semibold text-zinc-100"
+              :title="tarefaEditando.responsavel_texto || 'Sem responsavel'"
+            >
+              <img
+                v-if="getResponsavelFotoUrl(tarefaEditando)"
+                :src="getResponsavelFotoUrl(tarefaEditando) || ''"
+                :alt="tarefaEditando.responsavel_texto || 'Responsavel'"
+                class="h-full w-full object-cover"
+              >
+              <span v-else>{{ iniciais(tarefaEditando.responsavel_texto || '') }}</span>
+            </span>
           </div>
           <button
             type="button"
@@ -296,12 +315,15 @@
 
           <div>
             <label class="mb-1 block text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Responsavel</label>
-            <input
-              v-model="formModal.responsavel_texto"
-              type="text"
-              placeholder="Nome do responsavel"
-              class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+            <select
+              v-model="formModal.responsavel_equipe_id"
+              class="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-700 focus:outline-none"
             >
+              <option value="">Sem responsavel</option>
+              <option v-for="membro in equipeOptions" :key="membro.id" :value="String(membro.id)">
+                {{ membro.label }}
+              </option>
+            </select>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
@@ -375,7 +397,7 @@
 </template>
 
 <script setup lang="ts">
-import { fetchTarefasByProjetoId, updateTarefa, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { fetchEquipeMembros, fetchTarefasByProjetoId, updateTarefa, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
@@ -394,6 +416,52 @@ const { data: todasTarefas, refresh: refreshTarefas } = await useAsyncData(
   () => fetchTarefasByProjetoId(props.projeto.id),
   { server: false, default: () => [] }
 )
+
+const { data: equipeMembros } = await useAsyncData(
+  `gantt-equipe-${props.projeto.id}`,
+  () => fetchEquipeMembros(),
+  { server: false, default: () => [] }
+)
+
+const equipeOptions = computed(() => {
+  return (equipeMembros.value || [])
+    .filter((membro) => Boolean(membro.nome))
+    .map((membro) => {
+      const nome = (membro.nome || '').trim()
+      const cargo = (membro.cargo || '').trim()
+      return {
+        id: membro.id,
+        nome,
+        foto: membro.foto || null,
+        label: cargo ? `${nome} (${cargo})` : nome
+      }
+    })
+})
+
+function parseEquipeSelectValue(value: string | number | null | undefined): number | null {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) return null
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+function getEquipeOptionById(value: string | number | null | undefined) {
+  const equipeId = parseEquipeSelectValue(value)
+  if (!equipeId) return null
+  return equipeOptions.value.find((membro) => membro.id === equipeId) || null
+}
+
+function getEquipeOptionByNome(nome: string | null | undefined) {
+  const normalized = String(nome || '').trim().toLocaleLowerCase('pt-BR')
+  if (!normalized) return null
+  return equipeOptions.value.find((membro) => membro.nome.toLocaleLowerCase('pt-BR') === normalized) || null
+}
+
+function getResponsavelFotoUrl(tarefa: ProjetoTarefa) {
+  const membro = getEquipeOptionById(tarefa.responsavel_equipe_id) || getEquipeOptionByNome(tarefa.responsavel_texto)
+  return membro?.foto || null
+}
 
 // Filtrar tarefas que possuem ao menos prazo_inicio e prazo_fim
 const tarefasComDatas = computed(() => {
@@ -815,7 +883,7 @@ const formModal = reactive({
   prioridade: 'media' as ProjetoTarefa['prioridade'],
   prazo_inicio: '',
   prazo_fim: '',
-  responsavel_texto: '',
+  responsavel_equipe_id: '',
   horas_estimadas: 0,
 })
 
@@ -830,7 +898,7 @@ function abrirTarefa(tarefaId: number) {
   formModal.prioridade = tarefa.prioridade
   formModal.prazo_inicio = tarefa.prazo_inicio || ''
   formModal.prazo_fim = tarefa.prazo_fim || ''
-  formModal.responsavel_texto = tarefa.responsavel_texto || ''
+  formModal.responsavel_equipe_id = tarefa.responsavel_equipe_id ? String(tarefa.responsavel_equipe_id) : ''
   formModal.horas_estimadas = Number(tarefa.horas_estimadas) || 0
   modalAberto.value = true
 }
@@ -855,7 +923,7 @@ async function salvarEdicao() {
     prioridade: formModal.prioridade,
     prazo_inicio: formModal.prazo_inicio || null,
     prazo_fim: formModal.prazo_fim || null,
-    responsavel_texto: formModal.responsavel_texto || null,
+    responsavel_equipe_id: parseEquipeSelectValue(formModal.responsavel_equipe_id),
     horas_estimadas: Number(formModal.horas_estimadas) || 0,
   })
 
