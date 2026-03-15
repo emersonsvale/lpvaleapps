@@ -42,6 +42,8 @@ export default defineNuxtConfig({
     // Privadas (apenas server)
     resendApiKey: '',
     supabaseAdminKey: '',
+    openaiApiKey: '',
+    geminiApiKey: '',
 
     public: {
       baseURL: 'https://valeapps.com.br',

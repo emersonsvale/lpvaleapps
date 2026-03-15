@@ -336,6 +336,46 @@ export async function fetchLancamentosHorasByProjetoId(projetoId: number): Promi
     return (data as ProjetoLancamentoHora[] | null) || []
 }
 
+/**
+ * Lançamentos de horas do usuário em uma data, em todos os projetos.
+ * Filtra por equipe_id e/ou autor_uid.
+ */
+export async function fetchLancamentosHorasDoDiaByUsuario(
+    data: string,
+    equipeId: number | null,
+    autorUid: string | null
+): Promise<ProjetoLancamentoHora[]> {
+    const supabase = useSupabase()
+    if (!supabase) return []
+    if (equipeId == null && !autorUid) return []
+
+    const dataNorm = String(data || '').slice(0, 10)
+    if (!dataNorm) return []
+
+    let query = supabase
+        .from('projetos_lancamentos_horas')
+        .select('*')
+        .eq('data', dataNorm)
+        .order('created_at', { ascending: false })
+
+    if (equipeId != null && autorUid) {
+        query = query.or(`equipe_id.eq.${equipeId},autor_uid.eq.${autorUid}`)
+    } else if (equipeId != null) {
+        query = query.eq('equipe_id', equipeId)
+    } else {
+        query = query.eq('autor_uid', autorUid)
+    }
+
+    const { data: rows, error } = await query
+
+    if (error) {
+        console.warn('[fetchLancamentosHorasDoDiaByUsuario] Erro:', error.message)
+        return []
+    }
+
+    return (rows as ProjetoLancamentoHora[] | null) || []
+}
+
 export async function createTarefa(
     input: Partial<Omit<ProjetoTarefa, 'id' | 'created_at' | 'updated_at'>>
 ): Promise<{ data: ProjetoTarefa | null; error: string | null }> {

@@ -268,6 +268,9 @@
         </form>
       </div>
     </div>
+
+    <!-- FAB Chat IA (agente-vale-apps: Text-to-SQL + RAG). ID e nome do projeto para contexto. -->
+    <AdminProjectAiChatFab :projeto-id="projetoId" :projeto-nome="projeto?.nome" />
   </div>
 </template>
 
@@ -278,11 +281,20 @@ import { createTarefa, fetchEquipeMembros, fetchProjetoWorkspaceById, fetchTaref
 definePageMeta({ layout: 'admin' })
 
 const route = useRoute()
-const projetoId = Number(route.params.id)
+
+const projetoId = computed(() => {
+  const id = route.params.id
+  if (id == null || id === undefined) return 0
+  const n = Number(id)
+  return Number.isFinite(n) && n >= 1 ? n : 0
+})
+
+const routeId = route.params.id as string | undefined
+const routeIdStr = routeId != null ? String(routeId) : ''
 
 const { data: projeto, pending, error, refresh } = await useAsyncData(
-  `admin-projeto-${projetoId}`,
-  () => fetchProjetoWorkspaceById(projetoId),
+  `admin-projeto-${routeIdStr}`,
+  () => fetchProjetoWorkspaceById(projetoId.value),
   {
     server: false,
     default: () => null
@@ -290,7 +302,7 @@ const { data: projeto, pending, error, refresh } = await useAsyncData(
 )
 
 const { data: equipeMembros, refresh: refreshEquipeMembros } = await useAsyncData(
-  `admin-equipe-membros-${projetoId}`,
+  `admin-equipe-membros-${routeIdStr}`,
   () => fetchEquipeMembros(),
   {
     server: false,
@@ -299,8 +311,8 @@ const { data: equipeMembros, refresh: refreshEquipeMembros } = await useAsyncDat
 )
 
 const { data: tarefasProjeto, refresh: refreshTarefasProjeto } = await useAsyncData(
-  `admin-projeto-tarefas-tags-${projetoId}`,
-  () => fetchTarefasByProjetoId(projetoId),
+  `admin-projeto-tarefas-tags-${routeIdStr}`,
+  () => fetchTarefasByProjetoId(projetoId.value),
   {
     server: false,
     default: () => []
@@ -308,7 +320,7 @@ const { data: tarefasProjeto, refresh: refreshTarefasProjeto } = await useAsyncD
 )
 
 const tabs = computed(() => {
-  const base = `/admin/projetos/${projetoId}`
+  const base = `/admin/projetos/${projetoId.value}`
   return [
     { label: 'Resumo', path: base, exact: true },
     { label: 'Tarefas', path: `${base}/tarefas`, exact: false },

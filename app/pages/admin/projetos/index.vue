@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="space-y-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
@@ -26,6 +26,14 @@
         <button
           type="button"
           class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          :class="abaAtiva === 'meu_dia' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100'"
+          @click="abaAtiva = 'meu_dia'"
+        >
+          Meu Dia
+        </button>
+        <button
+          type="button"
+          class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           :class="abaAtiva === 'minhas_tarefas' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100'"
           @click="abaAtiva = 'minhas_tarefas'"
         >
@@ -34,12 +42,12 @@
       </div>
 
       <p class="text-sm text-zinc-500">
-        {{ abaAtiva === 'projetos' ? 'Visao geral dos projetos ativos e planejados.' : 'Tarefas atribuidas ao usuario logado em todos os projetos.' }}
+        {{ descricaoAbaAtiva }}
       </p>
     </section>
 
-    <!-- Filtros -->
-    <section class="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <!-- Filtros (ocultos em Meu Dia) -->
+    <section v-if="abaAtiva !== 'meu_dia'" class="grid grid-cols-1 md:grid-cols-4 gap-3">
       <input
         v-model="filtroBusca"
         type="text"
@@ -60,7 +68,100 @@
       </select>
     </section>
 
-    <div v-if="abaAtiva === 'projetos' && pending" class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 text-zinc-500">
+    <!-- Aba Meu Dia -->
+    <div v-if="abaAtiva === 'meu_dia'" class="space-y-6">
+      <p class="text-sm text-zinc-500">
+        Resumo de <strong class="text-zinc-300">{{ dataDeHojeFormatada }}</strong>
+        <span v-if="membroEquipeLogado?.nome" class="ml-2">— {{ membroEquipeLogado.nome }}</span>
+      </p>
+
+      <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p class="text-xs uppercase tracking-wider text-zinc-500">Horas trabalhadas hoje</p>
+          <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHorasMeuDia(horasTrabalhadasHoje) }}h</p>
+        </article>
+        <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p class="text-xs uppercase tracking-wider text-zinc-500">Tarefas com atividade</p>
+          <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ tarefasExecutadasHoje.length }}</p>
+        </article>
+        <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p class="text-xs uppercase tracking-wider text-zinc-500">Meta do dia (8h)</p>
+          <p class="mt-2 text-2xl font-semibold" :class="progressoMetaDia >= 100 ? 'text-emerald-400' : 'text-zinc-100'">
+            {{ progressoMetaDia }}%
+          </p>
+        </article>
+        <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <p class="text-xs uppercase tracking-wider text-zinc-500">Lançamentos hoje</p>
+          <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ lancamentosDoDia.length }}</p>
+        </article>
+      </section>
+
+      <section class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-medium text-zinc-200">Progresso do dia</h2>
+          <span class="text-sm text-zinc-500">{{ formatHorasMeuDia(horasTrabalhadasHoje) }}h de 8h</span>
+        </div>
+        <div class="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
+          <div
+            class="h-full transition-all duration-500 rounded-full"
+            :class="progressoMetaDia >= 100 ? 'bg-emerald-500' : 'bg-brand'"
+            :style="{ width: `${Math.min(progressoMetaDia, 100)}%` }"
+          />
+        </div>
+      </section>
+
+      <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+        <header class="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
+          <h2 class="text-base font-semibold text-zinc-100">Tarefas em que você trabalhou hoje (todos os projetos)</h2>
+          <button
+            type="button"
+            class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
+            @click="refreshMeuDia"
+          >
+            Atualizar
+          </button>
+        </header>
+        <div v-if="pendingMeuDia" class="px-4 py-10 text-center text-sm text-zinc-500">Carregando...</div>
+        <div v-else-if="!tarefasExecutadasHoje.length" class="px-4 py-10 text-center text-sm text-zinc-500">
+          Nenhuma tarefa registrada hoje. Use o cronômetro nas tarefas para lançar horas.
+        </div>
+        <div v-else class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b border-zinc-800">
+                <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Projeto / Tarefa</th>
+                <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Status</th>
+                <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas hoje</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in tarefasExecutadasHoje"
+                :key="`${item.projetoId}-${item.tarefaId}`"
+                class="border-b border-zinc-800/80 hover:bg-zinc-800/30 transition-colors"
+              >
+                <td class="px-4 py-3">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-xs font-medium text-zinc-400">{{ item.projetoNome }} · {{ item.codigo }}</span>
+                    <span class="text-sm text-zinc-200">{{ item.titulo }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-block rounded px-2 py-0.5 text-xs font-medium" :class="corStatusMeuDia(item.status)">
+                    {{ statusLabelMeuDia(item.status) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right text-sm font-medium text-zinc-100">
+                  {{ formatHorasMeuDia(item.horasHoje) }}h
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div v-else-if="abaAtiva === 'projetos' && pending" class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 text-zinc-500">
       Carregando projetos...
     </div>
     <div v-else-if="abaAtiva === 'projetos' && error" class="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300">
@@ -265,7 +366,7 @@
 <script setup lang="ts">
 import { PhFolderOpen, PhCalendarBlank, PhListChecks } from '@phosphor-icons/vue'
 import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProjetosWorkspace'
-import { createLancamentoHora, fetchEquipeMembros, fetchProjetosWorkspace, fetchTarefasWorkspace, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
+import { createLancamentoHora, fetchEquipeMembros, fetchLancamentosHorasDoDiaByUsuario, fetchProjetosWorkspace, fetchTarefasWorkspace, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
 import { useSupabase } from '~/composables/useSupabase'
 import { hydrateWorkspaceRunningTimerState, persistWorkspaceRunningTimerState, resetWorkspaceRunningTimerState, useWorkspaceRunningTimerState } from '~/composables/useWorkspaceRunningTimer'
 
@@ -305,7 +406,21 @@ const { data: equipeMembros } = await useAsyncData(
   }
 )
 
-const abaAtiva = ref<'projetos' | 'minhas_tarefas'>('projetos')
+const dataDeHoje = computed(() => new Date().toISOString().slice(0, 10))
+
+const { data: lancamentosMeuDia, pending: pendingMeuDia, refresh: refreshMeuDia } = await useAsyncData(
+  'meu-dia-lancamentos',
+  async () => {
+    const dataHoje = new Date().toISOString().slice(0, 10)
+    const eqId = membroEquipeLogado.value?.id ?? null
+    const uid = user.value?.id ?? null
+    if (eqId == null && !uid) return []
+    return fetchLancamentosHorasDoDiaByUsuario(dataHoje, eqId, uid)
+  },
+  { server: false, default: () => [] }
+)
+
+const abaAtiva = ref<'projetos' | 'meu_dia' | 'minhas_tarefas'>('projetos')
 const filtroBusca = ref('')
 const filtroStatus = ref<string>('todos')
 const tarefaRodandoId = ref<number | null>(null)
@@ -339,6 +454,12 @@ const taskStatusBadgeClass: Record<ProjetoTarefa['status'], string> = {
   sob_revisao: 'bg-yellow-500/15 text-yellow-300',
   concluido: 'bg-emerald-500/15 text-emerald-300'
 }
+
+const descricaoAbaAtiva = computed(() => {
+  if (abaAtiva.value === 'projetos') return 'Visao geral dos projetos ativos e planejados.'
+  if (abaAtiva.value === 'meu_dia') return 'Horas trabalhadas, tarefas executadas e progresso do dia em todos os projetos.'
+  return 'Tarefas atribuidas ao usuario logado em todos os projetos.'
+})
 
 const placeholderBusca = computed(() => {
   return abaAtiva.value === 'projetos'
@@ -460,6 +581,89 @@ const minhasTarefasResumo = computed(() => {
   })
 })
 
+// Meu Dia: resumo do dia em todos os projetos
+const lancamentosDoDia = computed(() => lancamentosMeuDia.value ?? [])
+const horasTrabalhadasHoje = computed(() =>
+  lancamentosDoDia.value.reduce((acc, l) => acc + Number(l.horas || 0), 0)
+)
+const META_HORAS_DIA = 8
+const progressoMetaDia = computed(() => {
+  if (META_HORAS_DIA <= 0) return 0
+  const p = (horasTrabalhadasHoje.value / META_HORAS_DIA) * 100
+  return Math.round(Math.min(p, 100))
+})
+const dataDeHojeFormatada = computed(() => {
+  const d = new Date(dataDeHoje.value + 'T12:00:00')
+  return new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  }).format(d)
+})
+const tarefasWorkspacePorId = computed(() => new Map((tarefasWorkspace.value ?? []).map((t) => [t.id, t])))
+interface TarefaDoDiaItem {
+  tarefaId: number
+  projetoId: number
+  projetoNome: string
+  codigo: string
+  titulo: string
+  status: ProjetoTarefa['status']
+  horasHoje: number
+}
+const tarefasExecutadasHoje = computed(() => {
+  const map = new Map<number, { projetoId: number; horas: number }>()
+  for (const l of lancamentosDoDia.value) {
+    const tid = l.tarefa_id
+    if (tid == null) continue
+    const horas = Number(l.horas || 0)
+    const existing = map.get(tid)
+    if (existing) {
+      existing.horas += horas
+    } else {
+      map.set(tid, { projetoId: l.projeto_id, horas })
+    }
+  }
+  const result: TarefaDoDiaItem[] = []
+  for (const [tarefaId, { projetoId, horas }] of map) {
+    const tarefa = tarefasWorkspacePorId.value.get(tarefaId)
+    const projeto = projetoPorId.value.get(projetoId)
+    result.push({
+      tarefaId,
+      projetoId,
+      projetoNome: projeto?.nome ?? 'Projeto',
+      codigo: tarefa?.codigo ?? `T-${tarefaId}`,
+      titulo: tarefa?.titulo ?? 'Tarefa',
+      status: tarefa?.status ?? 'refinar',
+      horasHoje: horas
+    })
+  }
+  result.sort((a, b) => b.horasHoje - a.horasHoje)
+  return result
+})
+const statusLabelsMeuDia: Record<ProjetoTarefa['status'], string> = {
+  refinar: 'Refinar',
+  fazer: 'Fazer',
+  em_progresso: 'Em Progresso',
+  sob_revisao: 'Sob Revisão',
+  concluido: 'Concluído'
+}
+function statusLabelMeuDia(s: ProjetoTarefa['status']) {
+  return statusLabelsMeuDia[s] ?? s
+}
+function corStatusMeuDia(s: ProjetoTarefa['status']) {
+  switch (s) {
+    case 'concluido': return 'bg-emerald-500/20 text-emerald-400'
+    case 'em_progresso': return 'bg-blue-500/20 text-blue-400'
+    case 'sob_revisao': return 'bg-amber-500/20 text-amber-400'
+    case 'fazer': return 'bg-zinc-500/20 text-zinc-400'
+    default: return 'bg-zinc-600/20 text-zinc-300'
+  }
+}
+function formatHorasMeuDia(value: number) {
+  return Number((value || 0).toFixed(2)).toString()
+}
+
 const tarefasPorProjeto = computed(() => {
   const resumo = new Map<number, { total: number; concluidas: number }>()
 
@@ -509,9 +713,10 @@ function getProjetoProgressoPercentual(projetoId: number) {
   return Math.round((concluidas / total) * 100)
 }
 
-watch(abaAtiva, () => {
+watch(abaAtiva, (nova) => {
   filtroBusca.value = ''
   filtroStatus.value = 'todos'
+  if (nova === 'meu_dia') refreshMeuDia()
 })
 
 watch(

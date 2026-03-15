@@ -105,3 +105,10 @@ public/fonts/*.woff2
 public/fonts/*.ttf
 public/fonts/*.otf
 !public/fonts/.gitkeep
+
+# Local/temp deploy and tooling
+.claude/
+deploy-args*.txt
+deploy-payload.json
+mcp-args.json
+supabase/.temp/

@@ -26,6 +26,11 @@ onMounted(() => {
 const pageTitle = computed(() => {
   const path = route.path
   if (path === '/admin') return 'Dashboard'
+  if (path === '/admin/chat-ia') return 'Chat IA'
+  if (path === '/admin/agentes') return 'Agentes especialistas'
+  if (path === '/admin/agentes/novo') return 'Novo agente'
+  if (path.match(/^\/admin\/agentes\/[^/]+$/)) return 'Editar agente'
+  if (path.match(/^\/admin\/agentes\/[^/]+\/chat$/)) return 'Chat com agente'
   if (path === '/admin/projetos') return 'Projetos'
   if (path === '/admin/projetos/novo') return 'Novo Projeto'
   if (path.match(/^\/admin\/projetos\/\d+(\/.*)?$/)) return 'Workspace do Projeto'
@@ -57,6 +62,26 @@ const breadcrumbs = computed(() => {
   const path = route.path
   const list: { label: string; path?: string }[] = [{ label: 'Dashboard', path: '/admin' }]
   if (path === '/admin') return list
+  if (path === '/admin/chat-ia') {
+    list.push({ label: 'Chat IA' })
+    return list
+  }
+  if (path === '/admin/agentes') {
+    list.push({ label: 'Agentes' })
+    return list
+  }
+  if (path === '/admin/agentes/novo') {
+    list.push({ label: 'Agentes', path: '/admin/agentes' }, { label: 'Novo' })
+    return list
+  }
+  if (path.match(/^\/admin\/agentes\/[^/]+$/)) {
+    list.push({ label: 'Agentes', path: '/admin/agentes' }, { label: 'Editar' })
+    return list
+  }
+  if (path.match(/^\/admin\/agentes\/[^/]+\/chat$/)) {
+    list.push({ label: 'Agentes', path: '/admin/agentes' }, { label: 'Chat' })
+    return list
+  }
   if (path.startsWith('/admin/projetos')) {
     list.push({ label: 'Projetos', path: '/admin/projetos' })
     if (path === '/admin/projetos/novo') list.push({ label: 'Novo' })

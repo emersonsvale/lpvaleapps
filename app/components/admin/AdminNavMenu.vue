@@ -36,6 +36,28 @@
             <span>Dashboard</span>
           </NuxtLink>
         </li>
+        <li>
+          <NuxtLink
+            to="/admin/chat-ia"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+            :class="isActive('/admin/chat-ia') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
+            @click="open = false"
+          >
+            <PhChatCircle class="w-5 h-5 shrink-0 opacity-80" />
+            <span>Chat IA</span>
+          </NuxtLink>
+        </li>
+        <li>
+          <NuxtLink
+            to="/admin/agentes"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+            :class="isActive('/admin/agentes') ? 'bg-brand/15 text-brand' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'"
+            @click="open = false"
+          >
+            <PhRobot class="w-5 h-5 shrink-0 opacity-80" />
+            <span>Agentes especialistas</span>
+          </NuxtLink>
+        </li>
       </ul>
 
       <p class="px-4 mt-6 mb-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Gestão</p>
@@ -157,6 +179,8 @@
 import {
   PhCode,
   PhChartLine,
+  PhChatCircle,
+  PhRobot,
   PhFolderOpen,
   PhFileText,
   PhUsersThree,
