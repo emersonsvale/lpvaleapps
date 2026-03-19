@@ -324,7 +324,6 @@ const tabs = computed(() => {
   return [
     { label: 'Resumo', path: base, exact: true },
     { label: 'Tarefas', path: `${base}/tarefas`, exact: false },
-    { label: 'Requisitos', path: `${base}/requisitos`, exact: false },
     { label: 'Documentação', path: `${base}/documentacao`, exact: false },
     { label: 'Gantt', path: `${base}/gantt`, exact: false },
     { label: 'Extrato de Horas', path: `${base}/extrato`, exact: false },

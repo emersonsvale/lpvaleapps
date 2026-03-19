@@ -2,8 +2,21 @@
   <div class="mt-6 space-y-4">
     <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        <p class="text-xs uppercase tracking-wider text-zinc-500">Horas Previstas</p>
-        <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHoras(totalHorasPrevistas) }}h</p>
+        <p class="text-xs uppercase tracking-wider text-zinc-500">Horas Contratadas</p>
+        <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHoras(totalHorasCompradas) }}h</p>
+      </article>
+
+      <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <p class="text-xs uppercase tracking-wider text-zinc-500">Horas Planejadas</p>
+        <p
+          class="mt-2 text-2xl font-semibold"
+          :class="totalHorasPlanejadas > totalHorasCompradas ? 'text-amber-300' : 'text-zinc-100'"
+        >
+          {{ formatHoras(totalHorasPlanejadas) }}h
+        </p>
+        <p v-if="totalHorasPlanejadas > totalHorasCompradas" class="mt-1 text-xs text-amber-300">
+          {{ formatHoras(totalHorasPlanejadas - totalHorasCompradas) }}h acima do contratado
+        </p>
       </article>
 
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
@@ -124,6 +137,7 @@
               <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tarefa</th>
               <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Autor</th>
               <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Status</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prazo</th>
               <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Duração</th>
               <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas</th>
               <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Custo Aprox.</th>
@@ -160,6 +174,17 @@
               </td>
               <td class="px-4 py-3 text-xs text-zinc-300">
                 <span class="rounded-md bg-zinc-800 px-2 py-1">{{ statusLabel(item.status) }}</span>
+              </td>
+              <td class="px-4 py-3 text-xs text-zinc-300">
+                <div class="flex flex-col gap-1">
+                  <span
+                    class="inline-flex w-fit items-center rounded-md px-2 py-1 text-[11px] font-medium"
+                    :class="item.prazoStatus.className"
+                  >
+                    {{ item.prazoStatus.label }}
+                  </span>
+                  <span class="text-[11px] text-zinc-500">{{ item.prazoStatus.dataLabel }}</span>
+                </div>
               </td>
               <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatDuracao(item.duracaoSegundos) }}</td>
               <td class="px-4 py-3 text-right text-sm font-medium text-zinc-100">{{ formatHoras(item.horasExecutadas) }}h</td>
@@ -212,20 +237,26 @@ const { data: equipeMembros } = await useAsyncData(
 // ==========================================
 
 const totalHorasPrevistas = computed(() => {
-  const projetoPrevistas = Number(props.projeto.horas_previstas || 0)
-  const tarefasPrevistas = (tarefas.value || []).reduce((acc, item) => acc + Number(item.horas_estimadas || 0), 0)
-  return Math.max(projetoPrevistas, tarefasPrevistas)
+  return totalHorasCompradas.value
+})
+
+const totalHorasCompradas = computed(() => {
+  return Number(props.projeto.horas_previstas || 0)
+})
+
+const totalHorasPlanejadas = computed(() => {
+  return (tarefas.value || []).reduce((acc, item) => acc + Number(item.horas_estimadas || 0), 0)
 })
 
 const totalHorasExecutadas = computed(() => {
   return (tarefas.value || []).reduce((acc, item) => acc + Number(item.horas_executadas || 0), 0)
 })
 
-const saldoHoras = computed(() => totalHorasPrevistas.value - totalHorasExecutadas.value)
+const saldoHoras = computed(() => totalHorasCompradas.value - totalHorasExecutadas.value)
 
 const percentualHorasConsumidas = computed(() => {
-  if (totalHorasPrevistas.value <= 0) return 0
-  return Math.round((totalHorasExecutadas.value / totalHorasPrevistas.value) * 100)
+  if (totalHorasCompradas.value <= 0) return 0
+  return Math.round((totalHorasExecutadas.value / totalHorasCompradas.value) * 100)
 })
 
 const orcamentoTotal = computed(() => Number(props.projeto.orcamento_total || 0))
@@ -281,6 +312,73 @@ const statusLabelsMap: Record<ProjetoTarefa['status'], string> = {
   concluido: 'Concluido'
 }
 
+function toStartOfDay(value: Date): Date {
+  return new Date(value.getFullYear(), value.getMonth(), value.getDate())
+}
+
+function parseDateOnly(value: string | null | undefined): Date | null {
+  if (!value) return null
+  const dataOnly = String(value).slice(0, 10)
+  const [ano, mes, dia] = dataOnly.split('-').map((part) => Number(part))
+  if (!ano || !mes || !dia) return null
+  return new Date(ano, mes - 1, dia)
+}
+
+function formatDateOnly(value: string | null | undefined): string {
+  const parsed = parseDateOnly(value)
+  if (!parsed) return 'Sem prazo'
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(parsed)
+}
+
+function getPrazoStatus(prazoFim: string | null | undefined) {
+  const dataPrazo = parseDateOnly(prazoFim)
+  if (!dataPrazo) {
+    return {
+      label: 'Sem prazo',
+      dataLabel: 'Nao definido',
+      className: 'bg-zinc-800 text-zinc-300'
+    }
+  }
+
+  const hoje = toStartOfDay(new Date())
+  const msPorDia = 1000 * 60 * 60 * 24
+  const diffDias = Math.ceil((dataPrazo.getTime() - hoje.getTime()) / msPorDia)
+
+  if (diffDias < -3) {
+    return {
+      label: 'Atrasado com urgencia',
+      dataLabel: formatDateOnly(prazoFim),
+      className: 'bg-rose-900/60 text-rose-200 border border-rose-500/40'
+    }
+  }
+
+  if (diffDias < 0) {
+    return {
+      label: 'Atrasado',
+      dataLabel: formatDateOnly(prazoFim),
+      className: 'bg-red-900/50 text-red-200 border border-red-500/40'
+    }
+  }
+
+  if (diffDias <= 2) {
+    return {
+      label: 'Proximo de vencer',
+      dataLabel: formatDateOnly(prazoFim),
+      className: 'bg-amber-900/50 text-amber-200 border border-amber-500/40'
+    }
+  }
+
+  return {
+    label: 'No prazo',
+    dataLabel: formatDateOnly(prazoFim),
+    className: 'bg-emerald-900/40 text-emerald-200 border border-emerald-500/35'
+  }
+}
+
 const lancamentos = computed(() => {
   const source = (lancamentosBrutos.value || []) as ProjetoLancamentoHora[]
   return source
@@ -289,6 +387,10 @@ const lancamentos = computed(() => {
       const horasExecutadas = Number(item.horas || 0)
       const horasEstimadas = Number(tarefa?.horas_estimadas || 0)
       const percentualConsumo = horasEstimadas > 0 ? (horasExecutadas / horasEstimadas) * 100 : 0
+      const prazoFim = tarefa?.prazo_fim || null
+      const prazoStatus = tarefa?.status === 'concluido'
+        ? { label: 'Concluido', dataLabel: prazoFim ? formatDateOnly(prazoFim) : 'Nao definido', className: 'bg-zinc-800/60 text-zinc-400 border border-zinc-700' }
+        : getPrazoStatus(prazoFim)
 
       return {
         id: item.id,
@@ -298,6 +400,8 @@ const lancamentos = computed(() => {
         responsavel: item.autor_texto || tarefa?.responsavel_texto || '-',
         responsavelFoto: getResponsavelFoto(item),
         status: tarefa?.status || null,
+        prazoFim,
+        prazoStatus,
         horasEstimadas,
         horasExecutadas,
         percentualConsumo,

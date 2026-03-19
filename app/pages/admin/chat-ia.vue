@@ -89,6 +89,17 @@
                 <option value="especialista">Especialista</option>
               </select>
             </div>
+            <div v-if="modo === 'geral'" class="flex items-center gap-2">
+              <span class="text-sm text-zinc-500">Modelo:</span>
+              <select
+                v-model="provider"
+                class="rounded-xl border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-100 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 cursor-pointer disabled:opacity-60"
+                :disabled="carregando"
+                aria-label="Modelo de IA"
+              >
+                <option v-for="opt in OPCOES_MODELO" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </select>
+            </div>
             <template v-if="modo === 'especialista'">
               <select
                 v-model="agenteId"
@@ -164,15 +175,6 @@
 
         <footer class="shrink-0 border-t border-zinc-800/80 p-4">
         <div class="flex gap-2 items-center">
-          <select
-            v-if="modo === 'geral'"
-            v-model="provider"
-            class="shrink-0 rounded-xl border border-zinc-600 bg-zinc-800 px-3 py-2.5 text-sm font-medium text-zinc-100 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 cursor-pointer disabled:opacity-60"
-            :disabled="carregando"
-            aria-label="Modelo de IA"
-          >
-            <option v-for="opt in OPCOES_MODELO" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
           <textarea
             ref="textareaMensagemRef"
             v-model="mensagem"
@@ -250,6 +252,7 @@ const PROMPTS_PREDEFINIDOS = [
 
 const { sendChat, generateImage } = useProjectAiChat()
 const { list } = useAgents()
+const { loadSession } = useAuth()
 const { listByAgent, create: createConversation, getWithMessages, updateConversation, sendMessage: sendAgentMessage } = useAgentConversations()
 
 const modo = ref<'geral' | 'especialista'>('geral')
@@ -294,6 +297,7 @@ onMounted(async () => {
     agenteId.value = route.query.agenteId
   }
   try {
+    await loadSession()
     agentes.value = await list()
   } catch (e) {
     console.error(e)

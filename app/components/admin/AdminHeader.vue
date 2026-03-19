@@ -36,15 +36,14 @@
         >
           <span class="max-w-[220px] truncate text-zinc-300">#{{ timerState.tarefaCodigo || timerState.tarefaId }} {{ timerState.tarefaTitulo }}</span>
           <span class="font-semibold text-zinc-100">{{ timerClock }}</span>
-          <span class="text-emerald-400">></span>
         </button>
         <button
           type="button"
-          class="rounded-sm bg-red-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-red-500"
+          class="inline-flex items-center justify-center rounded-sm px-1 py-0.5 text-white transition-colors hover:text-zinc-200"
           title="Parar cronometro"
           @click.stop="solicitarParadaTimer"
         >
-          []
+          <PhStopCircle :size="20" weight="fill" class="text-white" />
         </button>
       </div>
 
@@ -72,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhList, PhUserCircle } from '@phosphor-icons/vue'
+import { PhList, PhUserCircle, PhStopCircle } from '@phosphor-icons/vue'
 
 interface Breadcrumb {
   label: string

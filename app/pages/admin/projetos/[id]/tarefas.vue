@@ -23,10 +23,8 @@
               :aria-expanded="String(filtrosExpandidos)"
               @click="filtrosExpandidos = !filtrosExpandidos"
             >
-              <Icon
-                :name="filtrosExpandidos ? 'ph:arrows-in-line-vertical-bold' : 'ph:arrows-out-line-vertical-bold'"
-                class="h-3.5 w-3.5"
-              />
+              <Minimize2 v-if="filtrosExpandidos" class="h-3.5 w-3.5" />
+              <Maximize2 v-else class="h-3.5 w-3.5" />
               {{ filtrosExpandidos ? 'Minimizar' : 'Expandir' }}
             </button>
 
@@ -284,10 +282,11 @@
                 <div class="flex items-center gap-2">
                   <button
                     @click.stop="toggleTimerTarefa(t)"
-                    class="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-900 hover:opacity-90"
+                    class="flex h-6 w-6 items-center justify-center rounded-full text-white transition-colors hover:text-zinc-200"
                     :title="tarefaRodandoId === t.id ? 'Pausar' : 'Iniciar'"
                   >
-                    {{ tarefaRodandoId === t.id ? '||' : '>' }}
+                    <PhStopCircle v-if="tarefaRodandoId === t.id" :size="20" weight="fill" />
+                    <PhPlayCircle v-else :size="20" weight="fill" />
                   </button>
                   <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button @click.stop="editarTarefa(t.id)" class="text-brand hover:underline">Editar</button>
@@ -321,10 +320,8 @@
             @click="toggleStatusReducao(coluna.status)"
           >
             <div class="flex min-w-0 items-center gap-3">
-              <Icon
-                :name="isStatusReduzido(coluna.status) ? 'ph:caret-right-bold' : 'ph:caret-down-bold'"
-                class="h-3.5 w-3.5 shrink-0 text-zinc-500"
-              />
+              <ChevronRight v-if="isStatusReduzido(coluna.status)" class="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+              <ChevronDown v-else class="h-3.5 w-3.5 shrink-0 text-zinc-500" />
               <span
                 class="h-2.5 w-2.5 shrink-0 rounded-full"
                 :class="{
@@ -384,6 +381,7 @@
                   <th class="w-[14%] px-0 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Status</th>
                   <th class="w-[14%] px-0 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Tipo</th>
                   <th class="w-[14%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prazo</th>
+                  <th class="w-[14%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Prazo Status</th>
                   <th class="w-[10%] px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas</th>
                   <th class="w-[8%] px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Progresso</th>
                   <th class="w-[6%] px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Acoes</th>
@@ -470,6 +468,14 @@
                     </select>
                   </td>
                   <td class="px-4 py-3 align-middle text-sm text-zinc-300">{{ formatPrazoRange(t) }}</td>
+                  <td class="px-4 py-3 align-middle text-xs text-zinc-300">
+                    <span
+                      class="inline-flex rounded-md border px-2 py-1 text-[11px] font-medium"
+                      :class="getPrazoStatusMeta(t).className"
+                    >
+                      {{ getPrazoStatusMeta(t).label }}
+                    </span>
+                  </td>
                   <td class="px-4 py-3 align-middle text-sm text-zinc-200" @click.stop>
                     <div class="flex items-center justify-between gap-2">
                       <span>
@@ -478,11 +484,12 @@
                       </span>
                       <button
                         type="button"
-                        class="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-900 hover:opacity-90"
+                        class="flex h-6 w-6 items-center justify-center rounded-full text-white transition-colors hover:text-zinc-200"
                         @click.stop
                         @click="toggleTimerTarefa(t)"
                       >
-                        {{ tarefaRodandoId === t.id ? '||' : '>' }}
+                        <PhStopCircle v-if="tarefaRodandoId === t.id" :size="20" weight="fill" />
+                        <PhPlayCircle v-else :size="20" weight="fill" />
                       </button>
                     </div>
                   </td>
@@ -504,7 +511,7 @@
                 </tr>
 
                 <tr v-if="!tarefasPorStatus[coluna.status]?.length">
-                  <td colspan="9" class="px-4 py-3 text-xs text-zinc-600">Nenhuma tarefa nesta etapa.</td>
+                  <td colspan="10" class="px-4 py-3 text-xs text-zinc-600">Nenhuma tarefa nesta etapa.</td>
                 </tr>
               </tbody>
             </table>
@@ -606,7 +613,7 @@
 
           <div class="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
             <span class="inline-flex items-center gap-1.5">
-              <Icon name="ph:calendar-blank" class="h-3.5 w-3.5" />
+              <Calendar class="h-3.5 w-3.5" />
               {{ formatMetaDate(tarefaEmEdicao?.prazo_fim) }}
             </span>
             <span class="inline-flex items-center gap-2">
@@ -623,12 +630,12 @@
                 <span v-else>{{ getResponsavelInitials(tarefaEmEdicao.responsavel_texto) }}</span>
               </span>
               <span class="inline-flex items-center gap-1.5">
-                <Icon name="ph:user" class="h-3.5 w-3.5" />
+                <User class="h-3.5 w-3.5" />
                 {{ tarefaEmEdicao?.responsavel_texto || 'Sem responsavel' }}
               </span>
             </span>
             <span class="inline-flex items-center gap-1.5">
-              <Icon name="ph:clock-countdown" class="h-3.5 w-3.5" />
+              <Timer class="h-3.5 w-3.5" />
               {{ formatMetaDateTime(tarefaEmEdicao?.updated_at) }}
             </span>
             <button
@@ -636,7 +643,7 @@
               class="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
               @click="fecharModalEdicao"
             >
-              <Icon name="ph:x-bold" class="h-4 w-4" />
+              <X class="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -657,7 +664,7 @@
 
               <div>
                 <div class="mb-2 flex items-center gap-2 text-sm font-medium text-zinc-300">
-                  <Icon name="ph:file-text" class="h-4 w-4 text-zinc-500" />
+                  <FileText class="h-4 w-4 text-zinc-500" />
                   <span>Descricao</span>
                 </div>
                 <textarea
@@ -668,10 +675,84 @@
                 />
               </div>
 
+              <!-- Subtarefas -->
+              <div>
+                <div class="mb-2 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2">
+                    <label class="block text-sm font-medium text-zinc-300">Subtarefas</label>
+                    <span v-if="subtarefasAtivas.length" class="rounded-full bg-zinc-800 px-2 py-0.5 text-[11px] text-zinc-400">
+                      {{ subtarefasConcluidas }}/{{ subtarefasAtivas.length }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/60">
+                  <div v-if="subtarefasAtivas.length" class="h-1 bg-zinc-800">
+                    <div class="h-full bg-emerald-500 transition-all duration-300" :style="{ width: `${subtarefasProgressoPct}%` }" />
+                  </div>
+
+                  <div v-if="subtarefasAtivas.length" class="divide-y divide-zinc-800/60">
+                    <div
+                      v-for="st in subtarefasAtivas"
+                      :key="`subtarefa-${st.id}`"
+                      class="group flex items-center gap-3 px-4 py-2.5"
+                    >
+                      <button
+                        type="button"
+                        class="flex-shrink-0 transition-colors"
+                        :title="st.status === 'concluido' ? 'Reabrir' : 'Concluir'"
+                        @click="toggleSubtarefaStatus(st)"
+                      >
+                        <PhCheckSquare v-if="st.status === 'concluido'" :size="18" weight="fill" class="text-emerald-400" />
+                        <PhSquare v-else :size="18" class="text-zinc-500 hover:text-zinc-300" />
+                      </button>
+                      <span
+                        class="flex-1 text-sm leading-snug"
+                        :class="st.status === 'concluido' ? 'text-zinc-500 line-through' : 'text-zinc-200'"
+                      >
+                        {{ st.titulo }}
+                      </span>
+                      <button
+                        type="button"
+                        class="flex-shrink-0 text-zinc-600 opacity-0 transition-all hover:text-red-400 group-hover:opacity-100"
+                        title="Excluir subtarefa"
+                        @click="excluirSubtarefa(st.id)"
+                      >
+                        <PhTrash :size="14" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    class="flex items-center gap-2 px-4 py-2.5"
+                    :class="subtarefasAtivas.length ? 'border-t border-zinc-800/60' : ''"
+                  >
+                    <PhPlus :size="16" class="flex-shrink-0 text-zinc-600" />
+                    <input
+                      v-model="novaSubtarefaTitulo"
+                      type="text"
+                      placeholder="Adicionar subtarefa..."
+                      class="flex-1 bg-transparent text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none"
+                      :disabled="novaSubtarefaSalvando"
+                      @keydown.enter.prevent="adicionarSubtarefa"
+                    >
+                    <button
+                      v-if="novaSubtarefaTitulo.trim()"
+                      type="button"
+                      class="text-xs font-medium text-brand transition-opacity hover:opacity-80 disabled:opacity-50"
+                      :disabled="novaSubtarefaSalvando"
+                      @click="adicionarSubtarefa"
+                    >
+                      {{ novaSubtarefaSalvando ? '...' : 'Salvar' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
                   <div class="mb-3 flex items-center gap-2 text-sm font-medium text-zinc-300">
-                    <Icon name="ph:git-branch" class="h-4 w-4 text-zinc-500" />
+                    <GitBranch class="h-4 w-4 text-zinc-500" />
                     <span>Estrutura</span>
                   </div>
                   <div class="space-y-3">
@@ -700,7 +781,7 @@
 
                 <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
                   <div class="mb-3 flex items-center gap-2 text-sm font-medium text-zinc-300">
-                    <Icon name="ph:chart-line-up" class="h-4 w-4 text-zinc-500" />
+                    <TrendingUp class="h-4 w-4 text-zinc-500" />
                     <span>Progresso</span>
                   </div>
                   <div class="space-y-3">
@@ -780,6 +861,7 @@
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -857,7 +939,23 @@
               </section>
 
               <section class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-                <h4 class="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Tempo</h4>
+                <div class="mb-3 flex items-center justify-between">
+                  <h4 class="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Tempo</h4>
+                  <button
+                    v-if="tarefaEmEdicao"
+                    type="button"
+                    class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors"
+                    :class="tarefaRodandoId === tarefaEmEdicao.id
+                      ? 'bg-red-500/15 text-red-400 hover:bg-red-500/25'
+                      : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'"
+                    :title="tarefaRodandoId === tarefaEmEdicao.id ? 'Parar cronometro' : 'Iniciar cronometro'"
+                    @click.prevent="toggleTimerTarefa(tarefaEmEdicao)"
+                  >
+                    <PhStopCircle v-if="tarefaRodandoId === tarefaEmEdicao.id" :size="16" weight="fill" />
+                    <PhPlayCircle v-else :size="16" weight="fill" />
+                    {{ tarefaRodandoId === tarefaEmEdicao.id ? 'Parar' : 'Iniciar' }}
+                  </button>
+                </div>
                 <div class="grid grid-cols-2 gap-3">
                   <label class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3 block">
                     <span class="text-[10px] uppercase tracking-wider text-zinc-500">Estimado</span>
@@ -933,7 +1031,9 @@
 
 <script setup lang="ts">
 import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProjetosWorkspace'
-import { createLancamentoHora, fetchTarefasByProjetoId, updateTarefaStatus, deleteTarefa, updateTarefa, fetchEquipeMembros, normalizeProjetoTarefaTags } from '~/composables/useProjetosWorkspace'
+import { createLancamentoHora, fetchTarefasByProjetoId, updateTarefaStatus, deleteTarefa, updateTarefa, createTarefa, fetchEquipeMembros, normalizeProjetoTarefaTags } from '~/composables/useProjetosWorkspace'
+import { PhPlayCircle, PhStopCircle, PhCheckSquare, PhSquare, PhTrash, PhPlus } from '@phosphor-icons/vue'
+import { Minimize2, Maximize2, ChevronRight, ChevronDown, Calendar, User, Timer, X, FileText, GitBranch, TrendingUp } from 'lucide-vue-next'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 const route = useRoute()
@@ -1019,6 +1119,56 @@ const formEdicao = reactive({
 })
 
 const edicaoTagInput = ref('')
+const novaSubtarefaTitulo = ref('')
+const novaSubtarefaSalvando = ref(false)
+
+const subtarefasAtivas = computed(() =>
+  (tarefas.value || []).filter((t) => t.pai_id === tarefaEditandoId.value)
+)
+
+const subtarefasConcluidas = computed(() =>
+  subtarefasAtivas.value.filter((t) => t.status === 'concluido').length
+)
+
+const subtarefasProgressoPct = computed(() => {
+  if (!subtarefasAtivas.value.length) return 0
+  return Math.round((subtarefasConcluidas.value / subtarefasAtivas.value.length) * 100)
+})
+
+async function adicionarSubtarefa() {
+  const titulo = novaSubtarefaTitulo.value.trim()
+  if (!titulo || !tarefaEditandoId.value) return
+  novaSubtarefaSalvando.value = true
+  const { data, error } = await createTarefa({
+    projeto_id: props.projeto.id,
+    pai_id: tarefaEditandoId.value,
+    titulo,
+    status: 'fazer',
+    tipo: 'funcionalidade',
+    prioridade: 'media',
+    horas_estimadas: 0,
+  })
+  novaSubtarefaSalvando.value = false
+  if (error || !data) {
+    showAlert('Erro ao criar subtarefa: ' + error, { title: 'Erro', type: 'error' })
+    return
+  }
+  novaSubtarefaTitulo.value = ''
+  tarefas.value = [...(tarefas.value || []), data]
+}
+
+async function toggleSubtarefaStatus(st: ProjetoTarefa) {
+  const novoStatus: ProjetoTarefa['status'] = st.status === 'concluido' ? 'fazer' : 'concluido'
+  tarefas.value = (tarefas.value || []).map((t) =>
+    t.id === st.id ? { ...t, status: novoStatus } : t
+  )
+  await updateTarefaStatus(st.id, novoStatus)
+}
+
+async function excluirSubtarefa(id: number) {
+  tarefas.value = (tarefas.value || []).filter((t) => t.id !== id)
+  await deleteTarefa(id)
+}
 
 const equipeOptions = computed(() => {
   return (equipeMembros.value || [])
@@ -1667,6 +1817,66 @@ function formatPrazoRange(t: ProjetoTarefa): string {
   return `${fmt(inicio)} -> ${fmt(fim)}`
 }
 
+type PrazoStatusMeta = {
+  label: string
+  className: string
+}
+
+function getPrazoStatusMeta(t: ProjetoTarefa): PrazoStatusMeta {
+  if (t.status === 'concluido') {
+    return {
+      label: 'Concluido',
+      className: 'border-zinc-700 bg-zinc-900/50 text-zinc-400'
+    }
+  }
+
+  if (!t.prazo_fim) {
+    return {
+      label: 'Sem prazo',
+      className: 'border-zinc-700 bg-zinc-900 text-zinc-300'
+    }
+  }
+
+  const dataFim = new Date(`${toDateInputValue(t.prazo_fim)}T00:00:00`)
+  if (Number.isNaN(dataFim.getTime())) {
+    return {
+      label: 'Sem prazo',
+      className: 'border-zinc-700 bg-zinc-900 text-zinc-300'
+    }
+  }
+
+  const hoje = new Date()
+  const hojeInicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+  const msPorDia = 1000 * 60 * 60 * 24
+  const diffDias = Math.ceil((dataFim.getTime() - hojeInicio.getTime()) / msPorDia)
+
+  if (diffDias < -3) {
+    return {
+      label: 'Atrasado com urgencia',
+      className: 'border-rose-500/40 bg-rose-900/50 text-rose-200'
+    }
+  }
+
+  if (diffDias < 0) {
+    return {
+      label: 'Atrasado',
+      className: 'border-red-500/40 bg-red-900/50 text-red-200'
+    }
+  }
+
+  if (diffDias <= 2) {
+    return {
+      label: 'Proximo de vencer',
+      className: 'border-amber-500/40 bg-amber-900/50 text-amber-200'
+    }
+  }
+
+  return {
+    label: 'No prazo',
+    className: 'border-emerald-500/40 bg-emerald-900/40 text-emerald-200'
+  }
+}
+
 async function selecionarStatus(tarefa: ProjetoTarefa, novoStatus: ProjetoTarefa['status']) {
   if (tarefa.status === novoStatus) return
 
@@ -2030,16 +2240,8 @@ watch(
   tarefas,
   () => {
     restaurarTimerDaWorkspace()
-    abrirTarefaPelaQuery()
   },
   { immediate: true }
-)
-
-watch(
-  () => route.query.tarefa,
-  () => {
-    abrirTarefaPelaQuery()
-  }
 )
 
 onBeforeUnmount(() => {
@@ -2162,9 +2364,6 @@ async function editarTarefa(id: number) {
   formEdicao.responsavel_equipe_id = tarefa.responsavel_equipe_id ? String(tarefa.responsavel_equipe_id) : ''
   edicaoTagInput.value = ''
   modalEdicaoAberto.value = true
-  if (Number(route.query.tarefa) !== tarefa.id) {
-    navigateTo({ path: route.path, query: { ...route.query, tarefa: String(tarefa.id) } }, { replace: true })
-  }
 }
 
 async function abrirTarefaPelaQuery() {
@@ -2183,11 +2382,7 @@ function fecharModalEdicao() {
   modalEdicaoAberto.value = false
   tarefaEditandoId.value = null
   edicaoTagInput.value = ''
-  if (route.query.tarefa) {
-    const nextQuery = { ...route.query }
-    delete nextQuery.tarefa
-    navigateTo({ path: route.path, query: nextQuery }, { replace: true })
-  }
+  novaSubtarefaTitulo.value = ''
 }
 
 async function salvarEdicaoTarefa() {

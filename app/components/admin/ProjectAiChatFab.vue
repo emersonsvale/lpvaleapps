@@ -28,25 +28,35 @@
             </div>
             <h2 class="text-base font-semibold text-zinc-100 truncate pointer-events-none">Chat IA</h2>
           </div>
-          <div class="flex items-center gap-1">
-            <button
-              v-if="mensagens.length > 0"
-              type="button"
-              class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
-              aria-label="Limpar conversa"
-              title="Limpar conversa"
-              @click="limparConversa()"
+          <div class="flex items-center gap-2">
+            <select
+              v-model="provider"
+              class="rounded-xl border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-100 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 cursor-pointer disabled:opacity-60"
+              :disabled="carregando"
+              aria-label="Modelo de IA"
             >
-              <PhTrash class="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
-              aria-label="Fechar chat"
-              @click="aberto = false"
-            >
-              <PhX class="h-5 w-5" />
-            </button>
+              <option v-for="opt in OPCOES_MODELO" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
+            <div class="flex items-center gap-1">
+              <button
+                v-if="mensagens.length > 0"
+                type="button"
+                class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                aria-label="Limpar conversa"
+                title="Limpar conversa"
+                @click="limparConversa()"
+              >
+                <PhTrash class="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                class="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                aria-label="Fechar chat"
+                @click="aberto = false"
+              >
+                <PhX class="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -92,20 +102,6 @@
 
         <footer class="shrink-0 border-t border-zinc-800 p-3">
           <div class="flex gap-2 items-center">
-            <select
-              v-model="provider"
-              class="shrink-0 rounded-xl border border-zinc-600 bg-zinc-800 px-3 py-2.5 text-sm font-medium text-zinc-100 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 cursor-pointer disabled:opacity-60"
-              :disabled="carregando"
-              aria-label="Modelo de IA"
-            >
-              <option
-                v-for="opt in OPCOES_MODELO"
-                :key="opt.value"
-                :value="opt.value"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
             <textarea
               ref="textareaMensagemRef"
               v-model="mensagem"

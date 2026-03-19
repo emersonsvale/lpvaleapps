@@ -50,6 +50,7 @@ export interface ProjetoTarefa {
     pacote: string | null
     responsavel_equipe_id?: number | null
     responsavel_texto: string | null
+    pai_id?: number | null
     ordem_coluna: number
     ordem_global: number
     concluida_em: string | null

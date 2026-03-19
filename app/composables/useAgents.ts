@@ -6,13 +6,21 @@
 import type { AiAgent, AiAgentKnowledge } from '~/types/ai-agents'
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const supabase = useSupabase()
-  if (!supabase) throw new Error('Supabase não está disponível')
-  const { data } = await supabase.auth.getSession()
-  let token = data.session?.access_token
+  // Preferir sessão já carregada pelo useAuth (layout) para evitar race no primeiro load
+  const auth = useAuth()
+  let token = auth.session.value?.access_token ?? null
   if (!token) {
-    const { data: refresh } = await supabase.auth.refreshSession()
-    token = refresh.session?.access_token
+    const supabase = useSupabase()
+    if (!supabase) throw new Error('Supabase não está disponível')
+    const { data } = await supabase.auth.getSession()
+    token = data.session?.access_token ?? null
+  }
+  if (!token) {
+    const supabase = useSupabase()
+    if (supabase) {
+      const { data: refresh } = await supabase.auth.refreshSession()
+      token = refresh.session?.access_token ?? null
+    }
   }
   if (!token) throw new Error('Sessão expirada. Faça login novamente.')
   return { Authorization: `Bearer ${token}` }

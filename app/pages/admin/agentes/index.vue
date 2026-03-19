@@ -67,11 +67,13 @@ import type { AiAgent } from '~/types/ai-agents'
 definePageMeta({ layout: 'admin' })
 
 const { list } = useAgents()
+const { loadSession } = useAuth()
 const agents = ref<AiAgent[]>([])
 const loading = ref(true)
 
 onMounted(async () => {
   try {
+    await loadSession()
     agents.value = await list()
   } catch (e) {
     console.error(e)

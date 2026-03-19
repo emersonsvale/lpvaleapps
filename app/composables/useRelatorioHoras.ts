@@ -116,7 +116,8 @@ function buildCSS(): string {
     '.btn-close { background: #444; color: #fff; }',
     '.content-wrapper { margin-top: 60px; }',
 
-    '@media print { .toolbar { display: none !important; } .content-wrapper { margin-top: 0; } body { padding: 0; } @page { size: A4 landscape; margin: 1.5cm; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } .kpi-grid { page-break-inside: avoid; } .progress-section { page-break-inside: avoid; } }',
+    '@page { size: A4 portrait; margin: 1.5cm; }',
+    '@media print { .toolbar { display: none !important; } .content-wrapper { margin-top: 0; } body { padding: 0; max-width: none; width: auto; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } .kpi-grid { page-break-inside: avoid; } .progress-section { page-break-inside: avoid; } }',
   ].join('\n')
 }
 
@@ -213,7 +214,7 @@ export function generateRelatorioHorasHTML(data: RelatorioHorasData): string {
 
   // KPIs
   parts.push('<div class="kpi-grid">')
-  parts.push('<div class="kpi-card accent"><div class="kpi-label">Horas Previstas</div><div class="kpi-value">' + fmtHoras(data.horasPrevistas) + 'h</div><div class="kpi-sub">Contratadas no projeto</div></div>')
+  parts.push('<div class="kpi-card accent"><div class="kpi-label">Horas Contratadas</div><div class="kpi-value">' + fmtHoras(data.horasPrevistas) + 'h</div><div class="kpi-sub">Contratadas no projeto</div></div>')
   parts.push('<div class="kpi-card"><div class="kpi-label">Horas Executadas</div><div class="kpi-value">' + fmtHoras(data.horasExecutadas) + 'h</div><div class="kpi-sub">Total acumulado</div></div>')
   parts.push('<div class="kpi-card ' + saldoClass + '"><div class="kpi-label">Saldo de Horas</div><div class="kpi-value">' + fmtHoras(data.saldoHoras) + 'h</div><div class="kpi-sub">' + saldoSub + '</div></div>')
   parts.push('<div class="kpi-card accent"><div class="kpi-label">Horas no Periodo</div><div class="kpi-value">' + fmtHoras(data.horasNoPeriodo) + 'h</div><div class="kpi-sub">' + data.itens.length + ' tarefa(s) ativa(s)</div></div>')
@@ -226,7 +227,7 @@ export function generateRelatorioHorasHTML(data: RelatorioHorasData): string {
   parts.push('<div class="progress-label">')
   parts.push('<span>' + fmtHoras(data.horasExecutadas) + 'h executadas</span>')
   parts.push('<span>' + data.percentualConsumo + '% consumido</span>')
-  parts.push('<span>' + fmtHoras(data.horasPrevistas) + 'h previstas</span>')
+  parts.push('<span>' + fmtHoras(data.horasPrevistas) + 'h contratadas</span>')
   parts.push('</div></div>')
 
   // Status chips
