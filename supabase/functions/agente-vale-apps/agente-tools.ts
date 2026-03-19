@@ -37,6 +37,17 @@ function clampPrioridade(s: string): string {
   return TAREFA_PRIORIDADE.includes(lower as typeof TAREFA_PRIORIDADE[number]) ? lower : "media"
 }
 
+function normalizeDate(v: unknown): string | null {
+  if (typeof v === "string") {
+    const trimmed = v.trim()
+    // Valida se é uma data no formato YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed
+    }
+  }
+  return null
+}
+
 export async function executeTool(
   name: string,
   args: Record<string, unknown>,
@@ -81,6 +92,8 @@ async function criarTarefa(
     horas_estimadas: Number(args.horas_estimadas) || 0,
     sprint: typeof args.sprint === "string" ? (args.sprint.trim() || null) : null,
     release: typeof args.release === "string" ? (args.release.trim() || null) : null,
+    prazo_inicio: normalizeDate(args.prazo_inicio),
+    prazo_fim: normalizeDate(args.prazo_fim),
   }
 
   const { data, error } = await supabase.from("projetos_tarefas").insert(payload).select("id, titulo, status").single()
@@ -112,6 +125,8 @@ async function editarTarefa(args: Record<string, unknown>, supabase: SupabaseCli
   if (args.horas_estimadas !== undefined) payload.horas_estimadas = Number(args.horas_estimadas) || 0
   if (args.sprint !== undefined) payload.sprint = typeof args.sprint === "string" ? (args.sprint.trim() || null) : null
   if (args.release !== undefined) payload.release = typeof args.release === "string" ? (args.release.trim() || null) : null
+  if (args.prazo_inicio !== undefined) payload.prazo_inicio = normalizeDate(args.prazo_inicio)
+  if (args.prazo_fim !== undefined) payload.prazo_fim = normalizeDate(args.prazo_fim)
 
   if (Object.keys(payload).length === 0) {
     return { success: false, message: "Informe ao menos um campo para editar (titulo, descricao, status, tipo, prioridade, tags, etc.)." }
@@ -148,7 +163,7 @@ export const OPENAI_TOOLS = [
     type: "function" as const,
     function: {
       name: "criar_tarefa",
-      description: "Cria uma nova tarefa no projeto atual. O usuário pode descrever em linguagem natural: o que é a tarefa (título/descrição) e quanto tempo vai levar (ex.: '2 horas', '4h', 'meio dia'). Extraia titulo (obrigatório), opcionalmente descricao, e horas_estimadas (em número, ex. 2 ou 4). Só chame quando tiver título claro; se faltar informação, pergunte ao usuário antes.",
+      description: "Cria uma nova tarefa no projeto atual. O usuário pode descrever em linguagem natural: o que é a tarefa (título/descrição), quanto tempo vai levar (ex.: '2 horas', '4h') e datas de início/fim (ex.: '2025-03-20'). Extraia titulo (obrigatório), opcionalmente descricao, horas_estimadas (em número) e prazos (formato YYYY-MM-DD). Só chame quando tiver título claro; se faltar informação, pergunte ao usuário antes.",
       parameters: {
         type: "object",
         properties: {
@@ -162,6 +177,8 @@ export const OPENAI_TOOLS = [
           horas_estimadas: { type: "number", description: "Horas estimadas (ex.: usuário disse '2h' → 2, 'vou levar 4 horas' → 4)." },
           sprint: { type: "string", description: "Sprint" },
           release: { type: "string", description: "Release" },
+          prazo_inicio: { type: "string", description: "Data de início do prazo (formato: YYYY-MM-DD, ex.: '2025-03-20'). Extraia do contexto quando o usuário mencionar datas." },
+          prazo_fim: { type: "string", description: "Data de fim do prazo (formato: YYYY-MM-DD, ex.: '2025-03-25'). Extraia do contexto quando o usuário mencionar prazos ou datas de entrega." },
         },
         required: ["titulo"],
       },
@@ -186,6 +203,8 @@ export const OPENAI_TOOLS = [
           horas_estimadas: { type: "number" },
           sprint: { type: "string" },
           release: { type: "string" },
+          prazo_inicio: { type: "string", description: "Data de início (formato: YYYY-MM-DD)" },
+          prazo_fim: { type: "string", description: "Data de fim (formato: YYYY-MM-DD)" },
         },
         required: ["tarefa_id"],
       },
@@ -210,7 +229,7 @@ export const OPENAI_TOOLS = [
 export const GEMINI_TOOL_DECLARATIONS = [
   {
     name: "criar_tarefa",
-    description: "Cria uma nova tarefa no projeto atual. O usuário pode descrever em linguagem natural: o que é a tarefa (título/descrição) e quanto tempo vai levar (ex.: '2 horas', '4h', 'meio dia'). Extraia titulo (obrigatório), opcionalmente descricao, e horas_estimadas (em número). Só chame quando tiver título claro; se faltar informação, pergunte ao usuário antes.",
+    description: "Cria uma nova tarefa no projeto atual. O usuário pode descrever em linguagem natural: o que é a tarefa (título/descrição), quanto tempo vai levar (ex.: '2 horas', '4h') e datas de início/fim (ex.: '2025-03-20'). Extraia titulo (obrigatório), opcionalmente descricao, horas_estimadas (em número) e prazos (formato YYYY-MM-DD). Só chame quando tiver título claro; se faltar informação, pergunte ao usuário antes.",
     parameters: {
       type: "object",
       properties: {
@@ -224,6 +243,8 @@ export const GEMINI_TOOL_DECLARATIONS = [
         horas_estimadas: { type: "number", description: "Horas estimadas (ex.: '2h' → 2, '4 horas' → 4)." },
         sprint: { type: "string" },
         release: { type: "string" },
+        prazo_inicio: { type: "string", description: "Data de início do prazo (formato: YYYY-MM-DD, ex.: '2025-03-20')." },
+        prazo_fim: { type: "string", description: "Data de fim do prazo (formato: YYYY-MM-DD, ex.: '2025-03-25')." },
       },
       required: ["titulo"],
     },
@@ -245,6 +266,8 @@ export const GEMINI_TOOL_DECLARATIONS = [
         horas_estimadas: { type: "number" },
         sprint: { type: "string" },
         release: { type: "string" },
+        prazo_inicio: { type: "string", description: "Data de início (formato: YYYY-MM-DD)" },
+        prazo_fim: { type: "string", description: "Data de fim (formato: YYYY-MM-DD)" },
       },
       required: ["tarefa_id"],
     },
