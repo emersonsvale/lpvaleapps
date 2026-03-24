@@ -22,6 +22,7 @@ Disallow: /.output/
 Disallow: /node_modules/
 Disallow: /*.map
 Disallow: /api/
+Allow: /admin/login
 Disallow: /admin/
 
 # Permitir arquivos importantes

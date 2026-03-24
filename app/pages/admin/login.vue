@@ -46,6 +46,24 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
+useHead({
+  title: 'Login Administrativo - Vale Apps',
+  meta: [
+    {
+      name: 'robots',
+      content: 'noindex, nofollow, noarchive, nosnippet, noimageindex'
+    },
+    {
+      name: 'googlebot',
+      content: 'noindex, nofollow, noarchive, nosnippet, noimageindex'
+    },
+    {
+      name: 'referrer',
+      content: 'no-referrer'
+    }
+  ]
+})
+
 const email = ref('')
 const password = ref('')
 const error = ref('')

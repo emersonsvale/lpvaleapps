@@ -19,6 +19,19 @@ const route = useRoute()
 const { loadSession } = useAuth()
 const menuOpen = ref(false)
 
+useHead({
+  meta: [
+    {
+      name: 'robots',
+      content: 'noindex, nofollow, noarchive, nosnippet, noimageindex'
+    },
+    {
+      name: 'googlebot',
+      content: 'noindex, nofollow, noarchive, nosnippet, noimageindex'
+    }
+  ]
+})
+
 onMounted(() => {
   loadSession()
 })
