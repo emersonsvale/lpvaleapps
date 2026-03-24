@@ -341,6 +341,16 @@ onUnmounted(() => {
 
 const canonicalUrl = computed(() => post.value?.canonical_url || `https://valeapps.com.br/blog/${post.value?.slug}`)
 
+useHead({
+  script: [
+    {
+      async: true,
+      crossorigin: 'anonymous',
+      src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7695571467948724',
+    },
+  ],
+})
+
 setPageSEO({
   title: post.value.seo_title || post.value.title,
   description: post.value.seo_description || post.value.excerpt,
