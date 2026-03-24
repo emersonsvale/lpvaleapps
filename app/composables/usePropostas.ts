@@ -213,6 +213,34 @@ function normalizarItensHora(itens: PropostaHoraItem[] | null | undefined, valor
     .filter(item => item.etapa && item.horas > 0)
 }
 
+function normalizarItensHoraRaw(itens: unknown): PropostaHoraItem[] | null {
+  if (!Array.isArray(itens)) return null
+
+  const normalizados = itens
+    .map((item, index) => {
+      const src = item as Partial<PropostaHoraItem>
+      const horas = Math.max(0, toNumber(src.horas))
+      const valorHora = Math.max(0, toNumber(src.valor_hora))
+      const subtotal = src.subtotal != null ? toNumber(src.subtotal) : roundMoney(horas * valorHora)
+      const etapa = String(src.etapa ?? '').trim() || `Etapa ${index + 1}`
+
+      return {
+        id: src.id,
+        proposta_id: src.proposta_id,
+        created_at: src.created_at,
+        etapa,
+        descricao: src.descricao?.trim() || null,
+        horas,
+        valor_hora: valorHora,
+        subtotal,
+        ordem: toNumber(src.ordem) || index,
+      }
+    })
+    .filter(item => item.etapa && item.horas > 0)
+
+  return normalizados.length ? normalizados : []
+}
+
 export function calcularResumoHora(
   itens: PropostaHoraItem[] | null | undefined,
   valorHoraPadrao: number | null | undefined
@@ -330,8 +358,7 @@ function normalizarSlugParaBusca(slug: string): string[] {
 
 /** Busca proposta por slug (página pública do cliente). Aceita slug exato ou com _/-. */
 export async function fetchPropostaBySlug(slug: string): Promise<PropostaRow | null> {
-  const supabase = useSupabase()
-  if (!supabase || !slug?.trim()) return null
+  if (!slug?.trim()) return null
 
   const variantes = normalizarSlugParaBusca(slug)
   if (variantes.length === 0) return null
@@ -340,15 +367,17 @@ export async function fetchPropostaBySlug(slug: string): Promise<PropostaRow | n
     console.log('[fetchPropostaBySlug]', { slug, variantes })
   }
 
-  const { data, error } = await supabase
-    .from('proposta')
-    .select('*')
-    .in('slug', variantes)
-    .limit(1)
-    .maybeSingle()
+  let data: PropostaRow | null = null
 
-  if (error) {
-    console.warn('[usePropostas] Erro ao buscar por slug:', error.message)
+  try {
+    data = await $fetch<PropostaRow>(`/api/public/propostas/${encodeURIComponent(slug)}`)
+  }
+  catch (error: any) {
+    if (error?.statusCode === 404 || error?.status === 404) {
+      return null
+    }
+
+    console.warn('[usePropostas] Erro ao buscar por slug:', error?.data?.statusMessage || error?.message || error)
     return null
   }
 
@@ -369,12 +398,8 @@ export async function fetchPropostaBySlug(slug: string): Promise<PropostaRow | n
     forma_pagamento: normalizarFormaPagamento((data as PropostaRow).forma_pagamento),
     condicoes: normalizarListaTexto((data as PropostaRow).condicoes),
     garantias: normalizarListaTexto((data as PropostaRow).garantias),
-    proposta_itens_hora: null
+    proposta_itens_hora: normalizarItensHoraRaw((data as PropostaRow).proposta_itens_hora)
   } as PropostaRow
-
-  if (proposta.tipo_proposta === 'hora' && proposta.id) {
-    proposta.proposta_itens_hora = await fetchItensHora(proposta.id)
-  }
 
   return proposta
 }
