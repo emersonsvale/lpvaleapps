@@ -277,6 +277,7 @@
 <script setup lang="ts">
 import { PhFolderOpen } from '@phosphor-icons/vue'
 import { createTarefa, fetchEquipeMembros, fetchProjetoWorkspaceById, fetchTarefasByProjetoId, normalizeProjetoTarefaTags, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { formatHoursAsDuration } from '~/utils/duration'
 
 definePageMeta({ layout: 'admin' })
 
@@ -332,7 +333,7 @@ const tabs = computed(() => {
 })
 
 const horasContratadasLabel = computed(() => {
-  return `${formatHorasResumo(projeto.value?.horas_previstas)}h`
+  return formatHorasResumo(projeto.value?.horas_previstas)
 })
 
 const totalHorasExecutadasProjeto = computed(() => {
@@ -344,7 +345,7 @@ const totalHorasExecutadasProjeto = computed(() => {
 })
 
 const horasExecutadasLabel = computed(() => {
-  return `${formatHorasResumo(totalHorasExecutadasProjeto.value)}h`
+  return formatHorasResumo(totalHorasExecutadasProjeto.value)
 })
 
 const projetoComHorasDerivadas = computed(() => {
@@ -569,8 +570,6 @@ async function handleWorkspaceRefresh() {
 }
 
 function formatHorasResumo(value: unknown): string {
-  const numero = Number(value || 0)
-  if (!Number.isFinite(numero)) return '0'
-  return Number.isInteger(numero) ? String(numero) : numero.toFixed(1)
+  return formatHoursAsDuration(Number(value || 0))
 }
 </script>

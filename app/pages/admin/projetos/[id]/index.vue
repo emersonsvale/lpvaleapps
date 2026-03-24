@@ -27,17 +27,17 @@
         <div class="space-y-3">
           <div class="flex justify-between text-sm">
             <span class="text-zinc-500">Horas Previstas</span>
-            <span class="text-zinc-300">{{ projeto?.horas_previstas || 0 }}h</span>
+            <span class="text-zinc-300">{{ formatHoras(projeto?.horas_previstas || 0) }}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-zinc-500">Horas Executadas</span>
-            <span class="text-zinc-300">{{ totalHorasExecutadas }}h</span>
+            <span class="text-zinc-300">{{ formatHoras(totalHorasExecutadas) }}</span>
           </div>
           <hr class="border-zinc-800" />
           <div class="flex justify-between text-sm font-medium">
             <span class="text-zinc-400">Saldo</span>
             <span :class="saldoHoras >= 0 ? 'text-brand' : 'text-red-400'">
-              {{ saldoHoras > 0 ? '+' : '' }}{{ saldoHoras }}h
+              {{ formatHorasSaldo(saldoHoras) }}
             </span>
           </div>
         </div>
@@ -70,6 +70,7 @@
 <script setup lang="ts">
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace'
 import { fetchTarefasByProjetoId } from '~/composables/useProjetosWorkspace'
+import { formatHoursAsDuration } from '~/utils/duration'
 
 const props = defineProps<{
   projeto: ProjetoAdminWorkspace
@@ -155,5 +156,13 @@ function formatarData(data?: string | null) {
   if (!normalized) return '-'
   const d = new Date(`${normalized}T00:00:00`)
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(d)
+}
+
+function formatHoras(value: number | null | undefined) {
+  return formatHoursAsDuration(value)
+}
+
+function formatHorasSaldo(value: number | null | undefined) {
+  return formatHoursAsDuration(value, { signed: true, showPositiveSign: true })
 }
 </script>

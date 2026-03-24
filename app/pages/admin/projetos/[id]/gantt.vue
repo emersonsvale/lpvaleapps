@@ -340,7 +340,7 @@
             <div>
               <label class="mb-1 block text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Horas executadas</label>
               <div class="rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-400">
-                {{ tarefaEditando.horas_executadas || 0 }}h
+                {{ formatHoursAsDuration(tarefaEditando.horas_executadas || 0) }}
               </div>
             </div>
           </div>
@@ -399,6 +399,7 @@
 <script setup lang="ts">
 import { fetchEquipeMembros, fetchTarefasByProjetoId, updateTarefa, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace'
+import { formatHoursAsDuration } from '~/utils/duration'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 const emit = defineEmits<{ refresh: [] }>()

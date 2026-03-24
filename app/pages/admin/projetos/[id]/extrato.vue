@@ -3,7 +3,7 @@
     <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
         <p class="text-xs uppercase tracking-wider text-zinc-500">Horas Contratadas</p>
-        <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHoras(totalHorasCompradas) }}h</p>
+        <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHoras(totalHorasCompradas) }}</p>
       </article>
 
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
@@ -12,16 +12,16 @@
           class="mt-2 text-2xl font-semibold"
           :class="totalHorasPlanejadas > totalHorasCompradas ? 'text-amber-300' : 'text-zinc-100'"
         >
-          {{ formatHoras(totalHorasPlanejadas) }}h
+          {{ formatHoras(totalHorasPlanejadas) }}
         </p>
         <p v-if="totalHorasPlanejadas > totalHorasCompradas" class="mt-1 text-xs text-amber-300">
-          {{ formatHoras(totalHorasPlanejadas - totalHorasCompradas) }}h acima do contratado
+          {{ formatHoras(totalHorasPlanejadas - totalHorasCompradas) }} acima do contratado
         </p>
       </article>
 
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
         <p class="text-xs uppercase tracking-wider text-zinc-500">Horas Executadas</p>
-        <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHoras(totalHorasExecutadas) }}h</p>
+        <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHoras(totalHorasExecutadas) }}</p>
       </article>
 
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
@@ -30,7 +30,7 @@
           class="mt-2 text-2xl font-semibold"
           :class="saldoHoras < 0 ? 'text-red-400' : 'text-emerald-400'"
         >
-          {{ formatHoras(saldoHoras) }}h
+          {{ formatHorasSaldo(saldoHoras) }}
         </p>
       </article>
 
@@ -100,7 +100,7 @@
       <div v-if="lancamentosFiltrados.length" class="px-4 py-3">
         <p class="text-xs text-zinc-400">
           {{ lancamentosFiltrados.length }} lançamento(s) no periodo selecionado
-          — Total de <strong class="text-zinc-200">{{ formatHoras(horasExecutadasPeriodo) }}h</strong> executadas
+          — Total de <strong class="text-zinc-200">{{ formatHoras(horasExecutadasPeriodo) }}</strong> executadas
         </p>
       </div>
       <div v-else-if="relatorioDataInicio && relatorioDataFim" class="px-4 py-6 text-center text-xs text-zinc-500">
@@ -187,7 +187,7 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatDuracao(item.duracaoSegundos) }}</td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-zinc-100">{{ formatHoras(item.horasExecutadas) }}h</td>
+              <td class="px-4 py-3 text-right text-sm font-medium text-zinc-100">{{ formatHoras(item.horasExecutadas) }}</td>
               <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatMoeda(item.custoAproximado) }}</td>
               <td class="px-4 py-3 text-right text-xs text-zinc-500">{{ formatDateTime(item.iniciadoEm) }}</td>
               <td class="px-4 py-3 text-right text-xs text-zinc-500">{{ formatDateTime(item.finalizadoEm) }}</td>
@@ -202,6 +202,7 @@
 <script setup lang="ts">
 import { fetchEquipeMembros, fetchLancamentosHorasByProjetoId, fetchTarefasByProjetoId, type ProjetoAdminWorkspace, type ProjetoLancamentoHora, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import { openRelatorioHoras } from '~/composables/useRelatorioHoras'
+import { formatHoursAsDuration, formatSecondsAsDuration } from '~/utils/duration'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 
@@ -509,7 +510,11 @@ function gerarRelatorioPDF() {
 // ==========================================
 
 function formatHoras(value: number): string {
-  return Number((value || 0).toFixed(2)).toString()
+  return formatHoursAsDuration(value)
+}
+
+function formatHorasSaldo(value: number): string {
+  return formatHoursAsDuration(value, { signed: true })
 }
 
 function formatPercent(value: number): string {
@@ -538,12 +543,7 @@ function formatDateTime(value: string | null): string {
 }
 
 function formatDuracao(segundos: number | null | undefined): string {
-  const total = Math.max(0, Math.floor(Number(segundos || 0)))
-  const horas = Math.floor(total / 3600)
-  const minutos = Math.floor((total % 3600) / 60)
-  const restanteSegundos = total % 60
-
-  return [horas, minutos, restanteSegundos].map((valor) => String(valor).padStart(2, '0')).join(':')
+  return formatSecondsAsDuration(segundos)
 }
 
 function statusLabel(status: ProjetoTarefa['status'] | null): string {

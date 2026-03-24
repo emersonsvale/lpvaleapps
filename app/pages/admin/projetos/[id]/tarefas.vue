@@ -276,7 +276,7 @@
                 <div class="flex items-center gap-2">
                   <span v-if="t.horas_estimadas" class="flex flex-col">
                     <span class="text-[10px]">Horas</span>
-                    <span class="font-medium text-zinc-300">{{ getHorasExecutadasDisplay(t) }}/{{ t.horas_estimadas }}h</span>
+                    <span class="font-medium text-zinc-300">{{ getHorasExecutadasDisplay(t) }} / {{ formatHoras(t.horas_estimadas || 0) }}</span>
                   </span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -480,7 +480,7 @@
                     <div class="flex items-center justify-between gap-2">
                       <span>
                         <span class="font-semibold text-brand">{{ getHorasExecutadasDisplay(t) }}</span>
-                        <span class="text-zinc-400"> / {{ formatHoras(t.horas_estimadas || 0) }}h</span>
+                        <span class="text-zinc-400"> / {{ formatHoras(t.horas_estimadas || 0) }}</span>
                       </span>
                       <button
                         type="button"
@@ -788,11 +788,11 @@
                     <div class="grid grid-cols-2 gap-3">
                       <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
                         <span class="text-[10px] uppercase tracking-wider text-zinc-500">Estimado</span>
-                        <p class="mt-1 text-lg font-semibold text-zinc-100">{{ formatHoras(formEdicao.horas_estimadas) }}h</p>
+                        <p class="mt-1 text-lg font-semibold text-zinc-100">{{ formatHoras(formEdicao.horas_estimadas) }}</p>
                       </div>
                       <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
                         <span class="text-[10px] uppercase tracking-wider text-zinc-500">Realizado</span>
-                        <p class="mt-1 text-lg font-semibold text-zinc-100">{{ formatHoras(horasExecutadasEdicao) }}h</p>
+                        <p class="mt-1 text-lg font-semibold text-zinc-100">{{ formatHoras(horasExecutadasEdicao) }}</p>
                       </div>
                     </div>
                     <div class="flex items-center justify-between gap-3">
@@ -972,7 +972,7 @@
                   </label>
                   <div class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-3">
                     <span class="text-[10px] uppercase tracking-wider text-zinc-500">Realizado</span>
-                    <p class="mt-1 text-2xl font-semibold text-zinc-100">{{ tarefaEmEdicao ? `${getHorasExecutadasDisplay(tarefaEmEdicao)}h` : '0h' }}</p>
+                    <p class="mt-1 text-2xl font-semibold text-zinc-100">{{ tarefaEmEdicao ? getHorasExecutadasDisplay(tarefaEmEdicao) : '00:00:00' }}</p>
                   </div>
                 </div>
 
@@ -1034,6 +1034,7 @@ import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProj
 import { createLancamentoHora, fetchTarefasByProjetoId, updateTarefaStatus, deleteTarefa, updateTarefa, createTarefa, fetchEquipeMembros, normalizeProjetoTarefaTags } from '~/composables/useProjetosWorkspace'
 import { PhPlayCircle, PhStopCircle, PhCheckSquare, PhSquare, PhTrash, PhPlus } from '@phosphor-icons/vue'
 import { Minimize2, Maximize2, ChevronRight, ChevronDown, Calendar, User, Timer, X, FileText, GitBranch, TrendingUp } from 'lucide-vue-next'
+import { formatHoursAsDuration } from '~/utils/duration'
 
 const props = defineProps<{ projeto: ProjetoAdminWorkspace }>()
 const route = useRoute()
@@ -1529,7 +1530,7 @@ const resumoStatus = computed(() => {
         {
           inicio: formatarDataResumo(inicios.sort()[0]),
           fim: formatarDataResumo(fins.sort().at(-1)),
-          horas: `${formatHoras(horasExecutadas)} / ${formatHoras(horasEstimadas)}h`,
+          horas: `${formatHoras(horasExecutadas)} / ${formatHoras(horasEstimadas)}`,
           progresso: `${progressoMedio}%`
         }
       ]
@@ -1596,7 +1597,7 @@ function toggleSelecaoStatus(status: ProjetoTarefa['status'], checked: boolean) 
 }
 
 function formatHoras(value: number): string {
-  return Number((value || 0).toFixed(2)).toString()
+  return formatHoursAsDuration(value)
 }
 
 function getDayStartMs(value: string | null | undefined): number | null {

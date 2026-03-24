@@ -78,7 +78,7 @@
       <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
           <p class="text-xs uppercase tracking-wider text-zinc-500">Horas trabalhadas hoje</p>
-          <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHorasMeuDia(horasTrabalhadasHoje) }}h</p>
+          <p class="mt-2 text-2xl font-semibold text-zinc-100">{{ formatHorasMeuDia(horasTrabalhadasHoje) }}</p>
         </article>
         <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
           <p class="text-xs uppercase tracking-wider text-zinc-500">Tarefas com atividade</p>
@@ -99,7 +99,7 @@
       <section class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
         <div class="flex items-center justify-between mb-2">
           <h2 class="font-medium text-zinc-200">Progresso do dia</h2>
-          <span class="text-sm text-zinc-500">{{ formatHorasMeuDia(horasTrabalhadasHoje) }}h de 8h</span>
+          <span class="text-sm text-zinc-500">{{ formatHorasMeuDia(horasTrabalhadasHoje) }} de {{ formatHorasMeuDia(META_HORAS_DIA) }}</span>
         </div>
         <div class="h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
           <div
@@ -152,7 +152,7 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-right text-sm font-medium text-zinc-100">
-                  {{ formatHorasMeuDia(item.horasHoje) }}h
+                  {{ formatHorasMeuDia(item.horasHoje) }}
                 </td>
               </tr>
             </tbody>
@@ -346,7 +346,7 @@
             </div>
             <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
               <span class="text-[10px] uppercase tracking-wider text-zinc-500">Horas</span>
-              <p class="mt-1 text-sm font-medium text-zinc-100">{{ getHorasExecutadasDisplay(item) }} / {{ formatHorasResumo(item.horas_estimadas) }}h</p>
+              <p class="mt-1 text-sm font-medium text-zinc-100">{{ getHorasExecutadasDisplay(item) }} / {{ formatHorasResumo(item.horas_estimadas) }}</p>
             </div>
             <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
               <span class="text-[10px] uppercase tracking-wider text-zinc-500">Progresso</span>
@@ -369,6 +369,7 @@ import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProj
 import { createLancamentoHora, fetchEquipeMembros, fetchLancamentosHorasDoDiaByUsuario, fetchProjetosWorkspace, fetchTarefasWorkspace, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
 import { useSupabase } from '~/composables/useSupabase'
 import { hydrateWorkspaceRunningTimerState, persistWorkspaceRunningTimerState, resetWorkspaceRunningTimerState, useWorkspaceRunningTimerState } from '~/composables/useWorkspaceRunningTimer'
+import { formatHoursAsDuration } from '~/utils/duration'
 
 definePageMeta({ layout: 'admin' })
 
@@ -661,7 +662,7 @@ function corStatusMeuDia(s: ProjetoTarefa['status']) {
   }
 }
 function formatHorasMeuDia(value: number) {
-  return Number((value || 0).toFixed(2)).toString()
+  return formatHoursAsDuration(value)
 }
 
 const tarefasPorProjeto = computed(() => {
@@ -758,7 +759,12 @@ function formatPrazoTarefa(inicio: string | null, fim: string | null) {
 }
 
 function formatHorasResumo(value: number | null | undefined) {
-  return Number((value || 0).toFixed(2)).toString()
+  const totalSegundos = Math.max(0, Math.round(Number(value || 0) * 3600))
+  const horas = Math.floor(totalSegundos / 3600)
+  const minutos = Math.floor((totalSegundos % 3600) / 60)
+  const segundos = totalSegundos % 60
+
+  return [horas, minutos, segundos].map((parte) => String(parte).padStart(2, '0')).join(':')
 }
 
 function calculateProgressPercent(horasEstimadas: number | null | undefined, horasExecutadas: number | null | undefined): number {
