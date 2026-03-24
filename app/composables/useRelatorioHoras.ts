@@ -1,4 +1,5 @@
 import { EMPRESA_DEFAULTS } from '~/composables/useContratoDocument'
+import { formatHoursAsDuration } from '~/utils/duration'
 
 export interface RelatorioHorasData {
   projetoNome: string
@@ -33,7 +34,11 @@ function esc(str: string): string {
 }
 
 function fmtHoras(value: number): string {
-  return Number((value || 0).toFixed(2)).toString()
+  return formatHoursAsDuration(value)
+}
+
+function fmtHorasSaldo(value: number): string {
+  return formatHoursAsDuration(value, { signed: true })
 }
 
 function fmtPercent(value: number): string {
@@ -148,8 +153,8 @@ export function generateRelatorioHorasHTML(data: RelatorioHorasData): string {
       + '<td><span class="code">' + esc(item.codigo) + '</span> ' + esc(item.titulo) + '</td>'
       + '<td>' + responsavelCell + '</td>'
       + '<td><span class="status-badge">' + esc(item.status) + '</span></td>'
-      + '<td class="num">' + fmtHoras(item.horasEstimadas) + 'h</td>'
-      + '<td class="num bold">' + fmtHoras(item.horasExecutadas) + 'h</td>'
+      + '<td class="num">' + fmtHoras(item.horasEstimadas) + '</td>'
+      + '<td class="num bold">' + fmtHoras(item.horasExecutadas) + '</td>'
       + '<td class="num">' + fmtPercent(item.percentualConsumo) + '</td>'
       + '</tr>'
   }).join('\n')
@@ -160,8 +165,8 @@ export function generateRelatorioHorasHTML(data: RelatorioHorasData): string {
 
   const totalsRow = '<tr class="totals-row">'
     + '<td colspan="3"><strong>TOTAL</strong></td>'
-    + '<td class="num">' + fmtHoras(totalEstimadas) + 'h</td>'
-    + '<td class="num">' + fmtHoras(data.horasNoPeriodo) + 'h</td>'
+    + '<td class="num">' + fmtHoras(totalEstimadas) + '</td>'
+    + '<td class="num">' + fmtHoras(data.horasNoPeriodo) + '</td>'
     + '<td class="num">' + fmtPercent(totalPercentConsumo) + '</td>'
     + '</tr>'
 
@@ -214,10 +219,10 @@ export function generateRelatorioHorasHTML(data: RelatorioHorasData): string {
 
   // KPIs
   parts.push('<div class="kpi-grid">')
-  parts.push('<div class="kpi-card accent"><div class="kpi-label">Horas Contratadas</div><div class="kpi-value">' + fmtHoras(data.horasPrevistas) + 'h</div><div class="kpi-sub">Contratadas no projeto</div></div>')
-  parts.push('<div class="kpi-card"><div class="kpi-label">Horas Executadas</div><div class="kpi-value">' + fmtHoras(data.horasExecutadas) + 'h</div><div class="kpi-sub">Total acumulado</div></div>')
-  parts.push('<div class="kpi-card ' + saldoClass + '"><div class="kpi-label">Saldo de Horas</div><div class="kpi-value">' + fmtHoras(data.saldoHoras) + 'h</div><div class="kpi-sub">' + saldoSub + '</div></div>')
-  parts.push('<div class="kpi-card accent"><div class="kpi-label">Horas no Periodo</div><div class="kpi-value">' + fmtHoras(data.horasNoPeriodo) + 'h</div><div class="kpi-sub">' + data.itens.length + ' tarefa(s) ativa(s)</div></div>')
+  parts.push('<div class="kpi-card accent"><div class="kpi-label">Horas Contratadas</div><div class="kpi-value">' + fmtHoras(data.horasPrevistas) + '</div><div class="kpi-sub">Contratadas no projeto</div></div>')
+  parts.push('<div class="kpi-card"><div class="kpi-label">Horas Executadas</div><div class="kpi-value">' + fmtHoras(data.horasExecutadas) + '</div><div class="kpi-sub">Total acumulado</div></div>')
+  parts.push('<div class="kpi-card ' + saldoClass + '"><div class="kpi-label">Saldo de Horas</div><div class="kpi-value">' + fmtHorasSaldo(data.saldoHoras) + '</div><div class="kpi-sub">' + saldoSub + '</div></div>')
+  parts.push('<div class="kpi-card accent"><div class="kpi-label">Horas no Periodo</div><div class="kpi-value">' + fmtHoras(data.horasNoPeriodo) + '</div><div class="kpi-sub">' + data.itens.length + ' tarefa(s) ativa(s)</div></div>')
   parts.push('</div>')
 
   // Progress bar
@@ -225,9 +230,9 @@ export function generateRelatorioHorasHTML(data: RelatorioHorasData): string {
   parts.push('<h3 class="section-title">Consumo de Horas do Projeto</h3>')
   parts.push('<div class="progress-bar-container"><div class="progress-bar-fill ' + progressClass + '" style="width: ' + progressWidth + '%"></div></div>')
   parts.push('<div class="progress-label">')
-  parts.push('<span>' + fmtHoras(data.horasExecutadas) + 'h executadas</span>')
+  parts.push('<span>' + fmtHoras(data.horasExecutadas) + ' executadas</span>')
   parts.push('<span>' + data.percentualConsumo + '% consumido</span>')
-  parts.push('<span>' + fmtHoras(data.horasPrevistas) + 'h contratadas</span>')
+  parts.push('<span>' + fmtHoras(data.horasPrevistas) + ' contratadas</span>')
   parts.push('</div></div>')
 
   // Status chips
