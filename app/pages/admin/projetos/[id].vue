@@ -276,7 +276,7 @@
 
 <script setup lang="ts">
 import { PhFolderOpen } from '@phosphor-icons/vue'
-import { createTarefa, fetchEquipeMembros, fetchProjetoWorkspaceById, fetchTarefasByProjetoId, normalizeProjetoTarefaTags, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { createTarefa, fetchEquipeMembros, fetchProjetoWorkspaceById, fetchTarefasByProjetoId, filterProjetoTarefasPrincipais, normalizeProjetoTarefaTags, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import { formatHoursAsDuration } from '~/utils/duration'
 
 definePageMeta({ layout: 'admin' })
@@ -336,12 +336,14 @@ const horasContratadasLabel = computed(() => {
   return formatHorasResumo(projeto.value?.horas_previstas)
 })
 
+const tarefasProjetoPrincipais = computed(() => filterProjetoTarefasPrincipais(tarefasProjeto.value))
+
 const totalHorasExecutadasProjeto = computed(() => {
-  if (!(tarefasProjeto.value || []).length) {
+  if (!tarefasProjetoPrincipais.value.length) {
     return Number(projeto.value?.horas_executadas || 0)
   }
 
-  return (tarefasProjeto.value || []).reduce((acc, tarefa) => acc + Number(tarefa.horas_executadas || 0), 0)
+  return tarefasProjetoPrincipais.value.reduce((acc, tarefa) => acc + Number(tarefa.horas_executadas || 0), 0)
 })
 
 const horasExecutadasLabel = computed(() => {

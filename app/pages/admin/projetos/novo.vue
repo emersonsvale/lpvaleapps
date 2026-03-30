@@ -72,7 +72,7 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-zinc-300 mb-1.5">Horas Vendidas</label>
+            <label class="block text-sm font-medium text-zinc-300 mb-1.5">Horas da compra inicial</label>
             <input
               v-model="form.horas_previstas"
               type="number"
@@ -83,7 +83,7 @@
             >
           </div>
           <div>
-            <label class="block text-sm font-medium text-zinc-300 mb-1.5">Valor da Hora Vendida (R$)</label>
+            <label class="block text-sm font-medium text-zinc-300 mb-1.5">Valor da hora da compra inicial (R$)</label>
             <input
               v-model="form.valor_hora_vendida"
               type="number"
@@ -100,7 +100,7 @@
             <span class="text-zinc-400">Orçamento total calculado</span>
             <strong class="text-base font-semibold text-zinc-100">{{ formatMoeda(orcamentoTotalCalculado) }}</strong>
           </div>
-          <p class="mt-1 text-xs text-zinc-500">Calculado automaticamente com base em horas vendidas x valor da hora.</p>
+          <p class="mt-1 text-xs text-zinc-500">Ao salvar, essa informação vira o primeiro registro no histórico de compras de horas do projeto.</p>
         </div>
       </div>
 
@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { createProjetoWorkspace } from '~/composables/useProjetosWorkspace'
+import { createProjetoCompraHora, createProjetoWorkspace } from '~/composables/useProjetosWorkspace'
 import { useSupabase } from '~/composables/useSupabase'
 
 definePageMeta({ layout: 'admin' })
@@ -199,9 +199,9 @@ async function salvar() {
     data_inicio: form.data_inicio || null,
     data_fim_prevista: form.data_fim_prevista || null,
     prioridade: form.prioridade,
-    horas_previstas: Number(form.horas_previstas) || 0,
-    valor_hora_vendida: Number(form.valor_hora_vendida) || 0,
-    orcamento_total: orcamentoTotalCalculado.value,
+    horas_previstas: 0,
+    valor_hora_vendida: 0,
+    orcamento_total: 0,
   }
 
   const { data, error } = await createProjetoWorkspace(payload)
@@ -210,6 +210,23 @@ async function salvar() {
     erro.value = error
     salvando.value = false
   } else if (data) {
+    const horasIniciais = Number(form.horas_previstas) || 0
+
+    if (horasIniciais > 0) {
+      const { error: compraError } = await createProjetoCompraHora({
+        projeto_id: data.id,
+        data_compra: form.data_inicio || new Date().toISOString().slice(0, 10),
+        descricao: 'Compra inicial do projeto',
+        horas: horasIniciais,
+        valor_hora: Number(form.valor_hora_vendida) || 0,
+        observacoes: 'Registro criado automaticamente ao abrir o projeto.'
+      })
+
+      if (compraError) {
+        console.error('[novo-projeto] Erro ao criar compra inicial:', compraError)
+      }
+    }
+
     await navigateTo(`/admin/projetos/${data.id || ''}`)
   }
 }

@@ -75,6 +75,19 @@ export interface ProjetoLancamentoHora {
     created_at?: string
 }
 
+export interface ProjetoCompraHora {
+    id: number
+    projeto_id: number
+    data_compra: string
+    descricao: string | null
+    horas: number
+    valor_hora: number
+    valor_total: number
+    observacoes?: string | null
+    created_at?: string
+    updated_at?: string
+}
+
 export interface EquipeMembro {
     id: number
     nome: string | null
@@ -107,6 +120,14 @@ export function normalizeProjetoTarefaTags(value: unknown): string[] {
     return normalized
 }
 
+export function isProjetoTarefaPrincipal(tarefa: Pick<ProjetoTarefa, 'pai_id'>): boolean {
+    return tarefa.pai_id === null || tarefa.pai_id === undefined
+}
+
+export function filterProjetoTarefasPrincipais<T extends Pick<ProjetoTarefa, 'pai_id'>>(tarefas: T[] | null | undefined): T[] {
+    return (tarefas || []).filter(isProjetoTarefaPrincipal)
+}
+
 function normalizeProjetoTarefa(item: ProjetoTarefa): ProjetoTarefa {
     return {
         ...item,
@@ -116,6 +137,10 @@ function normalizeProjetoTarefa(item: ProjetoTarefa): ProjetoTarefa {
 
 function roundHoras(value: number | null | undefined): number {
     return Number((Number(value || 0)).toFixed(4))
+}
+
+function roundCurrency(value: number | null | undefined): number {
+    return Number((Number(value || 0)).toFixed(2))
 }
 
 function calculateTaskProgress(horasEstimadas: number | null | undefined, horasExecutadas: number | null | undefined): number {
@@ -142,6 +167,31 @@ function applyDerivedHorasToProjeto(item: ProjetoAdminWorkspace, horasExecutadas
     return {
         ...item,
         horas_executadas: roundHoras(horasExecutadas)
+    }
+}
+
+interface ProjetoComprasResumo {
+    totalHorasCompradas: number
+    totalValorComprado: number
+    valorHoraMedia: number
+}
+
+function buildComprasResumoVazio(): ProjetoComprasResumo {
+    return {
+        totalHorasCompradas: 0,
+        totalValorComprado: 0,
+        valorHoraMedia: 0
+    }
+}
+
+function applyDerivedResumoComprasToProjeto(item: ProjetoAdminWorkspace, resumo?: ProjetoComprasResumo | null): ProjetoAdminWorkspace {
+    const source = resumo || buildComprasResumoVazio()
+
+    return {
+        ...item,
+        horas_previstas: source.totalHorasCompradas,
+        orcamento_total: source.totalValorComprado,
+        valor_hora_vendida: source.valorHoraMedia
     }
 }
 
@@ -202,6 +252,58 @@ async function fetchHorasLancadasPorTarefaIds(supabase: NonNullable<ReturnType<t
     })))
 }
 
+async function fetchComprasResumoByProjetoIds(
+    supabase: NonNullable<ReturnType<typeof useSupabase>>,
+    projetos: ProjetoAdminWorkspace[]
+) {
+    if (!projetos.length) return new Map<number, ProjetoComprasResumo>()
+
+    const projetoIds = projetos.map((item) => item.id)
+    const fallbackMap = new Map<number, ProjetoComprasResumo>(
+        projetos.map((item) => [item.id, buildComprasResumoVazio()])
+    )
+
+    const { data, error } = await supabase
+        .from('projetos_compras_horas')
+        .select('projeto_id, horas, valor_hora, valor_total')
+        .in('projeto_id', projetoIds)
+
+    if (error) {
+        console.warn('[fetchComprasResumoByProjetoIds] Erro:', error.message)
+        return fallbackMap
+    }
+
+    const resumoMap = new Map<number, ProjetoComprasResumo>()
+
+    for (const item of ((data as Array<{ projeto_id: number | null; horas: number | string | null; valor_hora: number | string | null; valor_total: number | string | null }> | null) || [])) {
+        if (item.projeto_id == null) continue
+        const projetoId = Number(item.projeto_id)
+        const horas = roundHoras(item.horas)
+        const valorTotal = roundCurrency(item.valor_total ?? (Number(item.horas || 0) * Number(item.valor_hora || 0)))
+
+        const atual = resumoMap.get(projetoId) || {
+            totalHorasCompradas: 0,
+            totalValorComprado: 0,
+            valorHoraMedia: 0
+        }
+
+        atual.totalHorasCompradas = roundHoras(atual.totalHorasCompradas + horas)
+        atual.totalValorComprado = roundCurrency(atual.totalValorComprado + valorTotal)
+        atual.valorHoraMedia = atual.totalHorasCompradas > 0
+            ? roundCurrency(atual.totalValorComprado / atual.totalHorasCompradas)
+            : 0
+        resumoMap.set(projetoId, atual)
+    }
+
+    for (const projeto of projetos) {
+        if (!resumoMap.has(projeto.id)) {
+            resumoMap.set(projeto.id, fallbackMap.get(projeto.id) || buildComprasResumoVazio())
+        }
+    }
+
+    return resumoMap
+}
+
 function normalizeProjetoTarefaPayload<T extends Record<string, any>>(input: T): T {
     if (!Object.prototype.hasOwnProperty.call(input, 'tags')) {
         return input
@@ -232,7 +334,12 @@ export async function fetchProjetosWorkspace(): Promise<ProjetoAdminWorkspace[]>
 
     const projetos = (data as ProjetoAdminWorkspace[] | null) || []
     const horasPorProjeto = await fetchHorasLancadasPorProjetoIds(supabase, projetos.map((item) => item.id))
-    return projetos.map((item) => applyDerivedHorasToProjeto(item, horasPorProjeto.get(item.id) || 0))
+    const comprasResumoPorProjeto = await fetchComprasResumoByProjetoIds(supabase, projetos)
+
+    return projetos.map((item) => {
+        const projetoComResumo = applyDerivedResumoComprasToProjeto(item, comprasResumoPorProjeto.get(item.id))
+        return applyDerivedHorasToProjeto(projetoComResumo, horasPorProjeto.get(item.id) || 0)
+    })
 }
 
 export async function fetchProjetoWorkspaceById(id: number): Promise<ProjetoAdminWorkspace | null> {
@@ -253,7 +360,9 @@ export async function fetchProjetoWorkspaceById(id: number): Promise<ProjetoAdmi
     if (!projeto) return null
 
     const horasPorProjeto = await fetchHorasLancadasPorProjetoIds(supabase, [id])
-    return applyDerivedHorasToProjeto(projeto, horasPorProjeto.get(id) || 0)
+    const comprasResumoPorProjeto = await fetchComprasResumoByProjetoIds(supabase, [projeto])
+    const projetoComResumo = applyDerivedResumoComprasToProjeto(projeto, comprasResumoPorProjeto.get(id))
+    return applyDerivedHorasToProjeto(projetoComResumo, horasPorProjeto.get(id) || 0)
 }
 
 export async function createProjetoWorkspace(
@@ -337,6 +446,30 @@ export async function fetchLancamentosHorasByProjetoId(projetoId: number): Promi
     return (data as ProjetoLancamentoHora[] | null) || []
 }
 
+export async function fetchComprasHorasByProjetoId(projetoId: number): Promise<ProjetoCompraHora[]> {
+    const supabase = useSupabase()
+    if (!supabase) return []
+
+    const { data, error } = await supabase
+        .from('projetos_compras_horas')
+        .select('*')
+        .eq('projeto_id', projetoId)
+        .order('data_compra', { ascending: false })
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.warn('[fetchComprasHorasByProjetoId] Erro:', error.message)
+        return []
+    }
+
+    return ((data as ProjetoCompraHora[] | null) || []).map((item) => ({
+        ...item,
+        horas: roundHoras(item.horas),
+        valor_hora: roundCurrency(item.valor_hora),
+        valor_total: roundCurrency(item.valor_total)
+    }))
+}
+
 /**
  * Lançamentos de horas do usuário em uma data, em todos os projetos.
  * Filtra por equipe_id e/ou autor_uid.
@@ -417,6 +550,37 @@ export async function createLancamentoHora(
 
     if (error) return { data: null, error: error.message }
     return { data: data as ProjetoLancamentoHora, error: null }
+}
+
+export async function createProjetoCompraHora(
+    input: Partial<Omit<ProjetoCompraHora, 'id' | 'created_at' | 'updated_at' | 'valor_total'>>
+): Promise<{ data: ProjetoCompraHora | null; error: string | null }> {
+    const supabase = useSupabase()
+    if (!supabase) return { data: null, error: 'Supabase não configurado' }
+
+    const payload = {
+        ...input,
+        horas: roundHoras(input.horas),
+        valor_hora: roundCurrency(input.valor_hora)
+    }
+
+    const { data, error } = await supabase
+        .from('projetos_compras_horas')
+        .insert(payload)
+        .select('*')
+        .single()
+
+    if (error) return { data: null, error: error.message }
+
+    return {
+        data: {
+            ...(data as ProjetoCompraHora),
+            horas: roundHoras((data as ProjetoCompraHora).horas),
+            valor_hora: roundCurrency((data as ProjetoCompraHora).valor_hora),
+            valor_total: roundCurrency((data as ProjetoCompraHora).valor_total)
+        },
+        error: null
+    }
 }
 
 export async function deleteTarefa(id: number): Promise<{ error: string | null }> {

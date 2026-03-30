@@ -397,7 +397,7 @@
 </template>
 
 <script setup lang="ts">
-import { fetchEquipeMembros, fetchTarefasByProjetoId, updateTarefa, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { fetchEquipeMembros, fetchTarefasByProjetoId, filterProjetoTarefasPrincipais, updateTarefa, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace'
 import { formatHoursAsDuration } from '~/utils/duration'
 
@@ -423,6 +423,8 @@ const { data: equipeMembros } = await useAsyncData(
   () => fetchEquipeMembros(),
   { server: false, default: () => [] }
 )
+
+const tarefasPrincipais = computed(() => filterProjetoTarefasPrincipais(todasTarefas.value))
 
 const equipeOptions = computed(() => {
   return (equipeMembros.value || [])
@@ -466,7 +468,7 @@ function getResponsavelFotoUrl(tarefa: ProjetoTarefa) {
 
 // Filtrar tarefas que possuem ao menos prazo_inicio e prazo_fim
 const tarefasComDatas = computed(() => {
-  return (todasTarefas.value || [])
+  return tarefasPrincipais.value
     .filter(t => t.prazo_inicio && t.prazo_fim)
     .sort((a, b) => {
       const da = a.prazo_inicio!

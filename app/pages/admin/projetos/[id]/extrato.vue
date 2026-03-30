@@ -42,7 +42,7 @@
 
     <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        <p class="text-xs uppercase tracking-wider text-zinc-500">Orcamento Total</p>
+        <p class="text-xs uppercase tracking-wider text-zinc-500">Orcamento Total Vendido</p>
         <p class="mt-2 text-xl font-semibold text-zinc-100">{{ formatMoeda(orcamentoTotal) }}</p>
       </article>
 
@@ -62,9 +62,121 @@
       </article>
 
       <article class="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        <p class="text-xs uppercase tracking-wider text-zinc-500">Valor Hora Vendida</p>
+        <p class="text-xs uppercase tracking-wider text-zinc-500">Valor Médio da Hora</p>
         <p class="mt-2 text-xl font-semibold text-zinc-100">{{ formatMoeda(valorHoraVendida) }}</p>
+        <p class="mt-1 text-xs text-zinc-500">Media ponderada do histórico de compras do projeto.</p>
       </article>
+    </section>
+
+    <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+      <header class="flex flex-col gap-3 border-b border-zinc-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-base font-semibold text-zinc-100">Compras de Horas</h2>
+          <p class="text-xs text-zinc-500">Cada compra registra um pacote adicional de horas e pode usar um valor/hora diferente.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="rounded-lg bg-zinc-100 px-4 py-1.5 text-xs font-semibold text-zinc-900 transition-colors hover:bg-white"
+            @click="formCompraAberto = !formCompraAberto"
+          >
+            {{ formCompraAberto ? 'Fechar' : 'Adicionar horas' }}
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
+            @click="refreshCompras()"
+          >
+            Atualizar
+          </button>
+        </div>
+      </header>
+
+      <form v-if="formCompraAberto" class="grid grid-cols-1 gap-3 border-b border-zinc-800 bg-zinc-950/40 px-4 py-4 md:grid-cols-5" @submit.prevent="adicionarCompraHoras">
+        <label class="space-y-1 md:col-span-1">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Data</span>
+          <input
+            v-model="formCompra.data_compra"
+            type="date"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+          >
+        </label>
+
+        <label class="space-y-1 md:col-span-2">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Descricao</span>
+          <input
+            v-model="formCompra.descricao"
+            type="text"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+            placeholder="Ex: Pacote adicional para sprint 2"
+          >
+        </label>
+
+        <label class="space-y-1">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Horas</span>
+          <input
+            v-model.number="formCompra.horas"
+            type="number"
+            min="0.5"
+            step="0.5"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+          >
+        </label>
+
+        <label class="space-y-1">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-500">Valor/hora</span>
+          <input
+            v-model.number="formCompra.valor_hora"
+            type="number"
+            min="0"
+            step="0.01"
+            class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+          >
+        </label>
+
+        <div class="md:col-span-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-xs text-zinc-500">Valor total desta compra: <strong class="text-zinc-200">{{ formatMoeda(valorTotalNovaCompra) }}</strong></p>
+          <div class="flex items-center gap-2">
+            <span v-if="erroCompra" class="text-xs text-red-400">{{ erroCompra }}</span>
+            <button
+              type="submit"
+              :disabled="salvandoCompra"
+              class="rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {{ salvandoCompra ? 'Salvando...' : 'Salvar compra' }}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div v-if="pendingCompras" class="px-4 py-8 text-center text-sm text-zinc-500">Carregando compras de horas...</div>
+
+      <div v-else-if="!comprasHoras.length" class="px-4 py-8 text-center text-sm text-zinc-500">
+        Nenhuma compra registrada ainda. O pacote inicial e os adicionais aparecerão aqui.
+      </div>
+
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr class="border-b border-zinc-800 bg-zinc-950/60">
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Data</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Descricao</th>
+              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Horas</th>
+              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Valor/Hora</th>
+              <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Valor Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="compra in comprasHoras" :key="compra.id" class="border-b border-zinc-900/90 hover:bg-zinc-950/50">
+              <td class="px-4 py-3 text-sm text-zinc-300">{{ formatCompraDate(compra.data_compra) }}</td>
+              <td class="px-4 py-3 text-sm text-zinc-100">{{ compra.descricao || 'Compra sem descricao' }}</td>
+              <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatHoras(compra.horas) }}</td>
+              <td class="px-4 py-3 text-right text-sm text-zinc-300">{{ formatMoeda(compra.valor_hora) }}</td>
+              <td class="px-4 py-3 text-right text-sm font-medium text-zinc-100">{{ formatMoeda(compra.valor_total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <!-- Relatorio para Cliente -->
@@ -200,7 +312,7 @@
 </template>
 
 <script setup lang="ts">
-import { fetchEquipeMembros, fetchLancamentosHorasByProjetoId, fetchTarefasByProjetoId, type ProjetoAdminWorkspace, type ProjetoLancamentoHora, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
+import { createProjetoCompraHora, fetchComprasHorasByProjetoId, fetchEquipeMembros, fetchLancamentosHorasByProjetoId, fetchTarefasByProjetoId, filterProjetoTarefasPrincipais, type ProjetoAdminWorkspace, type ProjetoCompraHora, type ProjetoLancamentoHora, type ProjetoTarefa } from '~/composables/useProjetosWorkspace'
 import { openRelatorioHoras } from '~/composables/useRelatorioHoras'
 import { formatHoursAsDuration, formatSecondsAsDuration } from '~/utils/duration'
 
@@ -233,6 +345,29 @@ const { data: equipeMembros } = await useAsyncData(
   }
 )
 
+const { data: comprasHorasData, pending: pendingCompras, refresh: refreshCompras } = await useAsyncData(
+  `extrato-projeto-compras-${props.projeto.id}`,
+  () => fetchComprasHorasByProjetoId(props.projeto.id),
+  {
+    server: false,
+    default: () => []
+  }
+)
+
+const formCompraAberto = ref(false)
+const salvandoCompra = ref(false)
+const erroCompra = ref('')
+const formCompra = reactive({
+  data_compra: new Date().toISOString().slice(0, 10),
+  descricao: '',
+  horas: 0,
+  valor_hora: Number(props.projeto.valor_hora_vendida || 0)
+})
+
+const valorTotalNovaCompra = computed(() => Number(((Number(formCompra.horas) || 0) * (Number(formCompra.valor_hora) || 0)).toFixed(2)))
+
+const comprasHoras = computed(() => (comprasHorasData.value || []) as ProjetoCompraHora[])
+
 // ==========================================
 // RESUMO GERAL
 // ==========================================
@@ -242,15 +377,17 @@ const totalHorasPrevistas = computed(() => {
 })
 
 const totalHorasCompradas = computed(() => {
-  return Number(props.projeto.horas_previstas || 0)
+  return Number(comprasHoras.value.reduce((acc, item) => acc + Number(item.horas || 0), 0).toFixed(4))
 })
 
+const tarefasPrincipais = computed(() => filterProjetoTarefasPrincipais(tarefas.value))
+
 const totalHorasPlanejadas = computed(() => {
-  return (tarefas.value || []).reduce((acc, item) => acc + Number(item.horas_estimadas || 0), 0)
+  return tarefasPrincipais.value.reduce((acc, item) => acc + Number(item.horas_estimadas || 0), 0)
 })
 
 const totalHorasExecutadas = computed(() => {
-  return (tarefas.value || []).reduce((acc, item) => acc + Number(item.horas_executadas || 0), 0)
+  return tarefasPrincipais.value.reduce((acc, item) => acc + Number(item.horas_executadas || 0), 0)
 })
 
 const saldoHoras = computed(() => totalHorasCompradas.value - totalHorasExecutadas.value)
@@ -260,15 +397,16 @@ const percentualHorasConsumidas = computed(() => {
   return Math.round((totalHorasExecutadas.value / totalHorasCompradas.value) * 100)
 })
 
-const orcamentoTotal = computed(() => Number(props.projeto.orcamento_total || 0))
+const orcamentoTotal = computed(() => {
+  return Number(comprasHoras.value.reduce((acc, item) => acc + Number(item.valor_total || 0), 0).toFixed(2))
+})
+
 const valorHoraVendida = computed(() => {
-  const valorHoraProjeto = Number(props.projeto.valor_hora_vendida || 0)
-  if (valorHoraProjeto > 0) return valorHoraProjeto
+  if (totalHorasCompradas.value > 0 && orcamentoTotal.value > 0) {
+    return Number((orcamentoTotal.value / totalHorasCompradas.value).toFixed(2))
+  }
 
-  const horasVendidasFinanceiras = Number(props.projeto.horas_previstas || 0)
-  if (horasVendidasFinanceiras <= 0) return 0
-
-  return orcamentoTotal.value / horasVendidasFinanceiras
+  return 0
 })
 
 const orcamentoConsumido = computed(() => {
@@ -280,8 +418,12 @@ const custoMedioHora = computed(() => {
   return valorHoraVendida.value
 })
 
-const tarefasPorId = computed(() => {
+const todasTarefasPorId = computed(() => {
   return new Map((tarefas.value || []).map((tarefa) => [tarefa.id, tarefa]))
+})
+
+const tarefasPorId = computed(() => {
+  return new Map(tarefasPrincipais.value.map((tarefa) => [tarefa.id, tarefa]))
 })
 
 const equipePorId = computed(() => {
@@ -299,6 +441,21 @@ function getResponsavelInitials(nome: string | null | undefined): string {
   const partes = safe.split(/\s+/).filter(Boolean)
   if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase()
   return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase()
+}
+
+function getTarefaPrincipalRelacionada(tarefaId: number | null | undefined): ProjetoTarefa | null {
+  if (!tarefaId) return null
+
+  let atual = todasTarefasPorId.value.get(tarefaId) || null
+  if (!atual) return null
+
+  while (atual?.pai_id) {
+    const pai = todasTarefasPorId.value.get(atual.pai_id) || null
+    if (!pai) break
+    atual = pai
+  }
+
+  return atual
 }
 
 // ==========================================
@@ -384,7 +541,7 @@ const lancamentos = computed(() => {
   const source = (lancamentosBrutos.value || []) as ProjetoLancamentoHora[]
   return source
     .map((item) => {
-      const tarefa = item.tarefa_id ? tarefasPorId.value.get(item.tarefa_id) || null : null
+      const tarefa = getTarefaPrincipalRelacionada(item.tarefa_id)
       const horasExecutadas = Number(item.horas || 0)
       const horasEstimadas = Number(tarefa?.horas_estimadas || 0)
       const percentualConsumo = horasEstimadas > 0 ? (horasExecutadas / horasEstimadas) * 100 : 0
@@ -505,6 +662,46 @@ function gerarRelatorioPDF() {
   })
 }
 
+async function adicionarCompraHoras() {
+  erroCompra.value = ''
+
+  const horas = Number(formCompra.horas) || 0
+  const valorHora = Number(formCompra.valor_hora) || 0
+
+  if (horas <= 0) {
+    erroCompra.value = 'Informe uma quantidade de horas maior que zero.'
+    return
+  }
+
+  salvandoCompra.value = true
+
+  const { error } = await createProjetoCompraHora({
+    projeto_id: props.projeto.id,
+    data_compra: formCompra.data_compra || new Date().toISOString().slice(0, 10),
+    descricao: formCompra.descricao.trim() || 'Compra adicional de horas',
+    horas,
+    valor_hora: valorHora,
+    observacoes: null
+  })
+
+  salvandoCompra.value = false
+
+  if (error) {
+    erroCompra.value = error
+    return
+  }
+
+  formCompra.descricao = ''
+  formCompra.horas = 0
+  formCompra.valor_hora = valorHoraVendida.value
+  formCompraAberto.value = false
+
+  await Promise.all([
+    refreshCompras(),
+    refreshNuxtData(`admin-projeto-${props.projeto.id}`)
+  ])
+}
+
 // ==========================================
 // HELPERS
 // ==========================================
@@ -540,6 +737,13 @@ function formatDateTime(value: string | null): string {
     hour: '2-digit',
     minute: '2-digit'
   }).format(d)
+}
+
+function formatCompraDate(value: string | null): string {
+  if (!value) return '--'
+  const [ano, mes, dia] = String(value).slice(0, 10).split('-')
+  if (!ano || !mes || !dia) return '--'
+  return `${dia}/${mes}/${ano}`
 }
 
 function formatDuracao(segundos: number | null | undefined): string {

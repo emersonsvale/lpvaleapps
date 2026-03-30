@@ -26,7 +26,7 @@
         </h3>
         <div class="space-y-3">
           <div class="flex justify-between text-sm">
-            <span class="text-zinc-500">Horas Previstas</span>
+            <span class="text-zinc-500">Horas Contratadas</span>
             <span class="text-zinc-300">{{ formatHoras(projeto?.horas_previstas || 0) }}</span>
           </div>
           <div class="flex justify-between text-sm">
@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import type { ProjetoAdminWorkspace } from '~/composables/useProjetosWorkspace'
-import { fetchTarefasByProjetoId } from '~/composables/useProjetosWorkspace'
+import { fetchTarefasByProjetoId, filterProjetoTarefasPrincipais } from '~/composables/useProjetosWorkspace'
 import { formatHoursAsDuration } from '~/utils/duration'
 
 const props = defineProps<{
@@ -85,10 +85,12 @@ const { data: tarefasProjeto } = await useAsyncData(
   }
 )
 
-const totalTarefas = computed(() => (tarefasProjeto.value || []).length)
+const tarefasProjetoPrincipais = computed(() => filterProjetoTarefasPrincipais(tarefasProjeto.value))
+
+const totalTarefas = computed(() => tarefasProjetoPrincipais.value.length)
 
 const tarefasConcluidas = computed(() => {
-  return (tarefasProjeto.value || []).filter(tarefa => tarefa.status === 'concluido').length
+  return tarefasProjetoPrincipais.value.filter(tarefa => tarefa.status === 'concluido').length
 })
 
 const totalHorasExecutadas = computed(() => {
@@ -114,7 +116,7 @@ function normalizeDateValue(value?: string | null) {
 }
 
 const dataInicioTarefas = computed(() => {
-  const datas = (tarefasProjeto.value || [])
+  const datas = tarefasProjetoPrincipais.value
     .map(tarefa => normalizeDateValue(tarefa.prazo_inicio))
     .filter((value): value is string => Boolean(value))
     .sort()
@@ -123,7 +125,7 @@ const dataInicioTarefas = computed(() => {
 })
 
 const previsaoAtualTarefas = computed(() => {
-  const datasFim = (tarefasProjeto.value || [])
+  const datasFim = tarefasProjetoPrincipais.value
     .map(tarefa => normalizeDateValue(tarefa.prazo_fim))
     .filter((value): value is string => Boolean(value))
     .sort()
@@ -132,7 +134,7 @@ const previsaoAtualTarefas = computed(() => {
     return datasFim[datasFim.length - 1]
   }
 
-  const datasInicio = (tarefasProjeto.value || [])
+  const datasInicio = tarefasProjetoPrincipais.value
     .map(tarefa => normalizeDateValue(tarefa.prazo_inicio))
     .filter((value): value is string => Boolean(value))
     .sort()
@@ -141,7 +143,7 @@ const previsaoAtualTarefas = computed(() => {
 })
 
 const dataRealEntregaTarefas = computed(() => {
-  const datasConclusao = (tarefasProjeto.value || [])
+  const datasConclusao = tarefasProjetoPrincipais.value
     .filter(tarefa => tarefa.status === 'concluido')
     .map(tarefa => normalizeDateValue(tarefa.concluida_em || tarefa.updated_at || null))
     .filter((value): value is string => Boolean(value))

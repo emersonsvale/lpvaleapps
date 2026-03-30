@@ -85,38 +85,25 @@
         </label>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <label class="block space-y-2">
-          <span class="text-sm font-medium text-zinc-300">Horas Vendidas no Projeto</span>
-          <input
-            v-model.number="form.horas_previstas"
-            type="number"
-            min="0"
-            step="0.5"
-            class="w-full px-4 py-3 rounded-xl bg-zinc-950/50 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-            placeholder="Ex: 120"
-          />
-        </label>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <article class="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
+          <p class="text-xs uppercase tracking-wider text-zinc-500">Horas contratadas</p>
+          <strong class="mt-2 block text-xl font-semibold text-zinc-100">{{ formatHoras(props.projeto.horas_previstas) }}</strong>
+        </article>
 
-        <label class="block space-y-2">
-          <span class="text-sm font-medium text-zinc-300">Valor da Hora Vendida (R$)</span>
-          <input
-            v-model.number="form.valor_hora_vendida"
-            type="number"
-            min="0"
-            step="0.01"
-            class="w-full px-4 py-3 rounded-xl bg-zinc-950/50 border border-zinc-800 text-zinc-100 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand"
-            placeholder="Ex: 50"
-          />
-        </label>
+        <article class="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
+          <p class="text-xs uppercase tracking-wider text-zinc-500">Valor médio da hora</p>
+          <strong class="mt-2 block text-xl font-semibold text-zinc-100">{{ formatMoeda(props.projeto.valor_hora_vendida) }}</strong>
+        </article>
+
+        <article class="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
+          <p class="text-xs uppercase tracking-wider text-zinc-500">Valor total vendido</p>
+          <strong class="mt-2 block text-xl font-semibold text-zinc-100">{{ formatMoeda(props.projeto.orcamento_total) }}</strong>
+        </article>
       </div>
 
-      <div class="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
-        <div class="flex items-center justify-between gap-3 text-sm">
-          <span class="text-zinc-400">Orçamento total calculado</span>
-          <strong class="text-base font-semibold text-zinc-100">{{ formatMoeda(orcamentoTotalCalculado) }}</strong>
-        </div>
-        <p class="mt-1 text-xs text-zinc-500">Esse valor é usado no extrato para calcular consumo financeiro e custo das horas executadas.</p>
+      <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-100">
+        Horas contratadas e valores por hora agora são controlados pelo histórico em <strong>Extrato de Horas</strong>. Use essa tela apenas para dados cadastrais do projeto.
       </div>
 
        <label class="block space-y-2">
@@ -183,15 +170,7 @@ const form = ref({
   contrato_id: props.projeto.contrato_id as number | null,
   proposta_id: props.projeto.proposta_id as number | null,
   tech_stack: props.projeto.tech_stack?.join(', ') || '',
-  status_visualizacao: props.projeto.status_visualizacao || 'interno',
-  horas_previstas: props.projeto.horas_previstas || 0,
-  valor_hora_vendida: Number(props.projeto.valor_hora_vendida || 0)
-})
-
-const orcamentoTotalCalculado = computed(() => {
-  const horas = Number(form.value.horas_previstas) || 0
-  const valorHora = Number(form.value.valor_hora_vendida) || 0
-  return Number((horas * valorHora).toFixed(2))
+  status_visualizacao: props.projeto.status_visualizacao || 'interno'
 })
 
 async function salvar() {
@@ -213,9 +192,6 @@ async function salvar() {
   const payload: Record<string, unknown> = {
     nome: form.value.nome,
     cliente_nome: cliente_nome_resolvido || '',
-    horas_previstas: Number(form.value.horas_previstas) || 0,
-    valor_hora_vendida: Number(form.value.valor_hora_vendida) || 0,
-    orcamento_total: orcamentoTotalCalculado.value,
     descricao_comercial: (form.value.descricao_comercial || '').trim(),
     cliente_id: form.value.cliente_id || null,
     contrato_id: form.value.contrato_id || null,
@@ -261,5 +237,12 @@ function formatMoeda(value: number): string {
     currency: 'BRL',
     maximumFractionDigits: 2
   }).format(Number(value || 0))
+}
+
+function formatHoras(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  }).format(Number(value || 0)) + 'h'
 }
 </script>

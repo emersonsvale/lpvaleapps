@@ -1123,6 +1123,14 @@ const edicaoTagInput = ref('')
 const novaSubtarefaTitulo = ref('')
 const novaSubtarefaSalvando = ref(false)
 
+function isTarefaPai(tarefa: ProjetoTarefa) {
+  return tarefa.pai_id === null || tarefa.pai_id === undefined
+}
+
+const tarefasPrincipais = computed(() =>
+  (tarefas.value || []).filter(isTarefaPai)
+)
+
 const subtarefasAtivas = computed(() =>
   (tarefas.value || []).filter((t) => t.pai_id === tarefaEditandoId.value)
 )
@@ -1223,7 +1231,7 @@ const responsavelFiltroOptions = computed(() => {
     labels.set(nome.toLocaleLowerCase('pt-BR'), nome)
   }
 
-  for (const tarefa of tarefas.value || []) {
+  for (const tarefa of tarefasPrincipais.value) {
     const nome = (tarefa.responsavel_texto || '').trim()
     if (!nome) continue
     const key = nome.toLocaleLowerCase('pt-BR')
@@ -1363,7 +1371,7 @@ const tarefasFiltradas = computed(() => {
   const fimFiltroMs = getDayEndMs(filtroDataFim.value)
   const currentTickMs = tickMs.value
 
-  return [...(tarefas.value || [])]
+  return [...tarefasPrincipais.value]
     .filter((tarefa) => {
       if (filtroTipo.value !== 'todos' && tarefa.tipo !== filtroTipo.value) return false
       if (filtroPrioridade.value !== 'todos' && tarefa.prioridade !== filtroPrioridade.value) return false

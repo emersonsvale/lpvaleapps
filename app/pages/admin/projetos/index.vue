@@ -366,7 +366,7 @@
 <script setup lang="ts">
 import { PhFolderOpen, PhCalendarBlank, PhListChecks } from '@phosphor-icons/vue'
 import type { ProjetoAdminWorkspace, ProjetoTarefa } from '~/composables/useProjetosWorkspace'
-import { createLancamentoHora, fetchEquipeMembros, fetchLancamentosHorasDoDiaByUsuario, fetchProjetosWorkspace, fetchTarefasWorkspace, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
+import { createLancamentoHora, fetchEquipeMembros, fetchLancamentosHorasDoDiaByUsuario, fetchProjetosWorkspace, fetchTarefasWorkspace, filterProjetoTarefasPrincipais, updateTarefaStatus } from '~/composables/useProjetosWorkspace'
 import { useSupabase } from '~/composables/useSupabase'
 import { hydrateWorkspaceRunningTimerState, persistWorkspaceRunningTimerState, resetWorkspaceRunningTimerState, useWorkspaceRunningTimerState } from '~/composables/useWorkspaceRunningTimer'
 import { formatHoursAsDuration } from '~/utils/duration'
@@ -528,7 +528,7 @@ const identificadoresResponsavelUsuario = computed(() => {
 const tarefasUsuario = computed(() => {
   const identificadores = new Set(identificadoresResponsavelUsuario.value)
 
-  return (tarefasWorkspace.value ?? [])
+  return filterProjetoTarefasPrincipais(tarefasWorkspace.value)
     .filter((tarefa) => {
       const responsavel = normalizeResponsavelMatch(tarefa.responsavel_texto)
       return Boolean(responsavel) && identificadores.has(responsavel)
@@ -668,7 +668,7 @@ function formatHorasMeuDia(value: number) {
 const tarefasPorProjeto = computed(() => {
   const resumo = new Map<number, { total: number; concluidas: number }>()
 
-  for (const tarefa of tarefasWorkspace.value ?? []) {
+  for (const tarefa of filterProjetoTarefasPrincipais(tarefasWorkspace.value)) {
     const atual = resumo.get(tarefa.projeto_id) || { total: 0, concluidas: 0 }
     atual.total += 1
 

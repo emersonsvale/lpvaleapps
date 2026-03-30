@@ -34,18 +34,24 @@ function truncate(text: string | null | undefined, max = 300): string {
 async function fetchProjeto(sb: SB, id: number): Promise<string[]> {
   const { data, error } = await sb
     .from("projetos_admin")
-    .select("nome, status, cliente_nome, fase, progresso_percentual, data_inicio, data_fim_prevista, data_fim_real, horas_previstas, horas_executadas, valor_hora_vendida, orcamento_total, orcamento_consumido, prioridade, responsavel_texto, descricao_comercial, tech_stack, tags")
+    .select("nome, status, cliente_nome, fase, progresso_percentual, data_inicio, data_fim_prevista, data_fim_real, horas_executadas, orcamento_consumido, prioridade, responsavel_texto, descricao_comercial, tech_stack, tags")
     .eq("id", id)
     .single()
 
   if (error || !data) return ["(projeto não encontrado)"]
   const p = data as Record<string, unknown>
 
-  const hPrev = Number(p.horas_previstas) || 0
+  const { data: compras } = await sb
+    .from("projetos_compras_horas")
+    .select("horas, valor_total")
+    .eq("projeto_id", id)
+
+  const comprasRows = (compras || []) as Array<Record<string, unknown>>
+  const hPrev = comprasRows.reduce((acc, item) => acc + (Number(item.horas) || 0), 0)
   const hExec = Number(p.horas_executadas) || 0
-  const oTotal = Number(p.orcamento_total) || 0
+  const oTotal = comprasRows.reduce((acc, item) => acc + (Number(item.valor_total) || 0), 0)
   const oConsumido = Number(p.orcamento_consumido) || 0
-  const valorHora = Number(p.valor_hora_vendida) || 0
+  const valorHora = hPrev > 0 ? oTotal / hPrev : 0
   const custoHorasExecutadas = valorHora > 0 && hExec > 0 ? valorHora * hExec : 0
 
   const lines: string[] = [
